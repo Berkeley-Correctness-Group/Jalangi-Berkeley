@@ -37,27 +37,29 @@
 var exec = require('child_process').exec;
 var child;
 var cur_dir = process.cwd();
-var jalangi_home_dir = process.cwd() + '/' + 'jalangi_home';
+var path = require('path');
 
-if(process.argv.length !== 4) {
+if(process.argv.length !== 5) {
 	console.log('\r\n' + 
 		        ' * Command Line Usage: \r\n' + 
-				' * 	node src/js/commands/run_test.js <program to be instrumented> <analysis code>\r\n' + 
+				' * 	node src/js/commands/run_test.js <jalangi homepath> <program to be instrumented> <analysis code>\r\n' + 
 				' * Example:\r\n' + 
-				' * 	node src/js/commands/run_test.js jalangi_home/tests/octane/pdfjs.js src/js/analyses/jitaware/JITAware.js\r\n');
+				' * 	node src/js/commands/run_test.js jalangi_home jalangi_home/tests/octane/pdfjs.js src/js/analyses/jitaware/JITAware.js\r\n');
 	return;
 }
 
 // process.argv[0] -> node
 // process.argv[1] -> run_test.js
-// process.argv[2] -> program to be instrumented
-// process.argv[3] -> analysis code
-var target_file = process.argv[2];
-var clientAnalysis = process.argv[3];
+// process.argv[2] -> jalangi_home dir
+// process.argv[3] -> program to be instrumented
+// process.argv[4] -> analysis code
+var jalangi_home_dir = path.resolve(process.cwd() + '/' + process.argv[2]);
+var target_file = path.resolve(process.cwd() + '/' + process.argv[3]);
+var clientAnalysis = path.resolve(process.cwd() + '/' + process.argv[4])
 var inst_file = target_file.substring(0, target_file.lastIndexOf('.js')) + '_jalangi_.js';
 
 // instrument the target code
-var inst_comm = 'node src/js/instrument/esnstrument.js ' + target_file.substring(target_file.indexOf('/') + 1, target_file.length);
+var inst_comm = 'node src/js/instrument/esnstrument.js ' + target_file;
 console.log('instrumenting target: ' + target_file);
 console.log('please wait, it may take a while...');
 child = exec(inst_comm, {cwd: jalangi_home_dir}, function (error, stdout, stderr) {
@@ -73,13 +75,12 @@ child = exec(inst_comm, {cwd: jalangi_home_dir}, function (error, stdout, stderr
 });
 
 function run_inst_with_analysis(){
-	var analysis = require('../../../jalangi_home/src/js/analysis');
-	analysis.init("inbrowser", cur_dir + '/' + clientAnalysis);
-	require('../../../jalangi_home/src/js/InputManager');
-	require('../../../jalangi_home/src/js/instrument/esnstrument');
-	require('../../../jalangi_home/inputs.js');
+	var analysis = require(jalangi_home_dir + '/src/js/analysis');
+	analysis.init("inbrowser", clientAnalysis);
+	require(jalangi_home_dir + '/src/js/InputManager');
+	require(jalangi_home_dir + '/src/js/instrument/esnstrument');
+	require(jalangi_home_dir + '/inputs.js');
 	var script = inst_file;
-	var path = require('path');
 	require(path.resolve(script));
 	J$.endExecution();
 }

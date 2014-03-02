@@ -77,7 +77,7 @@ to run test, type:
 
 Command Usage:
 
-	node src/js/commands/run_test.js <program to be instrumented> <analysis code>
+	node src/js/commands/run_test.js <jalangi home directory ><program to be instrumented> <analysis code>
 
 All files paths should be relative path to the root directory of this repository
 
@@ -85,12 +85,12 @@ Examples:
 To run the object allocation experiment experiment:  
 In the root dir of the repository:
 
-	node src/js/commands/run_test.js jalangi_home/tests/octane/pdfjs.js jalangi_home/src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB
+	node src/js/commands/run_test.js jalangi_home jalangi_home/tests/octane/pdfjs.js jalangi_home/src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB
 
 To run the jit-compiler inefficient code pattern experiment:  
 In the root dir of the repository:
 
-	node src/js/commands/run_test.js jalangi_home/tests/octane/pdfjs.js src/js/analyses/jitaware/JITAware.js
+	node src/js/commands/run_test.js jalangi_home jalangi_home/tests/octane/pdfjs.js src/js/analyses/jitaware/JITAware.js
 
 
 Project for doing research on top of Jalangi project.
