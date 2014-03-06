@@ -19,7 +19,7 @@
 J$.analysis = {};
 
 ((function (sandbox){
-
+    var sys = require('sys');
     function JITAware() {
 
         var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
@@ -86,18 +86,59 @@ J$.analysis = {};
 
         /////////////////////////////////////////
 
-        function generateObjSig(obj) {
+        var total_get_sig_cnt = 0;
+
+        function getObjSig(obj) {
+            total_get_sig_cnt++;
+            var shadow_obj = smemory.getShadowObject(obj);
+            if(shadow_obj && shadow_obj.sig){
+                return shadow_obj.sig
+            }
+            var sig = generateObjSig(obj);
+
+            if(shadow_obj){
+                shadow_obj.sig = sig;
+            }
+            return sig;
+        }
+
+        function updateObjSig(obj){
+            var shadow_obj = smemory.getShadowObject(obj);
+            if(shadow_obj){
+                var sig = generateObjSig(obj);
+                shadow_obj.sig = sig
+            }
+        }
+
+        function isArr(obj){
+            return Array.isArray(obj) || (obj && obj.constructor && 
+                (obj.constructor.name === 'Uint8Array' || obj.constructor.name === 'Uint16Array' || 
+                    obj.constructor.name === 'Uint32Array' || obj.constructor.name === 'Uint8ClampedArray')); 
+        }
+
+        var total_signature_generation_cnt = 0;
+
+        function generateObjSig(obj){
+            total_signature_generation_cnt++;
+            //return '1';
             var sig = {};
             var obj_layout  = '';
+            var cnt = 0;
             try{
-                if((typeof obj ==='object' || typeof obj ==='function') && obj !== null){
+                if (isArr(obj)){
+                    obj_layout += 'no_sig_for_array|';
+                } else if((typeof obj ==='object' || typeof obj ==='function') && obj !== null){
                     for (var prop in obj) {
+                        cnt++;
                         if (HOP(obj,prop)) {
                             if(!isNormalNumber(prop)){ // if prop is number e.g., '0', '1' etc. then do not add it into the prop
                                 obj_layout += prop + '|';
                             }
                         }
                     }
+                    //console.log('prop cnt: ' + cnt);
+                    //console.log('obj_layout: ' + obj_layout);
+                    //console.log('obj constructor: ' + obj.constructor.name);
                 }
 
                 sig = {'obj_layout': obj_layout, 'pto': 'empty', 'con': 'empty'};
@@ -308,6 +349,8 @@ J$.analysis = {};
                 }
                 console.log('Number of statements init objects in non-constructor: ' + num);
                 console.log("---------------------------");
+                console.log('total signature generated: ' + total_signature_generation_cnt);
+                console.log('total get signature: ' + total_get_sig_cnt);
             }catch(e) {
                 console.log("error!!");
                 console.log(e);
@@ -317,10 +360,10 @@ J$.analysis = {};
 
 
         function checkIfObjectIsPolymorphic(base, iid){
-            if (Array.isArray(base)) {
+            if (isArr(base)) {
                 return;
             }
-            var sig = generateObjSig(base);
+            var sig = getObjSig(base);
             var query_sig = getByIndexArr(['JIT-checker', 'polystmt', iid]);
             if(typeof query_sig === 'undefined') {
                 setByIndexArr(['JIT-checker', 'polystmt', iid], [{'count': 1, 'sig': sig}]);
@@ -338,7 +381,7 @@ J$.analysis = {};
         }
 
         function checkIfReadingAnUninitializedArrayElement(base, offset, iid) {
-            if(Array.isArray(base)){
+            if(isArr(base)){
                 // check using uninitialized
                 if(isNormalNumber(offset) && !HOP(base, offset+'')) {
                     addCountByIndexArr(['JIT-checker', 'uninit-array-elem', iid]);
@@ -415,15 +458,24 @@ J$.analysis = {};
             return val;
         }
 
+        var instCnt = 0;
+
         this.putFieldPre = function (iid, base, offset, val) {
+            sys.print('\rinstructions scanned: ' + (++instCnt) + '       ');
             if (base !== null && base !== undefined) {
-                if(Array.isArray(base) && isNormalNumber(offset)) {
+                if(isArr(base) && isNormalNumber(offset)) {
                     checkIfArrayIsNumeric(base, val, iid);
                     checkIfWritingOutsideArrayBound(base, offset, iid);
                 } else { // check init object members in non-consturctor functions
                     checkIfFieldAddedOutsideConstructor(base, offset, iid);
                 }
             }
+            return val;
+        }
+
+        this.putField = function (iid, base, offset, val) {
+            // update object's shadow signature
+            updateObjSig(base);
             return val;
         }
 
@@ -440,6 +492,7 @@ J$.analysis = {};
         }
 
         this.endExecution = function() {
+            sys.print('\r\n');
             this.printResult();
         }
     }

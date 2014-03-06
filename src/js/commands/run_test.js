@@ -48,6 +48,8 @@ if(process.argv.length !== 5) {
 	return;
 }
 
+var run_start_time, run_end_time;
+
 // process.argv[0] -> node
 // process.argv[1] -> run_test.js
 // process.argv[2] -> jalangi_home dir
@@ -70,6 +72,7 @@ child = exec(inst_comm, {cwd: jalangi_home_dir}, function (error, stdout, stderr
   	console.log('writing into file: ' + inst_file);
   	console.log('start running instrumented code with analysis code:');
   	console.log('--------------------------------------');
+    run_start_time = new Date();
   	run_inst_with_analysis();
   }
 });
@@ -83,4 +86,6 @@ function run_inst_with_analysis(){
 	var script = inst_file;
 	require(path.resolve(script));
 	J$.endExecution();
+    run_end_time = new Date();
+    console.log('total seconds: ' + (run_end_time - run_start_time)/1000);
 }
