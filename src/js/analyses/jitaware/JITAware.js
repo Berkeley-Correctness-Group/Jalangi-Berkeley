@@ -19,7 +19,7 @@
 J$.analysis = {};
 
 ((function (sandbox){
-    var sys = require('sys');
+    var sys = require('util');
     function JITAware() {
 
         var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
@@ -34,6 +34,7 @@ J$.analysis = {};
         var ISNAN = isNaN;
         var PARSEINT = parseInt;
         var HOP = Constants.HOP;
+        var cache_sig = false;
 
         this.getAnalysisDB = function() {
             return analysisDB;
@@ -90,6 +91,11 @@ J$.analysis = {};
 
         function getObjSig(obj) {
             total_get_sig_cnt++;
+
+            if(!cache_sig){
+                return generateObjSig(obj);
+            }
+
             var shadow_obj = smemory.getShadowObject(obj);
             if(shadow_obj && shadow_obj.sig){
                 return shadow_obj.sig
@@ -103,6 +109,10 @@ J$.analysis = {};
         }
 
         function updateObjSig(obj){
+            if(!cache_sig){
+                return ;
+            }
+
             var shadow_obj = smemory.getShadowObject(obj);
             if(shadow_obj){
                 var sig = generateObjSig(obj);
@@ -113,7 +123,9 @@ J$.analysis = {};
         function isArr(obj){
             return Array.isArray(obj) || (obj && obj.constructor && 
                 (obj.constructor.name === 'Uint8Array' || obj.constructor.name === 'Uint16Array' || 
-                    obj.constructor.name === 'Uint32Array' || obj.constructor.name === 'Uint8ClampedArray')); 
+                    obj.constructor.name === 'Uint32Array' || obj.constructor.name === 'Uint8ClampedArray' || 
+                    obj.constructor.name === 'ArrayBuffer' || obj.constructor.name === 'Int8Array' || obj.constructor.name === 'Int16Array' ||
+                    obj.constructor.name === 'Int32Array' || obj.constructor.name === 'Int8ClampedArray' || obj.constructor.name === 'Float32Array' || obj.constructor.name === 'Float64Array')); 
         }
 
         var total_signature_generation_cnt = 0;
@@ -128,6 +140,9 @@ J$.analysis = {};
                 if (isArr(obj)){
                     obj_layout += 'no_sig_for_array|';
                 } else if((typeof obj ==='object' || typeof obj ==='function') && obj !== null){
+                    //console.log('begin');
+                    
+                    //console.log('obj constructor: ' + obj.constructor.name);
                     for (var prop in obj) {
                         cnt++;
                         if (HOP(obj,prop)) {
@@ -136,9 +151,9 @@ J$.analysis = {};
                             }
                         }
                     }
+                    //console.log('end');
                     //console.log('prop cnt: ' + cnt);
                     //console.log('obj_layout: ' + obj_layout);
-                    //console.log('obj constructor: ' + obj.constructor.name);
                 }
 
                 sig = {'obj_layout': obj_layout, 'pto': 'empty', 'con': 'empty'};
@@ -184,7 +199,7 @@ J$.analysis = {};
             return false;
         }
 
-        var warning_limit = 10;
+        var warning_limit = 30;
 
         this.setWarningLimit = function(newlimit){
             warning_limit = newlimit;
@@ -461,7 +476,12 @@ J$.analysis = {};
         var instCnt = 0;
 
         this.putFieldPre = function (iid, base, offset, val) {
-            sys.print('\rinstructions scanned: ' + (++instCnt) + '       ');
+            instCnt++;
+            if(((instCnt)%50000) === 0){
+                //process.stdout.write(instCnt + '\r');
+                console.log('put field operations processed: ' + instCnt);
+            }
+            
             if (base !== null && base !== undefined) {
                 if(isArr(base) && isNormalNumber(offset)) {
                     checkIfArrayIsNumeric(base, val, iid);
