@@ -61,7 +61,7 @@ var target_file = path.resolve(process.cwd() + '/' + process.argv[3]);
 var clientAnalysis = path.resolve(process.cwd() + '/' + process.argv[4])
 var inst_file = target_file.substring(0, target_file.lastIndexOf('.js')) + '_jalangi_.js';
 
-/*
+
 // instrument the target code
 inst_start_time = new Date();
 var inst_comm = 'node src/js/instrument/esnstrument.js ' + target_file;
@@ -80,10 +80,6 @@ child = exec(inst_comm, {cwd: jalangi_home_dir}, function (error, stdout, stderr
   	run_inst_with_analysis();
   }
 });
-*/
-
-run_start_time = new Date();
-  	run_inst_with_analysis();
 
 function run_inst_with_analysis(){
 	var analysis = require(jalangi_home_dir + '/src/js/analysis');
