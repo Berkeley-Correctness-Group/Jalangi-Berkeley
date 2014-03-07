@@ -87,6 +87,7 @@ function run_inst_with_analysis(){
 	require(jalangi_home_dir + '/src/js/InputManager');
 	require(jalangi_home_dir + '/src/js/instrument/esnstrument');
 	require(jalangi_home_dir + '/inputs.js');
+	require(jalangi_home_dir + '/jalangi_sourcemap.js');
 	var script = inst_file;
 	require(path.resolve(script));
 	J$.endExecution();
