@@ -121,11 +121,16 @@ J$.analysis = {};
         }
 
         function isArr(obj){
-            return Array.isArray(obj) || (obj && obj.constructor && 
-                (obj.constructor.name === 'Uint8Array' || obj.constructor.name === 'Uint16Array' || 
+            return Array.isArray(obj) || (obj && obj.constructor && (obj instanceof Uint8Array || obj instanceof Uint16Array || 
+                    obj instanceof Uint32Array || obj instanceof Uint8ClampedArray || 
+                    obj instanceof ArrayBuffer || obj instanceof Int8Array || obj instanceof Int16Array ||
+                    obj instanceof Int32Array || obj instanceof Float32Array || obj instanceof Float64Array));
+
+                /*(obj.constructor.name === 'Uint8Array' || obj.constructor.name === 'Uint16Array' || 
                     obj.constructor.name === 'Uint32Array' || obj.constructor.name === 'Uint8ClampedArray' || 
                     obj.constructor.name === 'ArrayBuffer' || obj.constructor.name === 'Int8Array' || obj.constructor.name === 'Int16Array' ||
-                    obj.constructor.name === 'Int32Array' || obj.constructor.name === 'Int8ClampedArray' || obj.constructor.name === 'Float32Array' || obj.constructor.name === 'Float64Array')); 
+                    obj.constructor.name === 'Int32Array' || obj.constructor.name === 'Int8ClampedArray' || obj.constructor.name === 'Float32Array' || obj.constructor.name === 'Float64Array'));
+                */
         }
 
         var total_signature_generation_cnt = 0;
@@ -532,3 +537,15 @@ J$.analysis = {};
     }
 
 })(typeof J$ === 'undefined'? (J$={}):J$));
+
+//@todo: check polymorphism for each iid location
+//@todo: make the checker efficient (append property on signature during put field)
+//@todo: finish experiments on octane benchmark
+//@todo: do experiment on JSBench
+//@todo: record number of different objects (for each distinct hidden class for each polymorphic code)
+//@todo: for each signature property, remeber where the property was appended(iid)
+//@todo: delete a.b  (transform into) -->> a = J$.De(‘a’, a, ‘b’, b)
+
+//done:
+//@todo: currently run_test.js does not support iid to location transition (done)
+
