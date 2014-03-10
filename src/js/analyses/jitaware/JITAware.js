@@ -19,9 +19,7 @@
 J$.analysis = {};
 
 ((function (sandbox){
-    var sys = require('util');
     function JITAware() {
-
         var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
         var smemory = sandbox.Globals.smemory;
         var iidToLocation = Constants.load("iidToLocation");
@@ -34,7 +32,12 @@ J$.analysis = {};
         var ISNAN = isNaN;
         var PARSEINT = parseInt;
         var HOP = Constants.HOP;
-        var cache_sig = false;
+        var cache_sig = true;
+
+        var obj_id = 1;
+        function getNextObjId() {
+            return obj_id++;
+        }
 
         this.getAnalysisDB = function() {
             return analysisDB;
@@ -96,10 +99,13 @@ J$.analysis = {};
                 return generateObjSig(obj);
             }
 
+            // if signature exists return it
             var shadow_obj = smemory.getShadowObject(obj);
             if(shadow_obj && shadow_obj.sig){
                 return shadow_obj.sig
             }
+
+            // generate and record signature
             var sig = generateObjSig(obj);
 
             if(shadow_obj){
@@ -164,6 +170,10 @@ J$.analysis = {};
                 sig = {'obj_layout': obj_layout, 'pto': 'empty', 'con': 'empty'};
                 sig.pto = obj.__proto__;
                 sig.con = obj.constructor;
+
+                // record object inforamtion that corresponds to each signature (hidden class)
+                var shadow_obj = smemory.getShadowObject(obj);
+                sig.sterm_obj = obj;
             } catch(e) {
                 sig = 'exception when generating signature';
             }
@@ -181,7 +191,10 @@ J$.analysis = {};
         function objSigToString (sig) {
             var str = '';
             try {
-                str = JSON.stringify(sig);
+                var sterm_obj = sig.sterm_obj;
+                sig.sterm_obj = 'hide';
+                str += JSON.stringify(sig);
+                sig.sterm_obj = sterm_obj;
                 if(sig.con && sig.con.name){
                     str = str + " | constructor: " + sig.con.name;
                 }
@@ -190,6 +203,7 @@ J$.analysis = {};
                     str = str + " | proto constructor: " + sig.pto.constructor.name;
                 }
             }catch(e) {
+                console.log(e);
                 str = sig.obj_layout + ' | constructor or prototype cannot be stringified';
             }
             return str;
@@ -209,6 +223,8 @@ J$.analysis = {};
         this.setWarningLimit = function(newlimit){
             warning_limit = newlimit;
         }
+
+        var regex_match = /id:[ ]([^ ]*)[ ]iid:[ ]([^ \)]*)/;
 
         this.printResult = function() {
             try{
@@ -271,7 +287,7 @@ J$.analysis = {};
                     // sort in descending order
                     return weightB - weightA;
                 });
-
+                try{
                 for(var i=0;i<jitArr.length && i<warning_limit ;i++) {
                     var query_sig = jitArr[i].sigList;
                     if(query_sig && query_sig.length > 1){
@@ -279,8 +295,43 @@ J$.analysis = {};
                         console.log('[location: ' + iidToLocation(jitArr[i].iid) + '] <- No. layouts: ' + query_sig.length);
                         for(var j=0;j<query_sig.length;j++) {
                             console.log('count: ' + query_sig[j].count + ' -> layout:' + objSigToString(query_sig[j].sig));
+                            var num_obj = 0;
+                            var num_create_location = 0;
+                            var set = {};
+                            var locations = {};
+                            instance_loop:
+                            for(var objId in query_sig[j].instances){
+                                if(HOP(query_sig[j].instances, objId)){
+                                    //console.log('\tobjId: ' + objId + '\t|\tcount: ' + query_sig[j].instances[objId]);
+                                    if(objId.indexOf('unknown')>=0){
+                                        continue instance_loop;
+                                    }
+                                    var result = regex_match.exec(objId);
+                                    var id = result[1];
+                                    var iid = result[2];
+                                    if(!set[id]){
+                                        set[id] = 1;
+                                        num_obj++;
+                                    }
+                                    if(locations[iid]){
+                                        locations[iid] += query_sig[j].instances[objId];
+                                    } else {
+                                        locations[iid] = query_sig[j].instances[objId];
+                                    }
+                                }
+                            }
+                            console.log('\tTotal distinct obj: ' + num_obj); //+ '\r\n\t' + 'Obj create locations & counts: ' + JSON.stringify(locations);
+                            for(var iid in locations){
+                                if(HOP(locations, iid)){
+                                    console.log('\toccurrance: ' + locations[iid] + '\t location: ' + iidToLocation(iid));
+                                }
+                            }
                         }
                     }
+                }
+                }catch(e){
+                    console.log(e);
+                    console.log(e.stack);
                 }
                 console.log('...');
                 console.log('Number of polymorphic statements spotted: ' + num);
@@ -384,18 +435,48 @@ J$.analysis = {};
                 return;
             }
             var sig = getObjSig(base);
+            var sterm_objId;
+            if(sig.sterm_obj){
+                var shadow_obj = smemory.getShadowObject(sig.sterm_obj);
+                if(shadow_obj){
+                    sterm_objId = shadow_obj.objId;
+                }
+            }
+            if(!sterm_objId){
+                sterm_objId = 'unknown(external)';
+            }
             var query_sig = getByIndexArr(['JIT-checker', 'polystmt', iid]);
             if(typeof query_sig === 'undefined') {
-                setByIndexArr(['JIT-checker', 'polystmt', iid], [{'count': 1, 'sig': sig}]);
+                // add object instance information associated with the hidden class to the database
+                var info_to_store = [{'count': 1, 'sig': sig}];
+                info_to_store[0].instances = {};
+                info_to_store[0].instances[sterm_objId] = 1;
+                setByIndexArr(['JIT-checker', 'polystmt', iid], info_to_store);
             } else {
                 outter: {
                     for(var i=0;i<query_sig.length;i++){
                         if(isEqualObjSig(query_sig[i].sig, sig)) {
                             query_sig[i].count++;
+
+                            // record object instance information associated with each signature (hidden class)
+                            if(query_sig[i].instances){
+                                if(query_sig[i].instances[sterm_objId]){
+                                    query_sig[i].instances[sterm_objId]++;
+                                } else {
+                                    query_sig[i].instances[sterm_objId] = 1;
+                                }
+                            } else {
+                                query_sig[i].instances = {};
+                                query_sig[i].instances[sterm_objId] = 1;
+                            }
+
                             break outter;
                         }
                     }
-                    query_sig.push({'count': 1, 'sig': sig});
+
+                    var info_to_store = {'count': 1, 'sig': sig, instances: {}};
+                    info_to_store.instances[sterm_objId] = 1;
+                    query_sig.push(info_to_store);
                 }
             }
         }
@@ -447,8 +528,8 @@ J$.analysis = {};
             var stack = [{}];
 
             return {
-                push: function(f, isConstructor) {
-                    stack.push({"fun": f, "isCon": isConstructor});
+                push: function(f, isConstructor, iid) {
+                    stack.push({"fun": f, "isCon": isConstructor, 'iid': iid});
                 },
                 pop: function() {
                     return stack.pop();
@@ -456,6 +537,9 @@ J$.analysis = {};
                 isConstructor: function(dis) {
                     var elem = stack[stack.length-1];
                     return elem.isCon && dis instanceof elem.fun;
+                },
+                peek: function(){
+                    return stack[stack.length-1];
                 }
             }
 
@@ -467,6 +551,27 @@ J$.analysis = {};
                     addCountByIndexArr(['JIT-checker', 'init-obj-nonconstr', iid]);
                 }
             }
+        }
+
+        function checkUpdateObjIdSync(obj){
+            if(obj){
+                var shadow_obj = smemory.getShadowObject(obj);
+                if(shadow_obj){
+                    if (consStack.isConstructor(obj)) { // update the objId
+                        // obj id to the object instance to be created
+                        if(!shadow_obj.objId) {
+                            shadow_obj.objId = '(id: ' + getNextObjId() + ' iid: ' + consStack.peek().iid + ')';
+                        }
+                    }
+                    if(shadow_obj.objId && shadow_obj.sig && (shadow_obj.sig.sterm_objId === 'unknown(external)' || !shadow_obj.sig.sterm_objid)){
+                        shadow_obj.sig.sterm_objId = shadow_obj.objId;
+                    }
+                }
+            }
+        }
+
+        this.getFieldPre = function (iid, base, offset){
+            checkUpdateObjIdSync(base);
         }
 
         this.getField = function(iid, base, offset, val) {
@@ -486,6 +591,8 @@ J$.analysis = {};
                 //process.stdout.write(instCnt + '\r');
                 console.log('put field operations processed: ' + instCnt);
             }
+
+            checkUpdateObjIdSync(base);
             
             if (base !== null && base !== undefined) {
                 if(isArr(base) && isNormalNumber(offset)) {
@@ -504,12 +611,22 @@ J$.analysis = {};
             return val;
         }
 
+        this.literalPre = function (iid, val) {
+            if(!val) return ;
+            
+            var shadow_obj = smemory.getShadowObject(val);
+            if(shadow_obj && !shadow_obj.objId) {
+                shadow_obj.objId = '(id: ' + getNextObjId() + ' iid: ' + iid+ ')';
+            }
+        }
+
         this.invokeFunPre = function(iid, f, base, args, isConstructor) {
-            consStack.push(f, isConstructor);
+            consStack.push(f, isConstructor, iid);
         }
 
         this.invokeFun = function (iid, f, base, args, val, isConstructor) {
-            if(isConstructor){ // check the return value of the constructor
+            checkUpdateObjIdSync(val);
+            if(isConstructor){ // check the return value of the constructor 
                 checkIfObjectIsPolymorphic(val, iid);
             }
             consStack.pop();
@@ -517,15 +634,13 @@ J$.analysis = {};
         }
 
         this.endExecution = function() {
-            sys.print('\r\n');
+            console.log('\n\n');
             this.printResult();
         }
     }
 
     if (sandbox.Constants.isBrowser) {
-
         sandbox.analysis = new JITAware();
-
         window.addEventListener('keydown', function (e) {
             // keyboard shortcut is Alt-Shift-T for now
             if (e.altKey && e.shiftKey && e.keyCode === 84) {
