@@ -127,16 +127,16 @@ J$.analysis = {};
         }
 
         function isArr(obj){
-            return Array.isArray(obj) || (obj && obj.constructor && (obj instanceof Uint8Array || obj instanceof Uint16Array || 
-                    obj instanceof Uint32Array || obj instanceof Uint8ClampedArray || 
-                    obj instanceof ArrayBuffer || obj instanceof Int8Array || obj instanceof Int16Array ||
-                    obj instanceof Int32Array || obj instanceof Float32Array || obj instanceof Float64Array));
+            return Array.isArray(obj) || (obj && obj.constructor && (obj instanceof Uint8Array || obj instanceof Uint16Array ||
+                obj instanceof Uint32Array || obj instanceof Uint8ClampedArray ||
+                obj instanceof ArrayBuffer || obj instanceof Int8Array || obj instanceof Int16Array ||
+                obj instanceof Int32Array || obj instanceof Float32Array || obj instanceof Float64Array));
 
-                /*(obj.constructor.name === 'Uint8Array' || obj.constructor.name === 'Uint16Array' || 
-                    obj.constructor.name === 'Uint32Array' || obj.constructor.name === 'Uint8ClampedArray' || 
-                    obj.constructor.name === 'ArrayBuffer' || obj.constructor.name === 'Int8Array' || obj.constructor.name === 'Int16Array' ||
-                    obj.constructor.name === 'Int32Array' || obj.constructor.name === 'Int8ClampedArray' || obj.constructor.name === 'Float32Array' || obj.constructor.name === 'Float64Array'));
-                */
+            /*(obj.constructor.name === 'Uint8Array' || obj.constructor.name === 'Uint16Array' || 
+             obj.constructor.name === 'Uint32Array' || obj.constructor.name === 'Uint8ClampedArray' || 
+             obj.constructor.name === 'ArrayBuffer' || obj.constructor.name === 'Int8Array' || obj.constructor.name === 'Int16Array' ||
+             obj.constructor.name === 'Int32Array' || obj.constructor.name === 'Int8ClampedArray' || obj.constructor.name === 'Float32Array' || obj.constructor.name === 'Float64Array'));
+             */
         }
 
         var total_signature_generation_cnt = 0;
@@ -152,7 +152,7 @@ J$.analysis = {};
                     obj_layout += 'no_sig_for_array|';
                 } else if((typeof obj ==='object' || typeof obj ==='function') && obj !== null){
                     //console.log('begin');
-                    
+
                     //console.log('obj constructor: ' + obj.constructor.name);
                     for (var prop in obj) {
                         cnt++;
@@ -226,73 +226,78 @@ J$.analysis = {};
 
         var regex_match = /id:[ ]([^ ]*)[ ]iid:[ ]([^ \)]*)/;
 
-        this.printResult = function() {
-            try{
-                var num = 0;
-                console.log("----------------------------");
-                console.log('Report of polymorphic statements:');
 
-                // first sort the results
-                var jitArr = [];
-                var jitResult = getByIndexArr(['JIT-checker', 'polystmt']);
-                for (var prop in jitResult) {
-                    if (HOP(jitResult, prop)) {
-                        var query_sig = jitResult[prop];
-                        if(query_sig && query_sig.length > 1){
-                            jitArr.push({'sigList': query_sig, 'iid': PARSEINT(prop)});
-                            num++;
-                        }
+
+        function printPolymorphicInfo(subindexName){
+            var num = 0;
+            // first sort the results
+            var jitArr = [];
+            var jitResult = null;
+            if(subindexName) {
+                jitResult = getByIndexArr(['JIT-checker', 'polystmt', subindexName]);
+                //console.log(JSON.stringify(jitResult));
+            } else {
+                jitResult = getByIndexArr(['JIT-checker', 'polystmt']);
+            }
+            for (var prop in jitResult) {
+                if (HOP(jitResult, prop)) {
+                    var query_sig = jitResult[prop];
+                    if(query_sig && query_sig.length > 1){
+                        jitArr.push({'sigList': query_sig, 'iid': PARSEINT(prop)});
+                        num++;
+                    }
+                }
+            }
+
+            // extract the second most frequently used signature count
+            jitArr.sort(function compare(a, b) {
+                var mostFreq = 0;
+                var secMostFreq = 0;
+                var curCnt = 0;
+                for(var i=0;i<a.sigList.length;i++){
+                    curCnt = a.sigList[i].count;
+                    if(mostFreq < curCnt) {
+                        secMostFreq = mostFreq;
+                        mostFreq = curCnt;
+                    } else if (secMostFreq < curCnt) {
+                        secMostFreq = curCnt;
                     }
                 }
 
-                // extract the second most frequently used signature count
-                jitArr.sort(function compare(a, b) {
-                    var mostFreq = 0;
-                    var secMostFreq = 0;
-                    var curCnt = 0;
-                    for(var i=0;i<a.sigList.length;i++){
-                        curCnt = a.sigList[i].count;
-                        if(mostFreq < curCnt) {
-                            secMostFreq = mostFreq;
-                            mostFreq = curCnt;
-                        } else if (secMostFreq < curCnt) {
-                            secMostFreq = curCnt;
-                        }
+                while(mostFreq >= 1){
+                    mostFreq /= 10.0;
+                }
+
+                var weightA = a.sigList.classChangeCnt + secMostFreq + mostFreq;
+
+                mostFreq = 0;
+                secMostFreq = 0;
+                for(var i=0;i<b.sigList.length;i++){
+                    curCnt = b.sigList[i].count;
+                    if(mostFreq < curCnt) {
+                        secMostFreq = mostFreq;
+                        mostFreq = curCnt;
+                    } else if (secMostFreq < curCnt) {
+                        secMostFreq = curCnt;
                     }
+                }
 
-                    while(mostFreq >= 1){
-                        mostFreq /= 10.0;
-                    }
+                while(mostFreq >= 1){
+                    mostFreq /= 10.0;
+                }
 
-                    var weightA = secMostFreq + mostFreq;
+                var weightB = b.sigList.classChangeCnt + secMostFreq + mostFreq;
 
-                    mostFreq = 0;
-                    secMostFreq = 0;
-                    for(var i=0;i<b.sigList.length;i++){
-                        curCnt = b.sigList[i].count;
-                        if(mostFreq < curCnt) {
-                            secMostFreq = mostFreq;
-                            mostFreq = curCnt;
-                        } else if (secMostFreq < curCnt) {
-                            secMostFreq = curCnt;
-                        }
-                    }
-
-                    while(mostFreq >= 1){
-                        mostFreq /= 10.0;
-                    }
-
-                    var weightB = secMostFreq + mostFreq;
-
-                    // sort in descending order
-                    return weightB - weightA;
-                });
-                try{
+                // sort in descending order
+                return weightB - weightA;
+            });
+            try{
                 for(var i=0;i<jitArr.length && i<warning_limit ;i++) {
                     var query_sig = jitArr[i].sigList;
                     if(query_sig && query_sig.length > 1){
                         console.log('------');
                         console.log('[location: ' + iidToLocation(jitArr[i].iid) + '] <- No. layouts: ' + query_sig.length);
+                        console.log('\thidden class switching rate: ' + query_sig.classChangeCnt/query_sig.totalCnt + '(' + query_sig.classChangeCnt + '/' + query_sig.totalCnt + ')');
                         for(var j=0;j<query_sig.length;j++) {
                             console.log('count: ' + query_sig[j].count + ' -> layout:' + objSigToString(query_sig[j].sig));
                             var num_obj = 0;
@@ -300,26 +305,26 @@ J$.analysis = {};
                             var set = {};
                             var locations = {};
                             instance_loop:
-                            for(var objId in query_sig[j].instances){
-                                if(HOP(query_sig[j].instances, objId)){
-                                    //console.log('\tobjId: ' + objId + '\t|\tcount: ' + query_sig[j].instances[objId]);
-                                    if(objId.indexOf('unknown')>=0){
-                                        continue instance_loop;
-                                    }
-                                    var result = regex_match.exec(objId);
-                                    var id = result[1];
-                                    var iid = result[2];
-                                    if(!set[id]){
-                                        set[id] = 1;
-                                        num_obj++;
-                                    }
-                                    if(locations[iid]){
-                                        locations[iid] += query_sig[j].instances[objId];
-                                    } else {
-                                        locations[iid] = query_sig[j].instances[objId];
+                                for(var objId in query_sig[j].instances){
+                                    if(HOP(query_sig[j].instances, objId)){
+                                        //console.log('\tobjId: ' + objId + '\t|\tcount: ' + query_sig[j].instances[objId]);
+                                        if(objId.indexOf('unknown')>=0){
+                                            continue instance_loop;
+                                        }
+                                        var result = regex_match.exec(objId);
+                                        var id = result[1];
+                                        var iid = result[2];
+                                        if(!set[id]){
+                                            set[id] = 1;
+                                            num_obj++;
+                                        }
+                                        if(locations[iid]){
+                                            locations[iid] += query_sig[j].instances[objId];
+                                        } else {
+                                            locations[iid] = query_sig[j].instances[objId];
+                                        }
                                     }
                                 }
-                            }
                             console.log('\tTotal distinct obj: ' + num_obj); //+ '\r\n\t' + 'Obj create locations & counts: ' + JSON.stringify(locations);
                             for(var iid in locations){
                                 if(HOP(locations, iid)){
@@ -329,17 +334,31 @@ J$.analysis = {};
                         }
                     }
                 }
-                }catch(e){
-                    console.log(e);
-                    console.log(e.stack);
-                }
-                console.log('...');
-                console.log('Number of polymorphic statements spotted: ' + num);
+            }catch(e){
+                console.log(e);
+                console.log(e.stack);
+            }
+
+            console.log('...');
+            console.log('Number of polymorphic statements spotted: ' + num);
+
+        }
+
+        this.printResult = function() {
+            try{
+
+                console.log("----------------------------");
+                console.log('Report of polymorphic statements:');
+                printPolymorphicInfo();
+                console.log("---------------------------");
+
+                console.log('Report of polymorphic constructors:');
+                printPolymorphicInfo('constructor');
                 console.log("---------------------------");
 
                 console.log('Report of loading undeclared or deleted array elements:')
                 var uninitArrDB = getByIndexArr(['JIT-checker', 'uninit-array-elem']);
-                num = 0;
+                var num = 0;
                 var jitUninitArr = [];
                 for(var prop in uninitArrDB) {
                     if (HOP(uninitArrDB, prop)) {
@@ -430,7 +449,7 @@ J$.analysis = {};
 
 
 
-        function checkIfObjectIsPolymorphic(base, iid){
+        function checkIfObjectIsPolymorphic(base, iid, subindexName){
             if (isArr(base)) {
                 return;
             }
@@ -445,13 +464,25 @@ J$.analysis = {};
             if(!sterm_objId){
                 sterm_objId = 'unknown(external)';
             }
-            var query_sig = getByIndexArr(['JIT-checker', 'polystmt', iid]);
+            var query_sig = null;
+            if(subindexName) {
+                query_sig = getByIndexArr(['JIT-checker', 'polystmt', subindexName, iid]);
+            } else {
+                query_sig = getByIndexArr(['JIT-checker', 'polystmt', iid]);
+            }
             if(typeof query_sig === 'undefined') {
                 // add object instance information associated with the hidden class to the database
                 var info_to_store = [{'count': 1, 'sig': sig}];
                 info_to_store[0].instances = {};
                 info_to_store[0].instances[sterm_objId] = 1;
-                setByIndexArr(['JIT-checker', 'polystmt', iid], info_to_store);
+                info_to_store.lastHiddenClass = sig;
+                info_to_store.classChangeCnt = 0;
+                info_to_store.totalCnt = 1;
+                if(subindexName) {
+                    setByIndexArr(['JIT-checker', 'polystmt', subindexName, iid], info_to_store);
+                } else {
+                    setByIndexArr(['JIT-checker', 'polystmt', iid], info_to_store);
+                }
             } else {
                 outter: {
                     for(var i=0;i<query_sig.length;i++){
@@ -477,7 +508,14 @@ J$.analysis = {};
                     var info_to_store = {'count': 1, 'sig': sig, instances: {}};
                     info_to_store.instances[sterm_objId] = 1;
                     query_sig.push(info_to_store);
+
+
                 }
+                if(!isEqualObjSig(query_sig.lastHiddenClass, sig)) {
+                    query_sig.classChangeCnt++;
+                }
+                query_sig.totalCnt++;
+                query_sig.lastHiddenClass = sig;
             }
         }
 
@@ -593,7 +631,7 @@ J$.analysis = {};
             }
 
             checkUpdateObjIdSync(base);
-            
+
             if (base !== null && base !== undefined) {
                 if(isArr(base) && isNormalNumber(offset)) {
                     checkIfArrayIsNumeric(base, val, iid);
@@ -613,21 +651,30 @@ J$.analysis = {};
 
         this.literalPre = function (iid, val) {
             if(!val) return ;
-            
+
             var shadow_obj = smemory.getShadowObject(val);
             if(shadow_obj && !shadow_obj.objId) {
                 shadow_obj.objId = '(id: ' + getNextObjId() + ' iid: ' + iid+ ')';
             }
         }
 
-        this.invokeFunPre = function(iid, f, base, args, isConstructor) {
+        this.invokeFunPre = function (iid, f, base, args, isConstructor) {
             consStack.push(f, isConstructor, iid);
+        }
+
+        var currentFunctionIID;
+        var currentFunctionObtainedFromFe;
+        this.functionEnter = function (iid, val, dis) {
+            currentFunctionIID = iid;
+            currentFunctionObtainedFromFe = val;
         }
 
         this.invokeFun = function (iid, f, base, args, val, isConstructor) {
             checkUpdateObjIdSync(val);
             if(isConstructor){ // check the return value of the constructor 
-                checkIfObjectIsPolymorphic(val, iid);
+                if(currentFunctionObtainedFromFe === f){  // if we can get the function enter event ==> we have instrumented its source code
+                    checkIfObjectIsPolymorphic(val, currentFunctionIID, 'constructor');
+                }
             }
             consStack.pop();
             return val;
@@ -657,10 +704,12 @@ J$.analysis = {};
 //@todo: make the checker efficient (append property on signature during put field)
 //@todo: finish experiments on octane benchmark
 //@todo: do experiment on JSBench
-//@todo: record number of different objects (for each distinct hidden class for each polymorphic code)
 //@todo: for each signature property, remeber where the property was appended(iid)
 //@todo: delete a.b  (transform into) -->> a = J$.De(‘a’, a, ‘b’, b)
+//@todo: checking duplicating huge hidden class
 
 //done:
 //@todo: currently run_test.js does not support iid to location transition (done)
-
+//@todo: record number of different objects (for each distinct hidden class for each polymorphic code) (done)
+//@todo: add a criterion that measures the hidden class switching rate (done)
+//@todo: checking polymorphic constructor and report separately (done)

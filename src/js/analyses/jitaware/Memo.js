@@ -184,9 +184,9 @@ J$.analysis = {};
 					var info = fundb[prop];
 					if(info.isMem === true) {
 						var avgInst = info.totalInst/info.cnt;
-						if(avgInst < 200) continue;
+						//if(avgInst < 200) continue;
 						var redrate = info.redOpCnt/info.cnt;
-						if(redrate < 0.2) continue;
+						//if(redrate < 0.2) continue;
 						console.log(info.fun.name + ', instructions on average to complete: ' + avgInst);
 						console.log('\t' + 'redundant Rate: ' + redrate + '(' + info.redOpCnt + '/' + info.cnt +')');
 						console.log('\t' + 'location: ' + iidToLocation(info.location));

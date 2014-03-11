@@ -166,4 +166,20 @@ con_obj2.field5 = 123;
 console.log('set object member in non constructor function call');
 var con_obj3 = Constructor1();
 
+// test case 6 checking the polymorphic constructor
+console.log('------------------ test case 6 ------------------');
+function Node(flag){
+    if(flag){
+        this.left = 1;
+        this.right = 2;
+    } else {
+        this.right = 1;
+        this.left = 2;
+    }
+}
+
+console.log('constructor creating polymorphic objects');
+var node1 = new Node(true);
+var node2 = new Node(false);
+
 // print result
