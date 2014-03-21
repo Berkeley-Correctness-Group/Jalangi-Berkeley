@@ -1,28 +1,14 @@
-
-Jalangi Berkeley
+Jalangi
 =======
 ### Introduction
 
-Jalangi is a framework for writing heavy-weight dynamic analyses for JavaScript.  Jalangi incorporates two key techniques:
-1) selective record-replay, a technique which enables to record and to faithfully replay a user-selected part of the program, and
-2) shadow values and shadow execution, which enables easy implementation of heavy-weight dynamic analyses.  In the distribution
-you will find several analyses:
+This repository is set up for doing researching on top of Jalangi, which is a dynamic analysis framework for JavaScript.
 
-  * concolic testing,
-  * an analysis to track origins of nulls and undefined,
-  * an analysis to infer likely types of objects fields and functions,
-  * an analysis to profile object allocation and usage,
-  * a simple form of taint analysis,
-  * an experimental pure symbolic execution engine (currently undocumented)
+More more details please visit jalangi master branch:
+https://github.com/SRA-SiliconValley/jalangi
 
-An evaluation of Jalangi on the SunSpider benchmark suite and on five web applications shows that
-Jalangi has an average slowdown of 26X during recording and 30X slowdown during replay and analysis. The slowdowns are comparable with slowdowns reported for similar
-tools, such as PIN and Valgrind for x86 binaries.
-
-A demo of Jalangi integrated with the Tizen IDE is available at http://srl.cs.berkeley.edu/~ksen/jalangi.html.  Note that the IDE plugin is not open-source.
-Slides are available at http://srl.cs.berkeley.edu/~ksen/slides/jalangi-jstools13.pdf and
-our paper on Jalangi is available at http://srl.cs.berkeley.edu/~ksen/papers/jalangi.pdf.
-
+Or visit the project website:
+https://www.eecs.berkeley.edu/~gongliang13/jalangi_ff/
 
 ### Requirements
 
@@ -61,7 +47,9 @@ If you have a fresh installation of Ubuntu, you can install all the requirements
 
 In the root dir of the repository:
 
-	node src/js/commands/install.js
+  node src/js/commands/install.js
+
+if your current working dir is <parent-dir>/<cur-dir> then it will check and create a directory <parent-dir>/jalangi_home where the master branch of Jalangi will be cloned and installed.
 
 If Installation succeeds, you should see the following message:
 
@@ -70,14 +58,15 @@ If Installation succeeds, you should see the following message:
 
 to run test, type:
 
-  cd jalangi_home
+  cd ../jalangi_home
   npm test
 
 ### Run Experiment
 
+In the Jalangi-Berkeley directory:
 Command Usage:
 
-	node src/js/commands/run_test.js <jalangi home directory ><program to be instrumented> <analysis code>
+  node src/js/commands/transform_analyze.js <jalangi home directory> <program to be instrumented> <analysis code>
 
 All files paths should be relative path to the root directory of this repository
 
@@ -85,12 +74,13 @@ Examples:
 To run the object allocation experiment experiment:  
 In the root dir of the repository:
 
-	node src/js/commands/run_test.js jalangi_home jalangi_home/tests/octane/pdfjs.js jalangi_home/src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB
+  node src/js/commands/transform_analyze.js ../jalangi_home ../jalangi_home/tests/octane/pdfjs.js ../jalangi_home/src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB
 
 To run the jit-compiler inefficient code pattern experiment:  
 In the root dir of the repository:
 
-	node src/js/commands/run_test.js jalangi_home jalangi_home/tests/octane/pdfjs.js src/js/analyses/jitaware/JITAware.js
+  node src/js/commands/transform_analyze.js ../jalangi_home ../jalangi_home/tests/octane/pdfjs.js src/js/analyses/jitaware/JITAware.js
 
 
 Project for doing research on top of Jalangi project.
+
