@@ -37,10 +37,19 @@
 var exec = require('child_process').exec;
 var child;
 var cur_dir = process.cwd();
-var jalangi_home_dir = process.cwd() + '/' + 'jalangi_home';
+var path = require('path');
+var jalangi_home_dir = path.resolve(process.cwd() + '/../' + 'jalangi_home');
 var sys = require('sys');
+var fs = require('fs');
 
-var mkdir_comm = 'mkdir jalangi_home';
+
+// check if the parent directory has a sub-directory called jalangi_home
+if (fs.existsSync('../jalangi_home')) {
+    console.log('directory jalangi_home already exists in the parent directory, install abort.');
+    return ;
+}
+
+var mkdir_comm = 'mkdir ../jalangi_home';
 
 exec(mkdir_comm, function (error, stdout, stderr) {
   if (error !== null) {
@@ -80,7 +89,7 @@ function install_jalangi(){
 	var install_comm = 'python ./scripts/install.py'
 	child = exec(install_comm, {cwd: jalangi_home_dir}, function (error, stdout, stderr) {
 	  if (error !== null) {
-	    console.log('download error: ' + error);
+	    console.log('install error: ' + error);
 	  } else {
 	  	console.log('install complete.')
 	  }
