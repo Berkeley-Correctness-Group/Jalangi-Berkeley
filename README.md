@@ -98,10 +98,8 @@ http://chromedriver.storage.googleapis.com/2.9/chromedriver_mac32.zip
 ```
 
 Before running the experiment on Mac OS:
-1. close your firefox and chrome instances
-
-2. configure your firefox so that it will dump output to the native console:
-
+  * close your firefox and chrome instances
+  * configure your firefox so that it will dump output to the native console:
     in the browser url input box type: ```about:config```
     search for: ```brwoser.dom.window.dump.enabled```, set it to true
 
