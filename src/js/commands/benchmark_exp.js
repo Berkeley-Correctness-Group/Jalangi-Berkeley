@@ -41,20 +41,15 @@ var sunspider2_homepage = "localhost:8080/sunspider2/driver.html";
 var octane_homepage = "localhost:8080/octane/octane.html";
 var octane2_homepage = "localhost:8080/octane/octane_modified.html";
 
-var start_firefox_sunspider = "/Applications/Firefox.app/Contents/MacOS/firefox -url " + sunspider_homepage + " -console > ./exp_output/console.txt";
-var start_firefox_octane = "/Applications/Firefox.app/Contents/MacOS/firefox -url " + octane_homepage + " -console > ./exp_output/console.txt";
-var start_chrome_sunspider = "/Applications/Firefox.app/Contents/MacOS/firefox -url " + sunspider_homepage + " -console > ./exp_output/console.txt";
-var start_chrome_octane = "/Applications/Firefox.app/Contents/MacOS/firefox -url " + octane_homepage + " -console > ./exp_output/console.txt";
-
 var child_process = require('child_process');
 var webdriver = require('selenium-webdriver');
 var path = require('path');
 var fs = require('fs');
 var browser_process;
 
-var queue = ['octane-firefox', 'octane2-firefox', 'octane-chrome', 'octane2-chrome'];
-    //['sunspider-firefox', 'sunspider2-firefox', 'sunspider-chrome', 'sunspider2-chrome']
-    //'octane-firefox', 'octane2-firefox', 'octane-chrome', 'octane2-chrome'
+var queue = ['octane-firefox', 'octane2-firefox', 'octane-chrome', 'octane2-chrome',
+    'sunspider-firefox', 'sunspider2-firefox', 'sunspider-chrome', 'sunspider2-chrome'];
+
 var current_index = -1;
 var repeat_time = 50;
 var current_time = 0;
@@ -157,6 +152,7 @@ function start_experiment(){
 
 function terminate_firefox(){
     // either kill('SIGKILL') or kill('SIGINT') will brutally kill firefox which leads to a warning dialog prompted next time starting firefox
+    child_process.exec('osascript -e \'tell application "Crash Reporter" \n quit \n end tell\'');
     child_process.exec('osascript -e \'tell application "Firefox" \n quit \n end tell\'');
 }
 
