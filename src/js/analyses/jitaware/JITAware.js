@@ -21,7 +21,7 @@ J$.analysis = {};
 ((function (sandbox){
     function JITAware() {
         var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
-        var smemory = sandbox.Globals.smemory;
+        var smemory = sandbox.Globals.smemory || sandbox.smemory;
         var iidToLocation = Constants.load("iidToLocation");
 
         // simulate stack trace in normal execution
@@ -533,21 +533,40 @@ J$.analysis = {};
             // if the meta data does not exist, check the type of this array
             var shadow = smemory.getShadowObject(base);
             if(shadow && shadow.arrType === undefined) {
+                var all_undefined = true;
                 shadow.arrType = 'unknown';
                 inner:
                     for(var i=0;i<base.length;i++){
+                        if(typeof base[i] !== 'undefined'){
+                            all_undefined = false;
+                        }
                         if(typeof base[i] !== 'number' && typeof base[i] !== 'undefined') {
                             shadow.arrType = 'non-numeric';
+                            all_undefined = false;
                             break inner;
                         }
+                        //console.log(JSON.stringify(base));
                         shadow.arrType = 'numeric';
                     }
+                if(all_undefined){
+                    shadow.arrType = 'unknown';
+                }
             }
 
             // for now this code does not check switching from non-numeric array to numeric, as it might be expensive
             if(shadow && shadow.arrType === 'numeric') {
                 if(typeof val !== 'number' && typeof val !== 'undefined') {
                     addCountByIndexArr(['JIT-checker', 'arr-type-switch', iid]);
+                    shadow.arrType = 'non-numeric';
+                }
+            }
+
+            if(shadow && shadow.arrType === 'unknown') {
+                if(typeof val === 'number') {
+                    shadow.arrType = 'numeric';
+                } else if (typeof val === 'undefined') {
+                    // do nothing, type remain unknown
+                } else {
                     shadow.arrType = 'non-numeric';
                 }
             }
@@ -625,10 +644,19 @@ J$.analysis = {};
 
         this.putFieldPre = function (iid, base, offset, val) {
             instCnt++;
-            if(((instCnt)%50000) === 0){
+            if(((instCnt)%5000) === 0){
                 //process.stdout.write(instCnt + '\r');
                 console.log('put field operations processed: ' + instCnt);
             }
+
+            /*
+            if(instCnt > 100000)
+            if(base.constructor.name === 'Array'){
+                console.log(base.length);
+            } else {
+                console.log(base.constructor.name);
+            }
+            */
 
             checkUpdateObjIdSync(base);
 
