@@ -30,26 +30,26 @@
 // Author: Liang Gong
 
 // Command Line Usage:
-// node src/js/commands/run_test.js <program to be instrumented> <analysis code>
+// node src/js/commands/run_test.js <jalangi_home> <program to be instrumented> <analysis code>
 // Example:
-// node src/js/commands/run_test.js jalangi_home/tests/octane/pdfjs.js src/js/analyses/jitaware/JITAware.js
+// node src/js/commands/run_test.js ../jalangi ../jalangi/tests/octane/pdfjs.js src/js/analyses/jitaware/JITAware.js
 
 var exec = require('child_process').exec;
 var child;
 var cur_dir = process.cwd();
 var path = require('path');
-var jalangi_home_dir = path.resolve(process.cwd() + '/../' + 'jalangi_home');
+var jalangi_home_dir = path.resolve(process.cwd() + '/../' + 'jalangi');
 var sys = require('sys');
 var fs = require('fs');
 
 
-// check if the parent directory has a sub-directory called jalangi_home
-if (fs.existsSync('../jalangi_home')) {
-    console.log('directory jalangi_home already exists in the parent directory, install abort.');
+// check if the parent directory has a sub-directory called jalangi
+if (fs.existsSync('../jalangi')) {
+    console.log('directory jalangi already exists in the parent directory, install abort.');
     return ;
 }
 
-var mkdir_comm = 'mkdir ../jalangi_home';
+var mkdir_comm = 'mkdir ../jalangi';
 
 exec(mkdir_comm, function (error, stdout, stderr) {
   if (error !== null) {

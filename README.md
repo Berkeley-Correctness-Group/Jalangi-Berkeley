@@ -47,26 +47,26 @@ If you have a fresh installation of Ubuntu, you can install all the requirements
 
 In the root dir of the repository:
 ```
-  node src/js/commands/install.js
+node src/js/commands/install.js
 ```
-if your current working dir is ```[parent-dir] / [cur-dir]``` then it will check and create a directory ```[parent-dir] / [jalangi_home]``` where the master branch of Jalangi will be cloned and installed.
+if your current working dir is ```[parent-dir] / [cur-dir]``` then it will check and create a directory ```[parent-dir] / [jalangi]``` where the master branch of Jalangi will be cloned and installed.
 
 If Installation succeeds, you should see the following message:
 ```
-    ---> Installation successful.
-    ---> run 'npm test' to make sure all tests pass
+---> Installation successful.
+---> run 'npm test' to make sure all tests pass
 ```
 to run test, type:
 ```
-  cd ../jalangi_home
-  npm test
+cd ../jalangi
+npm test
 ```
 ### Run Experiment
 
 In the Jalangi-Berkeley directory:
 Command Usage:
 ```
-  node src/js/commands/transform_analyze.js <jalangi home directory> <program to be instrumented> <analysis code>
+node src/js/commands/transform_analyze.js <jalangi home directory> <program to be instrumented> <analysis code>
 ```
 All files paths should be relative path to the root directory of this repository
 
@@ -74,12 +74,12 @@ Examples:
 To run the object allocation experiment experiment:  
 In the root dir of the repository:
 ```
-  node src/js/commands/transform_analyze.js ../jalangi_home ../jalangi_home/tests/octane/pdfjs.js ../jalangi_home/src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB
+node src/js/commands/transform_analyze.js ../jalangi ../jalangi/tests/octane/pdfjs.js ../jalangi/src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB
 ```
 To run the jit-compiler inefficient code pattern experiment:  
 In the root dir of the repository:
 ```
-  node src/js/commands/transform_analyze.js ../jalangi_home ../jalangi_home/tests/octane/pdfjs.js src/js/analyses/jitaware/JITAware.js
+node src/js/commands/transform_analyze.js ../jalangi ../jalangi/tests/octane/pdfjs.js src/js/analyses/jitaware/JITAware.js
 ```
 
 Project for doing research on top of Jalangi project.
@@ -89,8 +89,8 @@ Project for doing research on top of Jalangi project.
 For now, this experiment only supports Firefox and Chrome on Mac OS.
 To automated the web testing, selenium is needed, to install selenium type the following command in the terminal:
 ```
-  npm install selenium-webdriver
-  npm install mocha selenium-webdriver
+npm install selenium-webdriver
+npm install mocha selenium-webdriver
 ```
 Also need to install chromedriver
 ```
