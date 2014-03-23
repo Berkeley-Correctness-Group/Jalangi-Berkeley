@@ -46,16 +46,16 @@ If you have a fresh installation of Ubuntu, you can install all the requirements
 ### Installation
 
 In the root dir of the repository:
-
+```
   node src/js/commands/install.js
-
-if your current working dir is <parent-dir>/<cur-dir> then it will check and create a directory <parent-dir>/jalangi_home where the master branch of Jalangi will be cloned and installed.
+```
+if your current working dir is ```[parent-dir] / [cur-dir]``` then it will check and create a directory ```[parent-dir] / [jalangi_home]``` where the master branch of Jalangi will be cloned and installed.
 
 If Installation succeeds, you should see the following message:
-
+```
     ---> Installation successful.
     ---> run 'npm test' to make sure all tests pass
-
+```
 to run test, type:
 ```
   cd ../jalangi_home
@@ -84,3 +84,32 @@ In the root dir of the repository:
 
 Project for doing research on top of Jalangi project.
 
+### Run Experiment
+
+For now, this experiment only supports Firefox and Chrome on Mac OS.
+To automated the web testing, selenium is needed, to install selenium type the following command in the terminal:
+```
+  npm install selenium-webdriver
+  npm install mocha selenium-webdriver
+```
+Also need to install chromedriver
+```
+http://chromedriver.storage.googleapis.com/2.9/chromedriver_mac32.zip
+```
+
+Before running the experiment:
+
+on mac os:
+1. close your firefox and chrome instances
+2. configure your firefox so that it will dump output to the native console:
+    in the browser url input box type:
+        ```about:config```
+    search for:
+        ```brwoser.dom.window.dump.enabled```, set it to true
+
+In the Jalangi-Berkeley directory type the following command:
+```
+node src/js/commands/benchmark_exp.js
+```
+
+finally after the experiment finished, open the file ```Jalangi-Berkeley/exp_output/result.csv``` using Excel.
