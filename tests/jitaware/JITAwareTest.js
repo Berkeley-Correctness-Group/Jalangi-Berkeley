@@ -182,4 +182,11 @@ console.log('constructor creating polymorphic objects');
 var node1 = new Node(true);
 var node2 = new Node(false);
 
+
+// test case 7 checking binary operation on undefined values
+console.log('------------------ test case 6 ------------------');
+var undefvalue;
+console.log('binary operation on undefined value');
+undefvalue |= 0;
+
 // print result

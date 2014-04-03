@@ -439,6 +439,25 @@ J$.analysis = {};
                 }
                 console.log('Number of statements init objects in non-constructor: ' + num);
                 console.log("---------------------------");
+
+                console.log('Report of binary operation on undefined value:');
+                var binaryUndefinedArr = [];
+                var binaryUndefinedDB = getByIndexArr(['JIT-checker', 'binary-undefined-op']);
+                num = 0;
+                for(var prop in binaryUndefinedDB) {
+                    if (HOP(binaryUndefinedDB, prop)) {
+                        binaryUndefinedArr.push({'iid': prop, 'count': binaryUndefinedDB[prop].count});
+                        num++;
+                    }
+                }
+                binaryUndefinedArr.sort(function compare(a, b) {
+                    return b.count - a.count;
+                });
+                for(var i=0;i<binaryUndefinedArr.length && i< warning_limit;i++){
+                    console.log('[location: ' + iidToLocation(binaryUndefinedArr[i].iid) + '] <- No. usages: ' + binaryUndefinedArr[i].count);
+                }
+                console.log('Number of statements that perform binary operation on undefined values: ' + num);
+                console.log("---------------------------");
                 console.log('total signature generated: ' + total_signature_generation_cnt);
                 console.log('total get signature: ' + total_get_sig_cnt);
             }catch(e) {
@@ -627,6 +646,14 @@ J$.analysis = {};
             }
         }
 
+        function checkBinaryOpOnUndefined(iid, op, left, right) {
+            if(typeof left ==='undefined' || typeof right === 'undefined') {
+                if(op === '|' || op === '^' || op === '&' || op === '~') {
+                    addCountByIndexArr(['JIT-checker', 'binary-undefined-op', iid]);
+                }
+            }
+        }
+
         this.getFieldPre = function (iid, base, offset){
             checkUpdateObjIdSync(base);
         }
@@ -711,6 +738,10 @@ J$.analysis = {};
         this.endExecution = function() {
             console.log('\n\n');
             this.printResult();
+        }
+
+        this.binaryPre = function(iid, op, left, right){
+            checkBinaryOpOnUndefined(iid, op, left, right);
         }
     }
 
