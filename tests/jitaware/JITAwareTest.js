@@ -184,9 +184,31 @@ var node2 = new Node(false);
 
 
 // test case 7 checking binary operation on undefined values
-console.log('------------------ test case 6 ------------------');
+console.log('------------------ test case 7 ------------------');
 var undefvalue;
 console.log('binary operation on undefined value');
 undefvalue |= 0;
+
+
+// test case 8 checking polymorphic function call
+console.log('------------------ test case 8 ------------------');
+function f1(v1, v2) {
+    return v1 + v2;
+}
+f1(1,2);
+f1(1,2);
+f1(1,2);
+f1('1','2');
+f1('2',1)
+
+function f2(v1, v2) {
+    return v1 - v2;
+}
+f2(1,2);
+f2('1','2');
+f2(1,2);
+f2('1','2');
+f2('2',1)
+
 
 // print result

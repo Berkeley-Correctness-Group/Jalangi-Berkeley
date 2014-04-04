@@ -344,6 +344,51 @@ J$.analysis = {};
 
         }
 
+
+        function printPolymorphicFunCall(indexArr) {
+            var array = [];
+            var db = getByIndexArr(indexArr);
+            var num = 0;
+            for(var prop in db) {
+                if (HOP(db, prop)) {
+                    var largest = -1;
+                    var secLargest = -1;
+                    var total = 0;
+                    var innerDB = db[prop];
+                    for(var index in innerDB){
+                        if(HOP(innerDB, index)) {
+                            var count = innerDB[index].count
+                            total += count;
+                            if(largest < count){
+                                secLargest = largest;
+                                largest = count;
+                            } else if (secLargest < count) {
+                                secLargest = count;
+                            }
+                        }
+                    }
+                    if(secLargest > 0) {
+                        array.push({'iid': prop, 'secLargest': secLargest, 'total': total});
+                        num++;
+                    }
+                }
+            }
+            array.sort(function compare(a, b) {
+                return b.secLargest - a.secLargest;
+            });
+            for(var i=0;i<array.length && i< warning_limit;i++){
+                var iid = array[i].iid;
+                console.log('[location: ' + iidToLocation(array[i].iid) + '] <- No. usages: ' + (array[i].total));
+                var innerDB = db[iid];
+                for(var index in innerDB) {
+                    if(HOP(innerDB, index)) {
+                        console.log('\tNo.usages: ' + innerDB[index].count + ' | type: ' + index);
+                    }
+                }
+            }
+            console.log('Number of polymorphic function call: ' + num);
+        }
+
         this.printResult = function() {
             try{
 
@@ -458,6 +503,11 @@ J$.analysis = {};
                 }
                 console.log('Number of statements that perform binary operation on undefined values: ' + num);
                 console.log("---------------------------");
+
+                console.log('Report of polymorphic function call:');
+                printPolymorphicFunCall(['JIT-checker', 'polymorphic-fun-call']);
+
+                console.log("---------------------------");
                 console.log('total signature generated: ' + total_signature_generation_cnt);
                 console.log('total get signature: ' + total_get_sig_cnt);
             }catch(e) {
@@ -545,6 +595,14 @@ J$.analysis = {};
                     addCountByIndexArr(['JIT-checker', 'uninit-array-elem', iid]);
                 }
             }
+        }
+
+        function checkPolymorphicFunCall(args, iid) {
+            var callsig = '|'
+            for(var i=0;i<args.length;i++){
+                callsig += (typeof (args[i])) + '|';
+            }
+            addCountByIndexArr(['JIT-checker', 'polymorphic-fun-call', iid, callsig]);
         }
 
         function checkIfArrayIsNumeric(base, val, iid) {
@@ -648,7 +706,7 @@ J$.analysis = {};
 
         function checkBinaryOpOnUndefined(iid, op, left, right) {
             if(typeof left ==='undefined' || typeof right === 'undefined') {
-                if(op === '|' || op === '^' || op === '&' || op === '~') {
+                if(op === '|' || op === '^' || op === '&' || op === '~' || op === '+' || op === '-' || op === '*' || op === '/' || op === '%') {
                     addCountByIndexArr(['JIT-checker', 'binary-undefined-op', iid]);
                 }
             }
@@ -713,8 +771,10 @@ J$.analysis = {};
             }
         }
 
+        var cachedArgs;
         this.invokeFunPre = function (iid, f, base, args, isConstructor) {
             consStack.push(f, isConstructor, iid);
+            cachedArgs = args;
         }
 
         var currentFunctionIID;
@@ -722,6 +782,7 @@ J$.analysis = {};
         this.functionEnter = function (iid, val, dis) {
             currentFunctionIID = iid;
             currentFunctionObtainedFromFe = val;
+            checkPolymorphicFunCall(cachedArgs, iid);
         }
 
         this.invokeFun = function (iid, f, base, args, val, isConstructor) {
@@ -765,7 +826,8 @@ J$.analysis = {};
 //@todo: do experiment on JSBench
 //@todo: for each signature property, remeber where the property was appended(iid)
 //@todo: delete a.b  (transform into) -->> a = J$.De(‘a’, a, ‘b’, b)
-//@todo: checking duplicating huge hidden class
+//@todo: check duplicating huge hidden class
+//@todo: check polymorphic function calls
 
 //done:
 //@todo: currently run_test.js does not support iid to location transition (done)
