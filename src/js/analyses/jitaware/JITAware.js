@@ -349,40 +349,58 @@ J$.analysis = {};
             var array = [];
             var db = getByIndexArr(indexArr);
             var num = 0;
-            for(var prop in db) {
-                if (HOP(db, prop)) {
-                    var largest = -1;
-                    var secLargest = -1;
+            for(var defiid in db) {
+                if (HOP(db, defiid)) {
                     var total = 0;
-                    var innerDB = db[prop];
-                    for(var index in innerDB){
-                        if(HOP(innerDB, index)) {
-                            var count = innerDB[index].count
-                            total += count;
-                            if(largest < count){
-                                secLargest = largest;
-                                largest = count;
-                            } else if (secLargest < count) {
-                                secLargest = count;
+                    var finalscore = 0;
+                    var innerDB = db[defiid];
+                    var set = {};
+                    var uniquetypenum = 0;
+                    for(var invokeiid in innerDB){
+                        var ninvoke = 0;
+                        if(HOP(innerDB, invokeiid)) {
+                            var innerMostDB = innerDB[invokeiid];
+                            var count;
+                            var signum = 0;
+                            for(var callsig in innerMostDB) {
+                                if(HOP(innerMostDB, callsig)) {
+
+                                    count = innerMostDB[callsig].count
+                                    ninvoke += count;
+                                    total += count;
+                                    signum++;
+
+                                    if(!set[callsig]) {
+                                        set[callsig] = true;
+                                        uniquetypenum ++;
+                                    }
+                                }
                             }
+                            finalscore += (ninvoke/signum);
                         }
                     }
-                    if(secLargest > 0) {
-                        array.push({'iid': prop, 'secLargest': secLargest, 'total': total});
+                    if(uniquetypenum > 1) {
+                        array.push({'iid': defiid, 'score': finalscore, 'total': total});
                         num++;
                     }
                 }
             }
             array.sort(function compare(a, b) {
-                return b.secLargest - a.secLargest;
+                return b.score - a.score;
             });
             for(var i=0;i<array.length && i< warning_limit;i++){
                 var iid = array[i].iid;
                 console.log('[location: ' + iidToLocation(array[i].iid) + '] <- No. usages: ' + (array[i].total));
                 var innerDB = db[iid];
-                for(var index in innerDB) {
-                    if(HOP(innerDB, index)) {
-                        console.log('\tNo.usages: ' + innerDB[index].count + ' | type: ' + index);
+                for(var invokeiid in innerDB){
+                    if(HOP(innerDB, invokeiid)) {
+                        console.log('\t[invoke location] ' + iidToLocation(invokeiid));
+                        var innerMostDB = innerDB[invokeiid];
+                        for(var callsig in innerMostDB) {
+                            if(HOP(innerMostDB, callsig)) {
+                                console.log('\t\tNo. usages: ' + innerMostDB[callsig].count + ' | type: ' + callsig);
+                            }
+                        }
                     }
                 }
             }
@@ -597,12 +615,12 @@ J$.analysis = {};
             }
         }
 
-        function checkPolymorphicFunCall(args, iid) {
+        function checkPolymorphicFunCall(args, iid, invokeLocIid) {
             var callsig = '|'
             for(var i=0;i<args.length;i++){
                 callsig += (typeof (args[i])) + '|';
             }
-            addCountByIndexArr(['JIT-checker', 'polymorphic-fun-call', iid, callsig]);
+            addCountByIndexArr(['JIT-checker', 'polymorphic-fun-call', iid, cachedInvokeLocation, callsig]);
         }
 
         function checkIfArrayIsNumeric(base, val, iid) {
@@ -749,7 +767,7 @@ J$.analysis = {};
                 if(isArr(base) && isNormalNumber(offset)) {
                     checkIfArrayIsNumeric(base, val, iid);
                     checkIfWritingOutsideArrayBound(base, offset, iid);
-                } else { // check init object members in non-consturctor functions
+                } else { // check init object members in non-constructor functions
                     checkIfFieldAddedOutsideConstructor(base, offset, iid);
                 }
             }
@@ -772,9 +790,17 @@ J$.analysis = {};
         }
 
         var cachedArgs;
+        var cachedInvokeLocation;
+        var isAnalyzePolymorphicFunCall;
         this.invokeFunPre = function (iid, f, base, args, isConstructor) {
             consStack.push(f, isConstructor, iid);
             cachedArgs = args;
+            cachedInvokeLocation = iid;
+            if(isConstructor) { // do not analyze polymorphic function call for constructor, as it is difficult to refactor
+                isAnalyzePolymorphicFunCall = false;
+            } else {
+                isAnalyzePolymorphicFunCall = true
+            }
         }
 
         var currentFunctionIID;
@@ -782,7 +808,9 @@ J$.analysis = {};
         this.functionEnter = function (iid, val, dis) {
             currentFunctionIID = iid;
             currentFunctionObtainedFromFe = val;
-            checkPolymorphicFunCall(cachedArgs, iid);
+            if(isAnalyzePolymorphicFunCall) {
+                checkPolymorphicFunCall(cachedArgs, iid, cachedInvokeLocation);
+            }
         }
 
         this.invokeFun = function (iid, f, base, args, val, isConstructor) {
@@ -827,10 +855,11 @@ J$.analysis = {};
 //@todo: for each signature property, remeber where the property was appended(iid)
 //@todo: delete a.b  (transform into) -->> a = J$.De(‘a’, a, ‘b’, b)
 //@todo: check duplicating huge hidden class
-//@todo: check polymorphic function calls
+//@todo: implement array -> XIntXArray check and test on navier-stokes.js
 
 //done:
 //@todo: currently run_test.js does not support iid to location transition (done)
 //@todo: record number of different objects (for each distinct hidden class for each polymorphic code) (done)
 //@todo: add a criterion that measures the hidden class switching rate (done)
 //@todo: checking polymorphic constructor and report separately (done)
+//@todo: check polymorphic function calls (done)
