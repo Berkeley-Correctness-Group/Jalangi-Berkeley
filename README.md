@@ -92,16 +92,16 @@ To automated the web testing, selenium is needed, to install selenium type the f
 npm install selenium-webdriver
 npm install mocha selenium-webdriver
 ```
-Also need to install chromedriver
+Currently ```install.js``` automatically installs for MacOS. So if you are using a non-Mac OS, you also need to download and install chromedriver by yourself at the following link:
 ```
-http://chromedriver.storage.googleapis.com/2.9/chromedriver_mac32.zip
+https://code.google.com/p/selenium/wiki/ChromeDriver
 ```
 
 Before running the experiment on Mac OS:
   * close your firefox and chrome instances
   * configure your firefox so that it will dump output to the native console:
     in the browser url input box type: ```about:config```
-    search for: ```brwoser.dom.window.dump.enabled```, set it to true
+    search for: ```brwoser.dom.window.dump.enabled```, set it to ```true```
 
 In the Jalangi-Berkeley directory type the following command:
 ```
