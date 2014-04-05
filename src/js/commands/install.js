@@ -35,13 +35,13 @@
 // node src/js/commands/run_test.js ../jalangi ../jalangi/tests/octane/pdfjs.js src/js/analyses/jitaware/JITAware.js
 
 var exec = require('child_process').exec;
+var spawn = require('child_process').spawn;
 var child;
 var cur_dir = process.cwd();
 var path = require('path');
 var jalangi_home_dir = path.resolve(process.cwd() + '/../' + 'jalangi');
 var sys = require('sys');
 var fs = require('fs');
-
 
 // check if the parent directory has a sub-directory called jalangi
 if (fs.existsSync('../jalangi')) {
@@ -92,10 +92,28 @@ function install_jalangi(){
 	    console.log('install error: ' + error);
 	  } else {
 	  	console.log('install complete.')
+        download_chromedriver();
 	  }
 	});
 
 	child.stdout.on('data', function (data) {
 	  sys.print(data);
 	});
+}
+
+function download_chromedriver() {
+    fs.writeFileSync('chromedriver_mac32.zip', '');
+    var child = spawn('curl', ['http://chromedriver.storage.googleapis.com/2.9/chromedriver_mac32.zip']);
+
+    child.stdout.on('data', function (data) {
+       fs.appendFileSync('chromedriver_mac32.zip', data);
+    });
+
+    child.on('close', function (){
+        decompress();
+    });
+}
+
+function decompress(){
+    exec('unzip chromedriver_mac32.zip; rm chromedriver_mac32.zip');
 }
