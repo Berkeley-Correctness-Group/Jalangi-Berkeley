@@ -36,7 +36,8 @@ excluded = [ ]
 
 #jalangiAnalysis = jalangiBerkeleyBaseDir+"src/js/analyses/executionCounters/ExecutionCountersEngine.js"
 #jalangiAnalysis = jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine.js"
-jalangiAnalysis = jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine2.js"
+#jalangiAnalysis = jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine2.js"
+jalangiAnalysis = jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/InconsistentTypeEngine.js"
 #jalangiAnalysis = jalangiBaseDir+"src/js/analyses/logundefinedread/logUndefinedRead.js"
 
 # constants

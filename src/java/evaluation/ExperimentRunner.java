@@ -49,33 +49,34 @@ public class ExperimentRunner {
 	private void runAll() throws Exception {
 		DesiredCapabilities desiredCapabilities = DesiredCapabilities.firefox();
 		LoggingPreferences loggingPreferences = new LoggingPreferences();
-		loggingPreferences.enable(LogType.BROWSER, Level.WARNING);
+		loggingPreferences.enable(LogType.BROWSER, Level.ALL);
 		desiredCapabilities.setCapability(CapabilityType.LOGGING_PREFS,
 				loggingPreferences);
 		FirefoxBinary binary = new FirefoxBinary(new File(firefoxBinary));
 		FirefoxProfile profile = new FirefoxProfile();
 		profile.addExtension(new File(jalangiFFxpi));
 		driver = new FirefoxDriver(binary, profile, desiredCapabilities);
-		driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 
 		try {
 			testJoomla();
 			testJoomlaAdmin();
 			testCmsmadesimple();
-			testDrupal();
 			testMediawiki();
 			testMoodle();
-			testOwncloud();
 			testDokuwiki();
 			testOsclass();
 			testPhpbb();
 			testWordpress();
+			testZurmo();
+			testProcesswire();
 
+			// trigger beforeunload event after last benchmark
+			driver.get("about:blank"); 
 		} finally {
 			LogEntries logEntries = driver.manage().logs().get(LogType.BROWSER);
 			for (LogEntry eachEntry : logEntries.getAll()) {
 				System.out.println(eachEntry.toString());
-
 			}
 		}
 
@@ -109,6 +110,7 @@ public class ExperimentRunner {
 		driver.findElement(By.linkText("Logout")).click();
 	}
 
+	// empty results -- unclear why
 	public void testDrupal() throws Exception {
 		driver.get(baseUrl + "/drupal/");
 		driver.findElement(By.linkText("Home")).click();
@@ -199,6 +201,7 @@ public class ExperimentRunner {
 		driver.findElement(By.linkText("Log out")).click();
 	}
 
+	// empty results -- unclear why
 	public void testOwncloud() throws Exception {
 		driver.get(baseUrl + "/owncloud/");
 		driver.findElement(By.id("user")).click();
@@ -316,5 +319,45 @@ public class ExperimentRunner {
 				By.cssSelector("#wp-admin-bar-new-content > a.ab-item > span.ab-label"))
 				.click();
 		driver.findElement(By.linkText("Howdy, user")).click();
+	}
+
+	// triggers some Jalangi bug
+	public void testRoundcube() throws Exception {
+		driver.get(baseUrl + "/roundcube/?_task=logout");
+		driver.findElement(By.id("rcmloginuser")).clear();
+		driver.findElement(By.id("rcmloginuser")).sendKeys("reelnaheemji");
+		driver.findElement(By.id("rcmloginpwd")).clear();
+		driver.findElement(By.id("rcmloginpwd")).sendKeys("ijmeehanleer");
+		driver.findElement(By.cssSelector("input.button.mainaction")).click();
+		driver.findElement(By.cssSelector("span.button-inner")).click();
+		driver.findElement(By.cssSelector("#rcmbtn103 > span.button-inner"))
+				.click();
+		driver.findElement(By.id("rcmbtn101")).click();
+	}
+
+	public void testZurmo() throws Exception {
+		driver.get(baseUrl + "/zurmo/app/index.php/zurmo/default/login");
+		driver.findElement(By.id("LoginForm_username")).clear();
+		driver.findElement(By.id("LoginForm_username")).sendKeys("user");
+		driver.findElement(By.id("LoginForm_password")).clear();
+		driver.findElement(By.id("LoginForm_password")).sendKeys("password");
+		// remainder doesn't work with Jalangi-instrumented page -- unclear why
+		// driver.findElement(By.cssSelector(".z-label")).click();
+		// driver.findElement(By.xpath("//li[@id='mashableInbox']/a/span[2]"))
+		// .click();
+		// driver.findElement(By.xpath("//li[@id='accounts']/a/span[2]")).click();
+		// driver.findElement(By.xpath("//li[@id='leads']/a/span[2]")).click();
+		// driver.findElement(By.xpath("//li[@id='contacts']/a/span[2]")).click();
+		// driver.findElement(By.xpath("//li[@id='opportunities']/a/span[2]"))
+		// .click();
+		// driver.findElement(By.linkText("user")).click();
+		// driver.findElement(By.linkText("Sign out")).click();
+	}
+
+	public void testProcesswire() throws Exception {
+		driver.get(baseUrl + "/processwire/");
+		driver.get(baseUrl + "/processwire/about/");
+		driver.get(baseUrl + "/processwire/templates/");
+		driver.get(baseUrl + "/processwire/site-map/");
 	}
 }
