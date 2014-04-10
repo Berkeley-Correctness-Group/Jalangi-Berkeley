@@ -1,16 +1,13 @@
-(function () {
-    
+(function() {
+
     function C(a) {
         this.a = a;
     }
-    
-    function foo(x) {
-        
+
+    var i = 0;
+    while (i < 2) {
+        i++;
+        var c = new C(i === 1 ? 3 : true); // inconsistent type of field a
     }
-    
-    var c1 = new C(2);
-    foo(c1);
-    c1.b = 5;
-    foo(c1);
-    
+
 })();

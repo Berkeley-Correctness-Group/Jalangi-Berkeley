@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// Author: Koushik Sen
+// Author: Koushik Sen, Michael Pradel
 
 (function(sandbox) {
 
@@ -24,9 +24,9 @@
 
         var P_VALUE = 5.0;
 
-        // iid or type could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
-        var iidToFieldTypes = {}; // type -> (field -> type -> iid -> true)
-        var iidToSignature = {};  // type -> ({"this", "return", "arg1", ...} -> type -> iid -> true)
+        // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
+        var typeNameToFieldTypes = {}; // type name -> (field -> type name -> iid -> true)  --  for each type, gives the fields, their types, and where this field type has been observed
+        var functionToSignature = {};  // function name -> ({"this", "return", "arg1", ...} -> type -> iid -> true)  --  for each function, gives the receiver, argument, and return types, and where these types have been observed
         var typeNames = {};
         var functionNames = {};
 
@@ -48,29 +48,47 @@
             }
         };
 
-        function getSetFields(map, key, obj) {
-            if (!HOP(map, key)) {
-                if (obj) {
-                    if (key.indexOf("function") === 0) {
-                        functionNames[key] = obj.name ? obj.name : "";
-                    } else {
-                        typeNames[key] = obj.constructor ? obj.constructor.name : "";
-                    }
-                }
+        /**
+         * @param {object} map
+         * @param {string} key
+         * @returns {object} 
+         */
+        function getAndInit(map, key) {
+            if (!HOP(map, key))
                 return map[key] = {};
-            }
-            return map[key];
+            else
+                return map[key];
         }
 
-        function updateType(base, offset, value, updateLocation, creationLocationOptional) {
-            var iid, tval, type, s;
-            if (!creationLocationOptional) {
-                iid = getSymbolic(base);
+        /**
+         * @param {string} name
+         * @param {function | object} obj
+         */
+        function addFunctionOrTypeName(name, obj) {
+            if (name.indexOf("function") === 0) {
+                functionNames[name] = obj.name ? obj.name : "";
             } else {
-                iid = creationLocationOptional;
+                typeNames[name] = obj.constructor ? obj.constructor.name : "";
             }
-            if (iid) {
-                tval = getSetFields(iidToFieldTypes, iid, base);
+        }
+
+        /**
+         * @param {object} base
+         * @param {string} offset
+         * @param {object} value
+         * @param {number} updateLocation (IID)
+         * @param {string} typeNameOptional
+         */
+        function updateType(base, offset, value, updateLocation, typeNameOptional) {
+            var typeName, tval, type, s;
+            if (!typeNameOptional) {
+                typeName = getSymbolic(base);
+            } else {
+                typeName = typeNameOptional;
+            }
+            if (typeName) {
+                addFunctionOrTypeName(typeName, base);
+                tval = getAndInit(typeNameToFieldTypes, typeName);
                 type = typeof value;
                 s = getSymbolic(value);
                 if (s) {
@@ -78,23 +96,23 @@
                 } else if (value === null) {
                     type = "object(null)";
                 }
-                if (iid.indexOf("array") === 0) {
+                if (typeName.indexOf("array") === 0) {
                     if (offset > 10) {
                         offset = 100000;
                     }
                 }
 
-                var tmap = getSetFields(tval, offset);
-                var tmp = getSetFields(tmap, type);
-                tmp[updateLocation] = true;
-                console.log(iidToLocation(iid)+": Have updated type");
-                console.log("iidToFieldTypes:\n"+JSON.stringify(iidToFieldTypes));
-                console.log();                
+                var tmap = getAndInit(tval, offset);
+                var locations = getAndInit(tmap, type);
+                locations[updateLocation] = true;
             }
         }
 
-        /*
-         * Attach shadow with type information to object.
+        /**
+         * Attach shadow with type name to object.
+         * @param {number} creationLocation
+         * @param {object} obj
+         * @returns {object} The given object
          */
         function annotateObject(creationLocation, obj) {
             var type, i, s, sobj;
@@ -110,7 +128,8 @@
                         }
                         s = type + "(" + creationLocation + ")";
                         sobj.shadow = s;
-                        getSetFields(iidToFieldTypes, s, obj);
+                        addFunctionOrTypeName(s, obj);
+                        getAndInit(typeNameToFieldTypes, s);
                         for (i in obj) {
                             if (HOP(obj, i)) {
                                 updateType(obj, i, obj[i], creationLocation, s);
@@ -118,34 +137,38 @@
                         }
                     }
                 }
-                console.log(iidToLocation(creationLocation)+": Have annotated object; shadow is now:\n"+JSON.stringify(sobj.shadow));
-                console.log("iidToFieldTypes:\n"+JSON.stringify(iidToFieldTypes));
-                console.log();                
             }
             return obj;
         }
 
         function setTypeInFunSignature(value, tval, offset, callLocation) {
-            var type, s;
+            var type, typeName;
             type = typeof value;
-            s = getSymbolic(value);
-            if (s) {
-                type = s;
+            typeName = getSymbolic(value);
+            if (typeName) {
+                type = typeName;
             } else if (value === null) {
                 type = "object(null)";
             }
-            var tmap = getSetFields(tval, offset);
-            var tmp = getSetFields(tmap, type);
-            tmp[callLocation] = true;
-
+            var tmap = getAndInit(tval, offset);
+            var locations = getAndInit(tmap, type);
+            locations[callLocation] = true;
         }
 
-        function updateSignature(f, base, args, value, callLocation) {
-            var iid, tval;
-            iid = getSymbolic(f);
-            if (iid) {
-                tval = getSetFields(iidToSignature, iid, f);
-                setTypeInFunSignature(value, tval, "return", callLocation);
+        /**
+         * @param {function} f
+         * @param {object} base
+         * @param {array} args
+         * @param {type} returnValue
+         * @param {number} callLocation (IID)
+         */
+        function updateSignature(f, base, args, returnValue, callLocation) {
+            var functionName, tval;
+            functionName = getSymbolic(f);
+            if (functionName) {
+                addFunctionOrTypeName(functionName, f);
+                tval = getAndInit(functionToSignature, functionName);
+                setTypeInFunSignature(returnValue, tval, "return", callLocation);
                 setTypeInFunSignature(base, tval, "this", callLocation);
                 var len = args.length;
                 for (var i = 0; i < len; ++i) {
@@ -155,15 +178,15 @@
         }
 
         function analyzeTypes() {
-            var tableAndRoots = equiv(iidToFieldTypes);
+            var tableAndRoots = equiv(typeNameToFieldTypes);
             //console.log(
             //generateDOT(tableAndRoots[0], tableAndRoots[1], iidToFieldTypes, iidToSignature)
             //);
-            analyze(iidToFieldTypes, tableAndRoots[0]);
-            analyze(iidToSignature, tableAndRoots[0]);
+            analyze(typeNameToFieldTypes, tableAndRoots[0]);
+            analyze(functionToSignature, tableAndRoots[0]);
             //console.log(JSON.stringify(iidToFieldTypes, null, '\t'));
         }
-        
+
         this.analyzeTypes = analyzeTypes;
 
         this.literal = function(iid, val) {
@@ -198,7 +221,6 @@
 //        this.read = function(iid, name, val) {
 //            return annotateObject(iid, val);
 //        }
-
 
         function sizeOfMap(obj) {
             var count = 0;
@@ -259,18 +281,18 @@
             return str;
         }
 
-        function analyze(map, table) {
+        function analyze(nameToFieldMap, table) {
             var done = {};
-            for (var oloc in map) {
-                if (HOP(map, oloc)) {
-                    oloc = getRoot(table, oloc);
-                    if (!HOP(done, oloc)) {
-                        done[oloc] = true;
-                        var fieldMap = map[oloc];
+            for (var typeOrFunctionName in nameToFieldMap) {
+                if (HOP(nameToFieldMap, typeOrFunctionName)) {
+                    typeOrFunctionName = getRoot(table, typeOrFunctionName);
+                    if (!HOP(done, typeOrFunctionName)) {
+                        done[typeOrFunctionName] = true;
+                        var fieldMap = nameToFieldMap[typeOrFunctionName];
                         for (var field in fieldMap) {
                             if (HOP(fieldMap, field)) {
-                                if (field === "undefined") {
-                                    console.log("Potential Bug: undefined field found in " + typeInfoWithLocation(oloc) +
+                                if (field === "undefined") { // TODO How to trigger this case? (MP)
+                                    console.log("Potential Bug: undefined field found in " + typeInfoWithLocation(typeOrFunctionName) +
                                         ":\n" + getTypeInfo(typeMap));
                                 }
                             }
@@ -284,7 +306,7 @@
                                             for (var type2 in typeMap) {
                                                 if (HOP(typeMap, type2)) {
                                                     if (type1 < type2 && getRoot(table, type1) !== getRoot(table, type2)) {
-                                                        console.log("Warning: " + field + " of " + typeInfoWithLocation(oloc) +
+                                                        console.log("Warning: " + field + " of " + typeInfoWithLocation(typeOrFunctionName) +
                                                             " has multiple types:");
                                                         for (var type3 in typeMap) {
                                                             console.log("    " + typeInfoWithLocation(type3) + "\n" + getLocationsInfo(typeMap[type3]));
@@ -339,24 +361,22 @@
             return true;
         }
 
-
-        function getRoot(table, oloc) {
-            var ret = table[oloc];
-
-            while (ret !== oloc) {
-                oloc = ret;
-                ret = table[oloc];
+        function getRoot(table, typeOrFunctionName) {
+            var ret = table[typeOrFunctionName];
+            while (ret !== typeOrFunctionName) {
+                typeOrFunctionName = ret;
+                ret = table[typeOrFunctionName];
             }
             return ret;
         }
 
-        function equiv(map) {
+        function equiv(typeName2FieldTypes) {
             var table = {};
             var roots = {};
-            for (var oloc in map) {
-                if (HOP(map, oloc)) {
-                    table[oloc] = oloc;
-                    roots[oloc] = true;
+            for (var name in typeName2FieldTypes) {
+                if (HOP(typeName2FieldTypes, name)) {
+                    table[name] = name;
+                    roots[name] = true;
                 }
             }
             table['number'] = 'number';
@@ -365,21 +385,18 @@
             table['undefined'] = 'undefined';
             table['object(null)'] = 'object(null)';
 
-
             var changed = true, root1, root2;
             while (changed) {
                 changed = false;
-                for (var oloc in roots) {
-                    if (HOP(roots, oloc)) {
-
-                        loop2: for (var oloc2 in roots) {
-                            if (HOP(roots, oloc2) &&
-                                oloc < oloc2 &&
-                                (root1 = getRoot(table, oloc)) !== (root2 = getRoot(table, oloc2)) &&
-                                oloc.indexOf("function") !== 0 &&
-                                oloc2.indexOf("function") !== 0) {
-                                var fieldMap1 = map[oloc];
-                                var fieldMap2 = map[oloc2];
+                for (var name1 in roots) {
+                    if (HOP(roots, name1) && name1.indexOf("function") !== 0) {
+                        loop2: for (var name2 in roots) {
+                            if (HOP(roots, name2) &&
+                                name1 < name2 &&
+                                (root1 = getRoot(table, name1)) !== (root2 = getRoot(table, name2)) &&
+                                name2.indexOf("function") !== 0) {
+                                var fieldMap1 = typeName2FieldTypes[name1];
+                                var fieldMap2 = typeName2FieldTypes[name2];
                                 if (sizeOfMap(fieldMap1) !== sizeOfMap(fieldMap2)) {
                                     continue loop2;
                                 }
@@ -406,7 +423,6 @@
                                             }
                                         }
                                     }
-
                                 }
                                 if (root1 < root2) {
                                     table[root2] = root1;
@@ -573,17 +589,20 @@
         this.endExecution = function() {
             analyzeTypes();
         };
-        
-        
     }
 
     if (sandbox.Constants.isBrowser) {
         sandbox.analysis = new InconsistentTypeEngine();
         window.addEventListener("beforeunload", function() {
             console.log("beforeunload --> logging results");
-            sandbox.analysis.analyzeTypes();
-//            sandbox.analysis.logResult();
+            sandbox.analysis.endExecution();
         }, false);
+        window.addEventListener('keydown', function(e) {
+            // keyboard shortcut is Alt-Shift-D
+            if (e.altKey && e.shiftKey && e.keyCode === 68) {
+                sandbox.analysis.endExecution();
+            }
+        });
     } else {
         module.exports = InconsistentTypeEngine;
     }
