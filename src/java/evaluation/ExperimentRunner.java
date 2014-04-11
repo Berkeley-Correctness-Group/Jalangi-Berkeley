@@ -36,7 +36,8 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 
 public class ExperimentRunner {
 
-	final String firefoxBinary = "/home/m/javascript/mozilla-central/obj-x86_64-unknown-linux-gnu/dist/firefox/firefox";
+//	final String firefoxBinary = "/home/m/javascript/mozilla-central/obj-x86_64-unknown-linux-gnu/dist/firefox/firefox";
+	final String firefoxBinary = "/usr/bin/firefox";
 	final String jalangiFFxpi = "/home/m/research/projects/Jalangi-Berkeley/browserExtensions/jalangiFF/jalangiff.xpi";
 
 	String baseUrl = "http://127.0.0.1";
@@ -59,6 +60,8 @@ public class ExperimentRunner {
 		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 
 		try {
+//			testToyExample();
+			
 			testJoomla();
 			testJoomlaAdmin();
 			testCmsmadesimple();
@@ -72,7 +75,7 @@ public class ExperimentRunner {
 			testProcesswire();
 
 			// trigger beforeunload event after last benchmark
-			driver.get("about:blank"); 
+//			driver.get("about:blank"); 
 		} finally {
 			LogEntries logEntries = driver.manage().logs().get(LogType.BROWSER);
 			for (LogEntry eachEntry : logEntries.getAll()) {
@@ -83,6 +86,10 @@ public class ExperimentRunner {
 		// driver.quit();
 	}
 
+	public void testToyExample() throws Exception {
+		driver.get("http://127.0.0.1:8000/tests/inconsistentType/inconsistent8.html");
+	}
+	
 	public void testCmsmadesimple() throws Exception {
 		driver.get(baseUrl + "/cmsmadesimple/");
 		driver.findElement(By.cssSelector("a.menuactive > span")).click();

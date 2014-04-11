@@ -21,19 +21,17 @@
     function InconsistentTypeEngine() {
         var smemory = sandbox.smemory;
         var iidToLocation = sandbox.iidToLocation;
+        var typeAnalysis = importModule("TypeAnalysis");
+        var util = importModule("CommonUtil");
 
         var P_VALUE = 5.0;
+        var online = true; // offline mode is only for in-browser analysis
 
         // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
         var typeNameToFieldTypes = {}; // type name -> (field -> type name -> iid -> true)  --  for each type, gives the fields, their types, and where this field type has been observed
         var functionToSignature = {};  // function name -> ({"this", "return", "arg1", ...} -> type -> iid -> true)  --  for each function, gives the receiver, argument, and return types, and where these types have been observed
         var typeNames = {};
         var functionNames = {};
-
-        function HOP(obj, prop) {
-            return Object.prototype.hasOwnProperty.call(obj, prop);
-        }
-        ;
 
         function isArr(val) {
             return Object.prototype.toString.call(val) === '[object Array]';
@@ -54,7 +52,7 @@
          * @returns {object} 
          */
         function getAndInit(map, key) {
-            if (!HOP(map, key))
+            if (!util.HOP(map, key))
                 return map[key] = {};
             else
                 return map[key];
@@ -131,7 +129,7 @@
                         addFunctionOrTypeName(s, obj);
                         getAndInit(typeNameToFieldTypes, s);
                         for (i in obj) {
-                            if (HOP(obj, i)) {
+                            if (util.HOP(obj, i)) {
                                 updateType(obj, i, obj[i], creationLocation, s);
                             }
                         }
@@ -177,17 +175,15 @@
             }
         }
 
-        function analyzeTypes() {
-            var tableAndRoots = equiv(typeNameToFieldTypes);
-            //console.log(
-            //generateDOT(tableAndRoots[0], tableAndRoots[1], iidToFieldTypes, iidToSignature)
-            //);
-            analyze(typeNameToFieldTypes, tableAndRoots[0]);
-            analyze(functionToSignature, tableAndRoots[0]);
-            //console.log(JSON.stringify(iidToFieldTypes, null, '\t'));
+        function logResults() {
+            var results = {
+                typeNameToFieldTypes:typeNameToFieldTypes,
+                functionToSignature:functionToSignature,
+                typeNames:typeNames,
+                functionNames:functionNames
+            };
+            window.$jalangiFFLogResult(JSON.stringify(results), true);
         }
-
-        this.analyzeTypes = analyzeTypes;
 
         this.literal = function(iid, val) {
             return annotateObject(iid, val);
@@ -222,31 +218,7 @@
 //            return annotateObject(iid, val);
 //        }
 
-        function sizeOfMap(obj) {
-            var count = 0;
-            for (var i in obj) {
-                if (HOP(obj, i)) {
-                    count++;
-                }
-            }
-            return count;
-        }
-
-        function typeInfoWithLocation(type) {
-            if (type.indexOf("(") > 0) {
-                var type1 = type.substring(0, type.indexOf("("));
-                var iid = type.substring(type.indexOf("(") + 1, type.indexOf(")"));
-                if (iid === "null") {
-                    return "null";
-                } else {
-                    return type1 + " originated at " + iidToLocation(iid);
-                }
-            } else {
-                return type;
-            }
-        }
-
-
+        
         function infoWithLocation(type) {
             if (type.indexOf("(") > 0) {
                 var type1 = type.substring(0, type.indexOf("("));
@@ -261,91 +233,27 @@
             }
         }
 
-        function getLocationsInfo(map) {
-            var str = "";
-            for (var loc in map) {
-                if (HOP(map, loc)) {
-                    str += "        found at " + iidToLocation(loc) + ",\n";
-                }
-            }
-            return str;
-        }
-
-        function getTypeInfo(typeMap) {
-            var str = "";
-            for (var type1 in typeMap) {
-                if (HOP(typeMap, type1)) {
-                    str += getLocationsInfo(typeMap[type1]);
-                }
-            }
-            return str;
-        }
-
-        function analyze(nameToFieldMap, table) {
-            var done = {};
-            for (var typeOrFunctionName in nameToFieldMap) {
-                if (HOP(nameToFieldMap, typeOrFunctionName)) {
-                    typeOrFunctionName = getRoot(table, typeOrFunctionName);
-                    if (!HOP(done, typeOrFunctionName)) {
-                        done[typeOrFunctionName] = true;
-                        var fieldMap = nameToFieldMap[typeOrFunctionName];
-                        for (var field in fieldMap) {
-                            if (HOP(fieldMap, field)) {
-                                if (field === "undefined") { // TODO How to trigger this case? (MP)
-                                    console.log("Potential Bug: undefined field found in " + typeInfoWithLocation(typeOrFunctionName) +
-                                        ":\n" + getTypeInfo(typeMap));
-                                }
-                            }
-                        }
-                        for (var field in fieldMap) {
-                            if (HOP(fieldMap, field)) {
-                                var typeMap = fieldMap[field];
-                                if (sizeOfMap(typeMap) > 1) {
-                                    lbl1: for (var type1 in typeMap) {
-                                        if (HOP(typeMap, type1)) {
-                                            for (var type2 in typeMap) {
-                                                if (HOP(typeMap, type2)) {
-                                                    if (type1 < type2 && getRoot(table, type1) !== getRoot(table, type2)) {
-                                                        console.log("Warning: " + field + " of " + typeInfoWithLocation(typeOrFunctionName) +
-                                                            " has multiple types:");
-                                                        for (var type3 in typeMap) {
-                                                            console.log("    " + typeInfoWithLocation(type3) + "\n" + getLocationsInfo(typeMap[type3]));
-                                                        }
-                                                        break lbl1;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         function isGoodType(map, table, oloc) {
             var done = {};
             oloc = getRoot(table, oloc);
-            if (!HOP(done, oloc)) {
+            if (!util.HOP(done, oloc)) {
                 done[oloc] = true;
                 var fieldMap = map[oloc];
                 for (var field in fieldMap) {
-                    if (HOP(fieldMap, field)) {
+                    if (util.HOP(fieldMap, field)) {
                         if (field === "undefined") {
                             return false;
                         }
                     }
                 }
                 for (var field in fieldMap) {
-                    if (HOP(fieldMap, field)) {
+                    if (util.HOP(fieldMap, field)) {
                         var typeMap = fieldMap[field];
                         if (sizeOfMap(typeMap) > 1) {
                             lbl1: for (var type1 in typeMap) {
-                                if (HOP(typeMap, type1)) {
+                                if (util.HOP(typeMap, type1)) {
                                     for (var type2 in typeMap) {
-                                        if (HOP(typeMap, type2)) {
+                                        if (util.HOP(typeMap, type2)) {
                                             if (type1 < type2 && getRoot(table, type1) !== getRoot(table, type2)) {
                                                 return false;
                                                 break lbl1;
@@ -361,95 +269,18 @@
             return true;
         }
 
-        function getRoot(table, typeOrFunctionName) {
-            var ret = table[typeOrFunctionName];
-            while (ret !== typeOrFunctionName) {
-                typeOrFunctionName = ret;
-                ret = table[typeOrFunctionName];
-            }
-            return ret;
-        }
 
-        function equiv(typeName2FieldTypes) {
-            var table = {};
-            var roots = {};
-            for (var name in typeName2FieldTypes) {
-                if (HOP(typeName2FieldTypes, name)) {
-                    table[name] = name;
-                    roots[name] = true;
-                }
-            }
-            table['number'] = 'number';
-            table['boolean'] = 'boolean';
-            table['string'] = 'string';
-            table['undefined'] = 'undefined';
-            table['object(null)'] = 'object(null)';
-
-            var changed = true, root1, root2;
-            while (changed) {
-                changed = false;
-                for (var name1 in roots) {
-                    if (HOP(roots, name1) && name1.indexOf("function") !== 0) {
-                        loop2: for (var name2 in roots) {
-                            if (HOP(roots, name2) &&
-                                name1 < name2 &&
-                                (root1 = getRoot(table, name1)) !== (root2 = getRoot(table, name2)) &&
-                                name2.indexOf("function") !== 0) {
-                                var fieldMap1 = typeName2FieldTypes[name1];
-                                var fieldMap2 = typeName2FieldTypes[name2];
-                                if (sizeOfMap(fieldMap1) !== sizeOfMap(fieldMap2)) {
-                                    continue loop2;
-                                }
-                                for (var field1 in fieldMap1) {
-                                    if (HOP(fieldMap1, field1) && !HOP(fieldMap2, field1)) {
-                                        continue loop2;
-                                    }
-                                    var typeMap1 = fieldMap1[field1];
-                                    var typeMap2 = fieldMap2[field1];
-                                    for (var type1 in typeMap1) {
-                                        if (HOP(typeMap1, type1)) {
-                                            var found = false;
-                                            for (var type2 in typeMap2) {
-                                                if (HOP(typeMap2, type2)) {
-                                                    if (type1 === type2) {
-                                                        found = true;
-                                                    } else if (getRoot(table, type1) === getRoot(table, type2)) {
-                                                        found = true;
-                                                    }
-                                                }
-                                            }
-                                            if (!found) {
-                                                continue loop2;
-                                            }
-                                        }
-                                    }
-                                }
-                                if (root1 < root2) {
-                                    table[root2] = root1;
-                                    delete roots[root2];
-                                } else {
-                                    table[root1] = root2;
-                                    delete roots[root1];
-                                }
-                                changed = true;
-                            }
-                        }
-                    }
-                }
-            }
-            return [table, roots];
-        }
 
         function visitFieldsForDOT(table, types, node, nodeStr, edges) {
             var fieldMap = types[node], tmp;
             for (var field in fieldMap) {
-                if (HOP(fieldMap, field)) {
+                if (util.HOP(fieldMap, field)) {
                     tmp = escapeNode(field);
                     nodeStr = nodeStr + "|<" + tmp + ">" + tmp;
                 }
                 var typeMap = fieldMap[field];
                 for (var type in typeMap) {
-                    if (HOP(typeMap, type)) {
+                    if (util.HOP(typeMap, type)) {
                         type = getRoot(table, type);
                         var tmp2 = escapeNode(type);
                         var edgeStr = "    " + escapeNode(node) + ":" + tmp + " -> " + tmp2 + ":" + tmp2;
@@ -464,7 +295,7 @@
             var locs = {};
 
             for (var node in table) {
-                if (HOP(table, node) && node.indexOf("(") > 0 && node !== "object(null)") {
+                if (util.HOP(table, node) && node.indexOf("(") > 0 && node !== "object(null)") {
                     var loc, root = table[node];
                     loc = locs[root];
                     if (loc === undefined) {
@@ -476,7 +307,7 @@
 
 
             for (loc in locs) {
-                if (HOP(locs, loc)) {
+                if (util.HOP(locs, loc)) {
                     var lines = locs[loc];
                     var tmp = escapeNode(loc);
                     var nodeStr = "    " + tmp + "_loc [label = \"";
@@ -532,7 +363,7 @@
             }
 
             for (i in edges) {
-                if (HOP(edges, i)) {
+                if (util.HOP(edges, i)) {
                     dot = dot + i + ";\n";
                 }
             }
@@ -544,9 +375,9 @@
         }
 
         function getName(key) {
-            if (HOP(functionNames, key)) {
+            if (util.HOP(functionNames, key)) {
                 return functionNames[key];
-            } else if (HOP(typeNames, key)) {
+            } else if (util.HOP(typeNames, key)) {
                 return typeNames[key];
             } else {
                 return "";
@@ -565,7 +396,7 @@
             nodes.push("    undefined [label = \"<undefined>undefined\"]");
             nodes.push("    " + escapeNode("object(null)") + " [label = \"<" + escapeNode("object(null)") + ">null\"]");
             for (var node in roots) {
-                if (HOP(roots, node)) {
+                if (util.HOP(roots, node)) {
                     var tmp = escapeNode(node);
                     var nodeStr = "    " + tmp + " [label = \"<" + tmp + ">" + node.substring(0, node.indexOf("(")) + "\\ " + getName(node);
 
@@ -587,12 +418,26 @@
         }
 
         this.endExecution = function() {
-            analyzeTypes();
+            if (online) {
+                console.log("sandbox: "+JSON.stringify(sandbox)); // TODO RAD
+                typeAnalysis.analyzeTypes(typeNameToFieldTypes, functionToSignature, sandbox.iids);
+            } else {
+                logResults();
+            }
         };
+
+        function importModule(moduleName) {
+            if (sandbox.Constants.isBrowser) {
+                return window['$' + moduleName];
+            } else {
+                return require('./' + moduleName + ".js");
+            }
+        }
     }
 
     if (sandbox.Constants.isBrowser) {
         sandbox.analysis = new InconsistentTypeEngine();
+
         window.addEventListener("beforeunload", function() {
             console.log("beforeunload --> logging results");
             sandbox.analysis.endExecution();
