@@ -61,7 +61,7 @@ to run test, type:
 cd ../jalangi
 npm test
 ```
-### Run Experiment
+### Run Experiments
 
 In the Jalangi-Berkeley directory:
 Command Usage:
@@ -84,7 +84,7 @@ node src/js/commands/transform_analyze.js ../jalangi ../jalangi/tests/octane/pdf
 
 Project for doing research on top of Jalangi project.
 
-### Run Experiment
+### Run Browser Experiments
 
 For now, this experiment only supports Firefox and Chrome on Mac OS.
 To automated the web testing, selenium is needed, to install selenium type the following command in the terminal:
