@@ -54,6 +54,7 @@
 
     var allResults = [];
     function logResult(url, json, append) {
+        console.log("Received results in main.js of jalangiFF");
         var result = { url: url, value: JSON.parse(json) };
         if (append) {
             allResults.push(result);

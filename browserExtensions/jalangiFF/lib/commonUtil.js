@@ -39,6 +39,19 @@
         module = unwrapObject(window).$jalangiFFCommonUtil;
     }
 
+    function unwrapObject(object) {
+        if (!object)
+            return object;
+        try {
+            if (object.wrappedJSObject) {
+                return object.wrappedJSObject;
+            }
+        } catch (e) {
+            console.log("Problem w/ unwrapping: " + e.trace);
+        }
+        return object;
+    }
+
     // exports
     module.assert = assert;
 

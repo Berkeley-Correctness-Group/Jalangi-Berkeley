@@ -22,13 +22,12 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
+import org.openqa.jetty.log.LogStream.STDOUT;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
-import org.openqa.selenium.logging.LogEntries;
-import org.openqa.selenium.logging.LogEntry;
 import org.openqa.selenium.logging.LogType;
 import org.openqa.selenium.logging.LoggingPreferences;
 import org.openqa.selenium.remote.CapabilityType;
@@ -36,9 +35,11 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 
 public class ExperimentRunner {
 
-//	final String firefoxBinary = "/home/m/javascript/mozilla-central/obj-x86_64-unknown-linux-gnu/dist/firefox/firefox";
-	final String firefoxBinary = "/usr/bin/firefox";
+	final String firefoxBinary = "/home/m/javascript/mozilla-central/obj-x86_64-unknown-linux-gnu/dist/firefox/firefox";
 	final String jalangiFFxpi = "/home/m/research/projects/Jalangi-Berkeley/browserExtensions/jalangiFF/jalangiff.xpi";
+
+	final String firefoxLogFile = "/tmp/firefox.out";
+	final String javascriptLogFile = "/tmp/firefox_javascript.out";
 
 	String baseUrl = "http://127.0.0.1";
 	WebDriver driver;
@@ -55,41 +56,39 @@ public class ExperimentRunner {
 				loggingPreferences);
 		FirefoxBinary binary = new FirefoxBinary(new File(firefoxBinary));
 		FirefoxProfile profile = new FirefoxProfile();
+		System.setProperty("webdriver.firefox.logfile", firefoxLogFile);
+		profile.setPreference("webdriver.log.file", javascriptLogFile);
+		profile.setPreference("dom.max_script_run_time", 120);
 		profile.addExtension(new File(jalangiFFxpi));
 		driver = new FirefoxDriver(binary, profile, desiredCapabilities);
-		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+		driver.manage().timeouts().implicitlyWait(120, TimeUnit.SECONDS);
 
-		try {
-//			testToyExample();
-			
-			testJoomla();
-			testJoomlaAdmin();
-			testCmsmadesimple();
-			testMediawiki();
-			testMoodle();
-			testDokuwiki();
-			testOsclass();
-			testPhpbb();
-			testWordpress();
-			testZurmo();
-			testProcesswire();
+		// testToyExample();
 
-			// trigger beforeunload event after last benchmark
-//			driver.get("about:blank"); 
-		} finally {
-			LogEntries logEntries = driver.manage().logs().get(LogType.BROWSER);
-			for (LogEntry eachEntry : logEntries.getAll()) {
-				System.out.println(eachEntry.toString());
-			}
-		}
+//		testJoomla();
+//		testJoomlaAdmin();
+		testCmsmadesimple();
+//		testMediawiki();
+//		testMoodle();
+//		testDokuwiki();
+//		testOsclass();
+//		testPhpbb();
+//		testWordpress();
+//		testZurmo();
+//		testProcesswire();
 
-		// driver.quit();
+		// trigger beforeunload event after last benchmark
+		driver.get("about:blank");
+
+		driver.quit();
+
+		System.out.println("Done :-)");
 	}
 
 	public void testToyExample() throws Exception {
 		driver.get("http://127.0.0.1:8000/tests/inconsistentType/inconsistent8.html");
 	}
-	
+
 	public void testCmsmadesimple() throws Exception {
 		driver.get(baseUrl + "/cmsmadesimple/");
 		driver.findElement(By.cssSelector("a.menuactive > span")).click();

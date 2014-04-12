@@ -3,7 +3,6 @@
     var util = importModule("CommonUtil");
 
     function analyzeTypes(typeNameToFieldTypes, functionToSignature, iids) {
-        console.log("analyzeTypes called with iids: "+iids); // TODO RAD
         var tableAndRoots = equiv(typeNameToFieldTypes);
         //console.log(
         //generateDOT(tableAndRoots[0], tableAndRoots[1], iidToFieldTypes, iidToSignature)

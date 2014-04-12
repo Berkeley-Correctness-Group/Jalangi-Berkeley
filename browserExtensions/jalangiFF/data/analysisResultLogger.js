@@ -21,6 +21,7 @@
     var commonUtil = unwrapObject(window).$jalangiFFCommonUtil;
 
     unwrapObject(window).$jalangiFFLogResult = function(json, append) {
+        console.log("Receiving results from page script");
         var url = unwrapObject(document.URL);
         self.port.emit("logResult", url, json, append);
     };

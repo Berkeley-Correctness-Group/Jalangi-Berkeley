@@ -32,11 +32,12 @@ jalangiBerkeleyBaseDir = "/home/m/research/projects/Jalangi-Berkeley/"
 jalangiBaseDir = "/home/m/research/projects/jalangi/"
 
 #excluded = [ r'jquery', r'iscroll', r'peg-0.6.2', r'String.js', r'jsviews' ]
-excluded = [ ]
+excluded = [ r'jquery' ]
 
 workingDirName = "/tmp/jalangiWorkingDir/"
 
-#jalangiAnalysis = jalangiBerkeleyBaseDir+"src/js/analyses/executionCounters/ExecutionCountersEngine.js"
+#jalangiAnalysisFiles = [
+#    jalangiBerkeleyBaseDir+"src/js/analyses/executionCounters/ExecutionCountersEngine.js" ]
 #jalangiAnalysis = jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine.js"
 #jalangiAnalysis = jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine2.js"
 jalangiAnalysisFiles = [ 
@@ -86,7 +87,7 @@ def makeUniqueFileName():
 
 def findCachedFile():
   # disable caching while the analysis changes all the time (or delete instrumented files after each change)
-  return None
+  #return None
   print "Searching cached file for "+realFileName
   for file in os.listdir(workingDir):
     filePattern = re.sub(r'\.js$', "", realFileName)+"*"+".js"
@@ -166,7 +167,7 @@ if libOption == "jalangiLibs":
     f.write(open(jalangiAnalysisFile).read())
   f.write("\n\n// END OF JALANGI LIBS\n\n")
 # add iid infos
-f.write("var iidInfos = "+open(workingDirName+"/iids.json").read()+"; J$.iids = iidInfos.iids;") 
+f.write("var iidInfos = "+open(workingDirName+"/iids.json").read()+";\nJ$.iids = iidInfos.iids;\n\n") 
 # add instrumented code  
 f.write(open(instr).read()) 
 f.close()

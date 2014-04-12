@@ -25,7 +25,7 @@
         var util = importModule("CommonUtil");
 
         var P_VALUE = 5.0;
-        var online = true; // offline mode is only for in-browser analysis
+        var online = false; // offline mode is only for in-browser analysis
 
         // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
         var typeNameToFieldTypes = {}; // type name -> (field -> type name -> iid -> true)  --  for each type, gives the fields, their types, and where this field type has been observed
@@ -180,8 +180,10 @@
                 typeNameToFieldTypes:typeNameToFieldTypes,
                 functionToSignature:functionToSignature,
                 typeNames:typeNames,
-                functionNames:functionNames
+                functionNames:functionNames,
+                iids: sandbox.iids
             };
+            console.log("Sending results to jalangiFF");
             window.$jalangiFFLogResult(JSON.stringify(results), true);
         }
 
