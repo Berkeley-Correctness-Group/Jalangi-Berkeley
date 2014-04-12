@@ -65,9 +65,9 @@ public class ExperimentRunner {
 
 		// testToyExample();
 
-//		testJoomla();
-//		testJoomlaAdmin();
-		testCmsmadesimple();
+		testJoomla();
+		testJoomlaAdmin();
+//		testCmsmadesimple();
 //		testMediawiki();
 //		testMoodle();
 //		testDokuwiki();

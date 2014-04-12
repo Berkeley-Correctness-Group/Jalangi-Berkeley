@@ -7,12 +7,58 @@
         //console.log(
         //generateDOT(tableAndRoots[0], tableAndRoots[1], iidToFieldTypes, iidToSignature)
         //);
-        analyze(typeNameToFieldTypes, tableAndRoots[0], iids);
-        analyze(functionToSignature, tableAndRoots[0], iids);
+        var typeWarnings = analyze(typeNameToFieldTypes, tableAndRoots[0], iids);
+        var functionWarnings = analyze(functionToSignature, tableAndRoots[0], iids);
         //console.log(JSON.stringify(iidToFieldTypes, null, '\t'));
+        return [ typeWarnings, functionWarnings ];
     }
 
+    /**
+     * @param {TypeDescription} typeDescription
+     * @param {string} fieldName
+     * @param {array of pairs (TypeDescription, array of string)} observedTypesAndLocations
+     */
+    function InconsistentTypeWarning(typeDescription, fieldName, observedTypesAndLocations) {
+        this.typeDescription = typeDescription;
+        this.fieldName = fieldName;
+        this.observedTypesAndLocations = observedTypesAndLocations;
+    }
+    
+    InconsistentTypeWarning.prototype.toString = function() {
+        var s = "Warning: "+this.fieldName+" of "+this.typeDescription.toString()+" has multiple types:\n";
+        this.observedTypesAndLocations.forEach(function (observedTypeAndLocations) {
+            s += "    "+observedTypeAndLocations[0].toString()+"\n";
+            observedTypeAndLocations[1].forEach(function (location) {
+                s += "        found at "+location+"\n";
+            });
+        });
+        return s;
+    };
+    
+    function UndefinedFieldWarning(typeDescription, locations) {
+        this.typeDescription = typeDescription;
+        this.locations = locations;
+    }
+    
+    UndefinedFieldWarning.prototype.toString = function() {
+        var s = "Warning: undefined field found in "+this.typeDescription+":\n";
+        this.locations.forEach(function (location) {
+            s += "        found at "+location+"\n";
+        });
+        return s;
+    };
+
+    function TypeDescription(kind, location) {
+        this.kind = kind;
+        this.location = location;
+    }
+    
+    TypeDescription.prototype.toString = function() {
+        return this.kind+" originated at "+this.location;
+    };
+
     function analyze(nameToFieldMap, table, iids) {
+        var warnings = [];
         var done = {};
         for (var typeOrFunctionName in nameToFieldMap) {
             if (util.HOP(nameToFieldMap, typeOrFunctionName)) {
@@ -23,8 +69,10 @@
                     for (var field in fieldMap) {
                         if (util.HOP(fieldMap, field)) {
                             if (field === "undefined") { // TODO How to trigger this case? (MP)
-                                console.log("Potential Bug: undefined field found in " + typeInfoWithLocation(typeOrFunctionName, iids) +
-                                      ":\n" + getTypeInfo(typeMap, iids));
+                                var typeDescription = toTypeDescription(typeOrFunctionName, iids);
+                                var locations = toLocations(typeMap, iids);
+                                var warning = new UndefinedFieldWarning(typeDescription, locations);
+                                warnings.push(warning);
                             }
                         }
                     }
@@ -37,11 +85,15 @@
                                         for (var type2 in typeMap) {
                                             if (util.HOP(typeMap, type2)) {
                                                 if (type1 < type2 && getRoot(table, type1) !== getRoot(table, type2)) {
-                                                    console.log("Warning: " + field + " of " + typeInfoWithLocation(typeOrFunctionName, iids) +
-                                                          " has multiple types:");
+                                                    var typeDescription = toTypeDescription(typeOrFunctionName, iids);
+                                                    var observedTypesAndLocations = [];
                                                     for (var type3 in typeMap) {
-                                                        console.log("    " + typeInfoWithLocation(type3, iids) + "\n" + getLocationsInfo(typeMap[type3], iids));
+                                                        var observedType = toTypeDescription(type3, iids);
+                                                        var locations = toLocations(typeMap[type3], iids);
+                                                        observedTypesAndLocations.push([observedType, locations]);
                                                     }
+                                                    var warning = new InconsistentTypeWarning(typeDescription, field, observedTypesAndLocations);
+                                                    warnings.push(warning);
                                                     break lbl1;
                                                 }
                                             }
@@ -54,6 +106,7 @@
                 }
             }
         }
+        return warnings;
     }
 
     function getRoot(table, typeOrFunctionName) {
@@ -135,20 +188,31 @@
         return [table, roots];
     }
 
-    function typeInfoWithLocation(type, iids) {
+    function toTypeDescription(type, iids) {
         if (type.indexOf("(") > 0) {
             var type1 = type.substring(0, type.indexOf("("));
             var iid = type.substring(type.indexOf("(") + 1, type.indexOf(")"));
             if (iid === "null") {
-                return "null";
+                return new TypeDescription("null", "");
             } else {
-                return type1 + " originated at " + iids[iid];
+                return new TypeDescription(type1, iids[iid]);
             }
         } else {
-            return type;
+            return new TypeDescription(type, "");
         }
     }
 
+    function toLocations(map, iids) {
+        var result = [];
+        for (var loc in map) {
+            if (util.HOP(map, loc)) {
+                result.push(iids[loc]);
+            }
+        }
+        return result;
+    }
+    
+    // TODO replace by toLocations
     function getLocationsInfo(map, iids) {
         var str = "";
         for (var loc in map) {

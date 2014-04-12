@@ -32,7 +32,7 @@ jalangiBerkeleyBaseDir = "/home/m/research/projects/Jalangi-Berkeley/"
 jalangiBaseDir = "/home/m/research/projects/jalangi/"
 
 #excluded = [ r'jquery', r'iscroll', r'peg-0.6.2', r'String.js', r'jsviews' ]
-excluded = [ r'jquery' ]
+excluded = [ ]
 
 workingDirName = "/tmp/jalangiWorkingDir/"
 
@@ -149,7 +149,7 @@ shutil.copyfile(tmpOrig, orig)
 #if instrCodeOption == "instrumentCode":
 #  cmd = ["node", "/home/m/research/projects/jalangi/src/js/instrument/esnstrument.js", "--instrumentCode", orig]
 #else:
-cmd = [ "node", "/home/m/research/projects/jalangi/src/js/instrument/esnstrument.js", "--iidsFile", workingDirName+"iids.json", "--noEvalWrap", orig ]
+cmd = [ "node", "/home/m/research/projects/jalangi/src/js/instrument/esnstrument.js", "--maxIIDsFile", workingDirName+"maxIIDs.json", "--noEvalWrap", orig ]
 print "Calling instrumenter with\n"+' '.join(cmd)
 subprocess.call(cmd)
 
@@ -166,14 +166,14 @@ if libOption == "jalangiLibs":
   for jalangiAnalysisFile in jalangiAnalysisFiles:
     f.write(open(jalangiAnalysisFile).read())
   f.write("\n\n// END OF JALANGI LIBS\n\n")
-# add iid infos
-f.write("var iidInfos = "+open(workingDirName+"/iids.json").read()+";\nJ$.iids = iidInfos.iids;\n\n") 
 # add instrumented code  
-f.write(open(instr).read()) 
+f.write(open(instr).read()+"\n\n") 
+# add sourcemap
+f.write(open("jalangi_sourcemap.js").read()+"\n\n")
 f.close()
   
 if libOption == "jalangiLibs":
   shutil.copyfile(tmpInstr, instr+"_withJalangiLibs")
 
-if not instrCodeOption == "instrumentCode":
-  shutil.move("jalangi_sourcemap.js", os.path.join(workingDir, uniqueFileName+"_jalangi_sourcemap.js"))
+shutil.move("jalangi_sourcemap.js", os.path.join(workingDir, uniqueFileName+"_jalangi_sourcemap.js"))
+shutil.move("jalangi_sourcemap.json", os.path.join(workingDir, uniqueFileName+"_jalangi_sourcemap.json"))

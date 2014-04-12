@@ -29,7 +29,7 @@
 
         // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
         var typeNameToFieldTypes = {}; // type name -> (field -> type name -> iid -> true)  --  for each type, gives the fields, their types, and where this field type has been observed
-        var functionToSignature = {};  // function name -> ({"this", "return", "arg1", ...} -> type -> iid -> true)  --  for each function, gives the receiver, argument, and return types, and where these types have been observed
+        var functionToSignature = {};  // function name -> ({"this", "return", "arg1", ...} -> type name -> iid -> true)  --  for each function, gives the receiver, argument, and return types, and where these types have been observed
         var typeNames = {};
         var functionNames = {};
 
@@ -180,8 +180,7 @@
                 typeNameToFieldTypes:typeNameToFieldTypes,
                 functionToSignature:functionToSignature,
                 typeNames:typeNames,
-                functionNames:functionNames,
-                iids: sandbox.iids
+                functionNames:functionNames
             };
             console.log("Sending results to jalangiFF");
             window.$jalangiFFLogResult(JSON.stringify(results), true);
