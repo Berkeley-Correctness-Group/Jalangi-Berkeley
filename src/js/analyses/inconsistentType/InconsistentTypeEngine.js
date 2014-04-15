@@ -1,6 +1,7 @@
 /*
  * Copyright 2013-2014 Samsung Information Systems America, Inc.
- *
+ *                2014 University of California, Berkeley
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,8 +25,11 @@
         var typeAnalysis = importModule("TypeAnalysis");
         var util = importModule("CommonUtil");
 
+        var online = true; // offline mode is only for in-browser analysis
+        var printWarnings = true;
+        
         var P_VALUE = 5.0;
-        var online = false; // offline mode is only for in-browser analysis
+        
 
         // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
         var typeNameToFieldTypes = {}; // type name -> (field -> type name -> iid -> true)  --  for each type, gives the fields, their types, and where this field type has been observed
@@ -420,8 +424,7 @@
 
         this.endExecution = function() {
             if (online) {
-                console.log("sandbox: "+JSON.stringify(sandbox)); // TODO RAD
-                typeAnalysis.analyzeTypes(typeNameToFieldTypes, functionToSignature, sandbox.iids);
+                typeAnalysis.analyzeTypes(typeNameToFieldTypes, functionToSignature, sandbox.iids, printWarnings);
             } else {
                 logResults();
             }
@@ -454,3 +457,4 @@
     }
 
 }(typeof J$ === 'undefined' ? (J$ = {}) : J$));
+

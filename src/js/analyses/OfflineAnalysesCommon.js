@@ -2,16 +2,15 @@
 
     var fs = require('fs');
 
-    var jalangiWorkingDir = "/tmp/jalangiWorkingDir/";
     var sourceMapSuffix = "_sourcemap.json";
 
-    function loadIIDs(benchmarkOpt) {
+    function loadIIDs(sourcemapDir, benchmarkOpt) {
         var allIIDs = {};
         var sourceMapCtr = 0;
-        fs.readdirSync(jalangiWorkingDir).forEach(function(file) {
+        fs.readdirSync(sourcemapDir).forEach(function(file) {
             if (file.indexOf(sourceMapSuffix) === file.length - sourceMapSuffix.length) {
                 if (!benchmarkOpt || file.indexOf(benchmarkOpt) !== -1) {
-                    var json = fs.readFileSync(jalangiWorkingDir+file);
+                    var json = fs.readFileSync(sourcemapDir+file);
                     sourceMapCtr++;
                     var iids = JSON.parse(json)[0];
                     Object.keys(iids).forEach(function(iid) {

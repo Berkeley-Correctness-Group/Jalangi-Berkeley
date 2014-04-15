@@ -2,7 +2,7 @@
 
     var util = importModule("CommonUtil");
 
-    function analyzeTypes(typeNameToFieldTypes, functionToSignature, iids) {
+    function analyzeTypes(typeNameToFieldTypes, functionToSignature, iids, printWarnings) {
         var tableAndRoots = equiv(typeNameToFieldTypes);
         //console.log(
         //generateDOT(tableAndRoots[0], tableAndRoots[1], iidToFieldTypes, iidToSignature)
@@ -10,7 +10,17 @@
         var typeWarnings = analyze(typeNameToFieldTypes, tableAndRoots[0], iids);
         var functionWarnings = analyze(functionToSignature, tableAndRoots[0], iids);
         //console.log(JSON.stringify(iidToFieldTypes, null, '\t'));
-        return [ typeWarnings, functionWarnings ];
+
+        if (printWarnings) {
+            typeWarnings.forEach(function(w) {
+                console.log(w.toString());
+            });
+            functionWarnings.forEach(function(w) {
+                console.log(w.toString());
+            });
+        }
+
+        return [typeWarnings, functionWarnings];
     }
 
     /**
@@ -23,38 +33,43 @@
         this.fieldName = fieldName;
         this.observedTypesAndLocations = observedTypesAndLocations;
     }
-    
+
     InconsistentTypeWarning.prototype.toString = function() {
-        var s = "Warning: "+this.fieldName+" of "+this.typeDescription.toString()+" has multiple types:\n";
-        this.observedTypesAndLocations.forEach(function (observedTypeAndLocations) {
-            s += "    "+observedTypeAndLocations[0].toString()+"\n";
-            observedTypeAndLocations[1].forEach(function (location) {
-                s += "        found at "+location+"\n";
+        var s = "Warning: " + this.fieldName + " of " + this.typeDescription.toString() + " has multiple types:\n";
+        this.observedTypesAndLocations.forEach(function(observedTypeAndLocations) {
+            s += "    " + observedTypeAndLocations[0].toString() + "\n";
+            observedTypeAndLocations[1].forEach(function(location) {
+                s += "        found at " + location + "\n";
             });
         });
         return s;
     };
-    
+
     function UndefinedFieldWarning(typeDescription, locations) {
         this.typeDescription = typeDescription;
         this.locations = locations;
     }
-    
+
     UndefinedFieldWarning.prototype.toString = function() {
-        var s = "Warning: undefined field found in "+this.typeDescription+":\n";
-        this.locations.forEach(function (location) {
-            s += "        found at "+location+"\n";
+        var s = "Warning: undefined field found in " + this.typeDescription + ":\n";
+        this.locations.forEach(function(location) {
+            s += "        found at " + location + "\n";
         });
         return s;
     };
 
+    /**
+     * @param {string} kind
+     * @param {string} location
+     */
     function TypeDescription(kind, location) {
+        util.assert(typeof location === "string", location + " -- " + typeof location + " -- " + JSON.stringify(location));
         this.kind = kind;
         this.location = location;
     }
-    
+
     TypeDescription.prototype.toString = function() {
-        return this.kind+" originated at "+this.location;
+        return this.kind + " originated at " + this.location;
     };
 
     function analyze(nameToFieldMap, table, iids) {
@@ -195,7 +210,7 @@
             if (iid === "null") {
                 return new TypeDescription("null", "");
             } else {
-                return new TypeDescription(type1, iids[iid]);
+                return new TypeDescription(type1, iids[iid].toString());
             }
         } else {
             return new TypeDescription(type, "");
@@ -206,12 +221,12 @@
         var result = [];
         for (var loc in map) {
             if (util.HOP(map, loc)) {
-                result.push(iids[loc]);
+                result.push(iids[loc].toString());
             }
         }
         return result;
     }
-    
+
     // TODO replace by toLocations
     function getLocationsInfo(map, iids) {
         var str = "";

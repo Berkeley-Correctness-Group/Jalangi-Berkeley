@@ -14,6 +14,10 @@
         return count;
     }
 
+    function assert(cond, msg) {
+        if (!cond)
+            throw new Error(msg);
+    }
 
     // boilerplate to use this file both in browser and in node application
     var module;
@@ -29,5 +33,6 @@
     // exports
     module.HOP = HOP;
     module.sizeOfMap = sizeOfMap;
-   
+    module.assert = assert;
+
 })();
