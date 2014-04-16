@@ -1,12 +1,11 @@
 (function() {
 
     var util = importModule("CommonUtil");
+    var visualization = importModule("Visualization");
 
-    function analyzeTypes(typeNameToFieldTypes, functionToSignature, iids, printWarnings) {
+    function analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, iids, printWarnings) {
         var tableAndRoots = equiv(typeNameToFieldTypes);
-        //console.log(
-        //generateDOT(tableAndRoots[0], tableAndRoots[1], iidToFieldTypes, iidToSignature)
-        //);
+        console.log(visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature, typeNames, functionNames, iids));
         var typeWarnings = analyze(typeNameToFieldTypes, tableAndRoots[0], iids);
         var functionWarnings = analyze(functionToSignature, tableAndRoots[0], iids);
         //console.log(JSON.stringify(iidToFieldTypes, null, '\t'));
@@ -270,4 +269,5 @@
 
     // exports
     module.analyzeTypes = analyzeTypes;
+    module.getRoot = getRoot;
 })();

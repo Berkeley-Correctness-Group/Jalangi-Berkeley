@@ -17,14 +17,16 @@
         return JSON.parse(data);
     }
 
-    function TypeData(typeNameToFieldTypes, functionToSignature) {
+    function TypeData(typeNameToFieldTypes, functionToSignature, typeNames, functionNames) {
         this.typeNameToFieldTypes = typeNameToFieldTypes;
         this.functionToSignature = functionToSignature;
+        this.typeNames = typeNames;
+        this.functionNames = functionNames;
     }
 
-    function mergeTypeData(typeData, typeNameToFieldTypes, functionToSignature) {
-        mergeToLeft(typeData.typeNameToFieldTypes, typeNameToFieldTypes);
-        mergeToLeft(typeData.functionToSignature, functionToSignature);
+    function mergeTypeData(typeData, typeNameToFieldTypes, functionToSignature, typeNames, functionNames) {
+        mergeToLeft(typeData.typeNameToFieldTypes, typeNameToFieldTypes, typeNames, functionNames);
+        mergeToLeft(typeData.functionToSignature, functionToSignature, typeNames, functionNames);
     }
 
     function mergeToLeft(left, right) {
@@ -51,7 +53,7 @@
     WarningStats.prototype.toString = function() {
         return this.typeWarnings + "," + this.functionWarnings + "," + this.typeWarningsByLoc + "," + this.functionWarningsByLoc;
     };
-    
+
     WarningStats.prototype.headerString = function() {
         return "typeWarnings,functionWarnings,typeWarningsByLoc,functionWarningsByLoc";
     };
@@ -61,8 +63,9 @@
         loggedResults.forEach(function(loggedResult) {
             var urlSuffix = loggedResult.url.slice("http://127.0.0.1/".length);
             var benchmark = urlSuffix.slice(0, urlSuffix.indexOf("/"));
-            var typeData = benchmark2TypeData[benchmark] || new TypeData({}, {});
-            mergeTypeData(typeData, loggedResult.value.typeNameToFieldTypes, loggedResult.value.functionToSignature);
+            var typeData = benchmark2TypeData[benchmark] || new TypeData({}, {}, {}, {});
+            mergeTypeData(typeData, loggedResult.value.typeNameToFieldTypes, loggedResult.value.functionToSignature,
+                  loggedResult.value.typeNames, loggedResult.value.functionNames);
             benchmark2TypeData[benchmark] = typeData;
         });
 
@@ -71,7 +74,7 @@
             var typeData = benchmark2TypeData[benchmark];
             console.log(Object.keys(typeData.typeNameToFieldTypes).length + " types, " + Object.keys(typeData.functionToSignature).length + " functions");
             var iids = offlineCommon.loadIIDs(sourcemapDir);
-            var warnings = typeAnalysis.analyzeTypes(typeData.typeNameToFieldTypes, typeData.functionToSignature, iids);
+            var warnings = typeAnalysis.analyzeTypes(typeData.typeNameToFieldTypes, typeData.functionToSignature, typeData.typeNames, typeData.functionNames, iids);
             var typeWarnings = warnings[0];
 //            typeWarnings.forEach(function(warning) {
 //                console.log(warning.toString());
@@ -111,7 +114,7 @@
 
         var warningStats = new WarningStats(typeWarnings.length, functionWarnings.length,
               Object.keys(locToTypeWarnings).length, Object.keys(locToFunctionWarnings).length);
-        console.log(warningStats.headerString());              
+        console.log(warningStats.headerString());
         console.log(warningStats.toString());
     }
 
@@ -195,7 +198,7 @@
 
     function analyzeTypeWarnings(allTypeWarnings) {
         var typeWarnings = removeMultipleFunctionsWarnings(allTypeWarnings);
-        
+
         // merge by location
         var locToTypeWarnings = {};
         typeWarnings.forEach(function(warning) {
@@ -230,7 +233,7 @@
 
 
     }
-    
+
     /**
      * Removes each warning about a property that points to
      * multiple different functions
@@ -241,7 +244,7 @@
         var result = [];
         warnings.forEach(function(w) {
             var includesNonFunction = false;
-            w.observedTypesAndLocations.some(function (typeAndLocs) {
+            w.observedTypesAndLocations.some(function(typeAndLocs) {
                 if (typeAndLocs[0].kind !== "function") {
                     return includesNonFunction = true;
                 }
