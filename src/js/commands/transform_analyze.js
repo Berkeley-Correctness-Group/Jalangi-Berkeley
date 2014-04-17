@@ -83,7 +83,7 @@ child = exec(inst_comm, {cwd: jalangi_home_dir}, function (error, stdout, stderr
 
 function run_inst_with_analysis(){
 	var analysis = require(jalangi_home_dir + '/src/js/analysis');
-	analysis.init("inbrowser", clientAnalysis);
+	analysis.init("inbrowser", clientAnalysis, true);
 	require(jalangi_home_dir + '/src/js/InputManager');
 	require(jalangi_home_dir + '/src/js/instrument/esnstrument');
 	require(jalangi_home_dir + '/inputs.js');

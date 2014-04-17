@@ -89,8 +89,8 @@ def findCachedFile():
   # disable caching while the analysis changes all the time (or delete instrumented files after each change)
   #return None
   print "Searching cached file for "+realFileName
+  filePattern = re.sub(r'\.js$', "", realFileName)+"*"+".js"
   for file in os.listdir(workingDir):
-    filePattern = re.sub(r'\.js$', "", realFileName)+"*"+".js"
     if fnmatch.fnmatch(file, filePattern):
       path = os.path.join(workingDir, file)
       cmpReturn = subprocess.call(["cmp", "--silent", tmpOrig, path]);
@@ -98,6 +98,16 @@ def findCachedFile():
         return path
   print ".. Nothing found"
   return None
+
+def addJalangiLibs(f):
+  f.write("// START OF JALANGI LIBS\n\n")
+  f.write(open(jalangiBerkeleyBaseDir+"src/js/analyses/InitDirectAnalysis.js").read())
+  for jalangiLib in jalangiLibs:
+    f.write(open(jalangiBaseDir+jalangiLib).read())
+  for jalangiAnalysisFile in jalangiAnalysisFiles:
+    f.write(open(jalangiAnalysisFile).read())
+  f.write("\n\n// END OF JALANGI LIBS\n\n")
+
 
 # main part
 realFileName = ''.join(c for c in rawRealFileName if c in valid_chars)
@@ -117,13 +127,7 @@ for ex in excluded:
     if libOption == "jalangiLibs":
       print " .. but will add jalangi libs"
       f = open(tmpInstr, 'w')
-      f.write("// START OF JALANGI LIBS\n\n")
-      f.write(open(jalangiBerkeleyBaseDir+"src/js/analyses/InitDirectAnalysis.js").read())
-      for jalangiLib in jalangiLibs:
-        f.write(open(jalangiBaseDir+jalangiLib).read())
-      for jalangiAnalysisFile in jalangiAnalysisFiles:
-        f.write(open(jalangiAnalysisFile).read())
-      f.write("\n\n// END OF JALANGI LIBS\n\n")
+      addJalangiLibs(f)
       f.write(open(tmpOrig).read()) 
       f.close()
     else:
@@ -135,8 +139,19 @@ cachedOrigFile = findCachedFile()
 if cachedOrigFile != None:
   cachedInstrFile = re.sub(r'\.js$', jalangiSuffix, cachedOrigFile)
   if libOption == "jalangiLibs":
-    cachedInstrFile = cachedInstrFile+"_withJalangiLibs"
-  if os.path.exists(cachedInstrFile):
+    cachedInstrFileWithLibs = cachedInstrFile+"_withJalangiLibs"
+    if os.path.exists(cachedInstrFileWithLibs):
+      shutil.copyfile(cachedInstrFileWithLibs, tmpInstr);
+      print "Reusing cached file "+cachedInstrFileWithLibs
+      sys.exit(0)
+    else:
+      f = open(tmpInstr, 'w')
+      addJalangiLibs(f)
+      f.write(open(cachedInstrFile).read()) 
+      f.close()
+      print "Reusing cached file "+cachedInstrFile+", after adding jalangi libs"
+      sys.exit(0)
+  else:
     shutil.copyfile(cachedInstrFile, tmpInstr);
     print "Reusing cached file "+cachedInstrFile
     sys.exit(0)
@@ -159,13 +174,7 @@ instr = re.sub(r'\.js$', jalangiSuffix, orig)
 f = open(tmpInstr, 'w')
 # add jalangi libs (if needed)
 if libOption == "jalangiLibs":
-  f.write("// START OF JALANGI LIBS\n\n")
-  f.write(open(jalangiBerkeleyBaseDir+"src/js/analyses/InitDirectAnalysis.js").read())
-  for jalangiLib in jalangiLibs:
-    f.write(open(jalangiBaseDir+jalangiLib).read())
-  for jalangiAnalysisFile in jalangiAnalysisFiles:
-    f.write(open(jalangiAnalysisFile).read())
-  f.write("\n\n// END OF JALANGI LIBS\n\n")
+  addJalangiLibs(f)
 # add instrumented code  
 f.write(open(instr).read()+"\n\n") 
 # add sourcemap

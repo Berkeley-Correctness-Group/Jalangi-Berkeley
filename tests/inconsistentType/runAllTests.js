@@ -39,6 +39,7 @@
                           failed++;
                       } else if (!expectWarning && hasWarning) {
                           console.log(file + ": FAILED (get unexpected warning)");
+//                          console.log(stdout);
                           failed++;
                       } else {
                           console.log(file + ": OK");

@@ -12,9 +12,8 @@ https://www.eecs.berkeley.edu/~gongliang13/jalangi_ff/
 
 ### Requirements
 
-We tested Jalangi on Mac OS X 10.8 with Chromium browser.  Jalangi should work on Mac OS
-10.7, Ubuntu 11.0 and higher and Windows 7 or higher. Jalangi will NOT work with Firefox
-and IE.
+We tested Jalangi on Mac OS X 10.8 with the Chromium browser and on Ubuntu 12.04 with both the Chromium and the Firefox browsers.  Jalangi should work on Mac OS
+10.7, Ubuntu 11.0 and higher and Windows 7 or higher. Jalangi will NOT work with IE.
 
   * Latest version of Node.js available at http://nodejs.org/.  We have tested Jalangi with Node v0.8.22 and v0.10.3.
   * Sun's JDK 1.6 or higher.  We have tested Jalangi with Java 1.6.0_43.
@@ -71,7 +70,7 @@ node src/js/commands/transform_analyze.js <jalangi home directory> <program to b
 All files paths should be relative path to the root directory of this repository
 
 Examples:  
-To run the object allocation experiment experiment:  
+To run the object allocation experiment:
 In the root dir of the repository:
 ```
 node src/js/commands/transform_analyze.js ../jalangi ../jalangi/tests/octane/pdfjs.js ../jalangi/src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB
@@ -81,8 +80,10 @@ In the root dir of the repository:
 ```
 node src/js/commands/transform_analyze.js ../jalangi ../jalangi/tests/octane/pdfjs.js src/js/analyses/jitaware/JITAware.js
 ```
-
-Project for doing research on top of Jalangi project.
+To run an analysis to find inconsistent types:
+```
+node src/js/commands/transform_analyze.js ../jalangi tests/inconsistentType/inconsistent3.js src/js/analyses/inconsistentType/InconsistentTypeEngine
+```
 
 ### Run Browser Experiments
 
