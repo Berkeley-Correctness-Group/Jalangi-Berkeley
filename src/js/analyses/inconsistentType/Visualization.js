@@ -24,10 +24,6 @@
 
     function generateDOT(table, roots, typeNameToFieldTypes, functionToSignature, typeNames, functionNames,
           iids, highlightedIIDs, onlyHighlighted, fileNameOpt) {
-        console.log("XXXX " + fileNameOpt + ", highlightedIIDs = " + JSON.stringify(highlightedIIDs));
-        console.log("XXXX2 roots: "+JSON.stringify(roots));
-        console.log("XXXX3 table: "+JSON.stringify(table));
-
         var nodes = [];
         var badNodes = [];
         var locationNodes = [];
@@ -68,9 +64,6 @@
             }
             reachablesChanged = oldNbReachables < Object.keys(reachableFromHighlighted).length;
         }
-
-        console.log("YYY reachableFromHighlighted= " + JSON.stringify(reachableFromHighlighted));
-        console.log("ZZZ nodeToNodeStr: "+JSON.stringify(nodeToNodeStr));
 
         var allEdges = {};
         for (var node in roots) {

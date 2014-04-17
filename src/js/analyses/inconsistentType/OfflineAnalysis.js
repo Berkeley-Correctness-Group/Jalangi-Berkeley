@@ -11,7 +11,7 @@
     // parameters
     var inspectedWarningsFile = "/home/m/research/experiments/inconsistentTypes/inspectedWarnings.json";
     var visualizeAllTypes = true;
-    var visualizeWarningTypes = false;
+    var visualizeWarningTypes = true;
 
     function readFile(fileName) {
         var data = fs.readFileSync(fileName);
