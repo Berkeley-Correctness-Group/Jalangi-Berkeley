@@ -25,11 +25,12 @@
         var typeAnalysis = importModule("TypeAnalysis");
         var util = importModule("CommonUtil");
 
-        var online = true; // offline mode is only for in-browser analysis
+        var online = true;
         var printWarnings = true;
-        
+        var visualizeAllTypes = true; // only for node.js execution (i.e., not in browser)
+        var visualizeWarningTypes = true; // only for node.js execution (i.e., not in browser)
+
         var P_VALUE = 5.0;
-        
 
         // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
         var typeNameToFieldTypes = {}; // type name -> (field -> type name -> iid -> true)  --  for each type, gives the fields, their types, and where this field type has been observed
@@ -186,8 +187,15 @@
                 typeNames:typeNames,
                 functionNames:functionNames
             };
-            console.log("Sending results to jalangiFF");
-            window.$jalangiFFLogResult(JSON.stringify(results), true);
+            if (sandbox.Constants.isBrowser) {
+                console.log("Sending results to jalangiFF");
+                window.$jalangiFFLogResult(JSON.stringify(results), true);
+            } else {
+                var fs = require("fs");
+                var benchmark = process.argv[3];
+                var wrappedResults = [{url:benchmark, value:results}];
+                fs.writeFileSync(process.cwd() + "/analysisResults.json", JSON.stringify(wrappedResults));
+            }
         }
 
         this.literal = function(iid, val) {
@@ -225,7 +233,7 @@
 
         this.endExecution = function() {
             if (online) {
-                typeAnalysis.analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, sandbox.iids, printWarnings);
+                typeAnalysis.analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, sandbox.iids, printWarnings, visualizeAllTypes, visualizeWarningTypes);
             } else {
                 logResults();
             }

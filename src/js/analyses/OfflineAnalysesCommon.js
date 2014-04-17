@@ -10,7 +10,7 @@
         fs.readdirSync(sourcemapDir).forEach(function(file) {
             if (file.indexOf(sourceMapSuffix) === file.length - sourceMapSuffix.length) {
                 if (!benchmarkOpt || file.indexOf(benchmarkOpt) !== -1) {
-                    var json = fs.readFileSync(sourcemapDir+file);
+                    var json = fs.readFileSync(sourcemapDir+"/"+file);
                     sourceMapCtr++;
                     var iids = JSON.parse(json)[0];
                     Object.keys(iids).forEach(function(iid) {

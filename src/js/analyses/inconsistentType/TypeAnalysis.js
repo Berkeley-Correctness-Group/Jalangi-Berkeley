@@ -3,38 +3,60 @@
     var util = importModule("CommonUtil");
     var visualization = importModule("Visualization");
 
-    function analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, iids, printWarnings) {
+    function analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, iids, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
         var tableAndRoots = equiv(typeNameToFieldTypes);
-        console.log(visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature, typeNames, functionNames, iids));
         var typeWarnings = analyze(typeNameToFieldTypes, tableAndRoots[0], iids);
         var functionWarnings = analyze(functionToSignature, tableAndRoots[0], iids);
-        //console.log(JSON.stringify(iidToFieldTypes, null, '\t'));
 
-        if (printWarnings) {
-            typeWarnings.forEach(function(w) {
-                console.log(w.toString());
-            });
-            functionWarnings.forEach(function(w) {
-                console.log(w.toString());
-            });
+        if (visualizeAllTypes) {
+            var allHighlightedIIDs = {};
+            addHighlightedIIDs(allHighlightedIIDs, typeWarnings);
+            addHighlightedIIDs(allHighlightedIIDs, functionWarnings);
+            visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature,
+                  typeNames, functionNames, iids, allHighlightedIIDs, false);
         }
+
+        typeWarnings.forEach(function(w) {
+            if (printWarnings) {
+                console.log(w.toString());
+            }
+            if (visualizeWarningTypes) {
+                visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature,
+                      typeNames, functionNames, iids, w.highlightedIIDs, true, "warning" + w.id + ".dot");
+            }
+        });
+        functionWarnings.forEach(function(w) {
+            if (printWarnings) {
+                console.log(w.toString());
+            }
+            if (visualizeWarningTypes) {
+                visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature,
+                      typeNames, functionNames, iids, w.highlightedIIDs, true, "warning" + w.id + ".dot");
+            }
+        });
 
         return [typeWarnings, functionWarnings];
     }
+
+    var warningCtr = 0;
 
     /**
      * @param {TypeDescription} typeDescription
      * @param {string} fieldName
      * @param {array of pairs (TypeDescription, array of string)} observedTypesAndLocations
+     * @param {set of string} highlightedIIDs
      */
-    function InconsistentTypeWarning(typeDescription, fieldName, observedTypesAndLocations) {
+    function InconsistentTypeWarning(typeDescription, fieldName, observedTypesAndLocations, highlightedIIDs) {
         this.typeDescription = typeDescription;
         this.fieldName = fieldName;
         this.observedTypesAndLocations = observedTypesAndLocations;
+        this.highlightedIIDs = highlightedIIDs;
+        warningCtr++;
+        this.id = warningCtr;
     }
 
     InconsistentTypeWarning.prototype.toString = function() {
-        var s = "Warning: " + this.fieldName + " of " + this.typeDescription.toString() + " has multiple types:\n";
+        var s = "Warning " + this.id + ": " + this.fieldName + " of " + this.typeDescription.toString() + " has multiple types:\n";
         this.observedTypesAndLocations.forEach(function(observedTypeAndLocations) {
             s += "    " + observedTypeAndLocations[0].toString() + "\n";
             observedTypeAndLocations[1].forEach(function(location) {
@@ -44,13 +66,16 @@
         return s;
     };
 
-    function UndefinedFieldWarning(typeDescription, locations) {
+    function UndefinedFieldWarning(typeDescription, locations, highlightedIIDs) {
         this.typeDescription = typeDescription;
         this.locations = locations;
+        this.highlightedIIDs = highlightedIIDs;
+        warningCtr++;
+        this.id = warningCtr;
     }
 
     UndefinedFieldWarning.prototype.toString = function() {
-        var s = "Warning: undefined field found in " + this.typeDescription + ":\n";
+        var s = "Warning" + this.id + ": undefined field found in " + this.typeDescription + ":\n";
         this.locations.forEach(function(location) {
             s += "        found at " + location + "\n";
         });
@@ -82,10 +107,12 @@
                     var fieldMap = nameToFieldMap[typeOrFunctionName];
                     for (var field in fieldMap) {
                         if (util.HOP(fieldMap, field)) {
-                            if (field === "undefined") { // TODO How to trigger this case? (MP)
+                            if (field === "undefined") {
                                 var typeDescription = toTypeDescription(typeOrFunctionName, iids);
                                 var locations = toLocations(typeMap, iids);
-                                var warning = new UndefinedFieldWarning(typeDescription, locations);
+                                var highlightedIIDs = {};
+                                highlightedIIDs[typeOrFunctionName] = true;
+                                var warning = new UndefinedFieldWarning(typeDescription, locations, highlightedIIDs);
                                 warnings.push(warning);
                             }
                         }
@@ -106,8 +133,11 @@
                                                         var locations = toLocations(typeMap[type3], iids);
                                                         observedTypesAndLocations.push([observedType, locations]);
                                                     }
-                                                    var warning = new InconsistentTypeWarning(typeDescription, field, observedTypesAndLocations);
+                                                    var highlightedIIDs = {};
+                                                    highlightedIIDs[typeOrFunctionName] = true;
+                                                    var warning = new InconsistentTypeWarning(typeDescription, field, observedTypesAndLocations, highlightedIIDs);
                                                     warnings.push(warning);
+
                                                     break lbl1;
                                                 }
                                             }
@@ -200,6 +230,14 @@
             }
         }
         return [table, roots];
+    }
+
+    function addHighlightedIIDs(iids, warnings) {
+        warnings.forEach(function(w) {
+            Object.keys(w.highlightedIIDs).forEach(function(iid) {
+                iids[iid] = true;
+            });
+        });
     }
 
     function toTypeDescription(type, iids) {

@@ -10,7 +10,8 @@
 
     // parameters
     var inspectedWarningsFile = "/home/m/research/experiments/inconsistentTypes/inspectedWarnings.json";
-    var sourcemapDir = "/home/m/research/experiments/inconsistentTypes/benchmarks/joomla/sourcemaps/";
+    var visualizeAllTypes = true;
+    var visualizeWarningTypes = false;
 
     function readFile(fileName) {
         var data = fs.readFileSync(fileName);
@@ -58,11 +59,10 @@
         return "typeWarnings,functionWarnings,typeWarningsByLoc,functionWarningsByLoc";
     };
 
-    function analyze(loggedResults) {
+    function analyze(loggedResults, sourcemapDir) {
         var benchmark2TypeData = {};
         loggedResults.forEach(function(loggedResult) {
-            var urlSuffix = loggedResult.url.slice("http://127.0.0.1/".length);
-            var benchmark = urlSuffix.slice(0, urlSuffix.indexOf("/"));
+            var benchmark = benchmarkHelper.urlToBenchmark(loggedResult.url);
             var typeData = benchmark2TypeData[benchmark] || new TypeData({}, {}, {}, {});
             mergeTypeData(typeData, loggedResult.value.typeNameToFieldTypes, loggedResult.value.functionToSignature,
                   loggedResult.value.typeNames, loggedResult.value.functionNames);
@@ -74,7 +74,8 @@
             var typeData = benchmark2TypeData[benchmark];
             console.log(Object.keys(typeData.typeNameToFieldTypes).length + " types, " + Object.keys(typeData.functionToSignature).length + " functions");
             var iids = offlineCommon.loadIIDs(sourcemapDir);
-            var warnings = typeAnalysis.analyzeTypes(typeData.typeNameToFieldTypes, typeData.functionToSignature, typeData.typeNames, typeData.functionNames, iids);
+            var warnings = typeAnalysis.analyzeTypes(typeData.typeNameToFieldTypes, typeData.functionToSignature, typeData.typeNames, typeData.functionNames, iids,
+                  false, visualizeAllTypes, visualizeWarningTypes);
             var typeWarnings = warnings[0];
 //            typeWarnings.forEach(function(warning) {
 //                console.log(warning.toString());
@@ -85,10 +86,11 @@
 //            });
 
 
-//            analyzeFunctionWarnings(functionWarnings);
-            getWarningStats(typeWarnings, functionWarnings);
-            analyzeTypeWarnings(typeWarnings);
 
+            getWarningStats(typeWarnings, functionWarnings);
+            console.log();
+            analyzeFunctionWarnings(functionWarnings);
+            analyzeTypeWarnings(typeWarnings);
         }
     }
 
@@ -119,6 +121,8 @@
     }
 
     function analyzeFunctionWarnings(functionWarnings) {
+        console.log("@@@ Analyzing function warnings:");
+
         // merge by location of function definition
         var locToFunctionWarnings = {};
         functionWarnings.forEach(function(warning) {
@@ -128,48 +132,37 @@
         });
 
         // merge by call site
-        var callSiteToWarnings = {}; // string -> array of InconsistentTypeWarning
-        functionWarnings.forEach(function(w) {
-            w.observedTypesAndLocations.forEach(function(typeAndLocs) {
-                var callSites = typeAndLocs[1];
-                callSites.forEach(function(callSite) {
-                    var warningsForCallSite = callSiteToWarnings[callSite] || [];
-                    warningsForCallSite.push(w);
-                    callSiteToWarnings[callSite] = warningsForCallSite;
-                });
-            });
-        });
+//        var callSiteToWarnings = {}; // string -> array of InconsistentTypeWarning
+//        functionWarnings.forEach(function(w) {
+//            w.observedTypesAndLocations.forEach(function(typeAndLocs) {
+//                var callSites = typeAndLocs[1];
+//                callSites.forEach(function(callSite) {
+//                    var warningsForCallSite = callSiteToWarnings[callSite] || [];
+//                    warningsForCallSite.push(w);
+//                    callSiteToWarnings[callSite] = warningsForCallSite;
+//                });
+//            });
+//        });
 
         // group by caller component and callee component
-        var componentsToCallWarnings = {}; // string of format "callerComponent->calleeComponent" -> array of CallWarning
         var componentsToWarnings = {}; // string of format "callerComponent->calleeComponent" -> array of InconsistentTypeWarning
-        Object.keys(callSiteToWarnings).forEach(function(callSite) {
-            var warningsForCallSite = callSiteToWarnings[callSite];
-            warningsForCallSite.forEach(function(warningForCallSite) {
-                var calleeLoc = warningForCallSite.typeDescription.location;
+        Object.keys(locToFunctionWarnings).forEach(function(functionLoc) {
+            var warningsForFunction = locToFunctionWarnings[functionLoc];
+            warningsForFunction.forEach(function(warningForFunction) {
+                var calleeLoc = warningForFunction.typeDescription.location;
                 var calleeComponent = benchmarkHelper.locationToComponent(calleeLoc);
-                var callerComponent = benchmarkHelper.locationToComponent(callSite);
+                var callerComponent = benchmarkHelper.locationToComponent(functionLoc);
                 var components = callerComponent + "->" + calleeComponent;
 
-                var callWarningsForComponents = componentsToCallWarnings[components] || [];
-                callWarningsForComponents.push(new CallWarning(callSite, calleeLoc));
-                componentsToCallWarnings[components] = callWarningsForComponents;
-
                 var warningsForComponents = componentsToWarnings[components] || [];
-                warningsForComponents.push(warningForCallSite);
+                warningsForComponents.push(warningForFunction);
                 componentsToWarnings[components] = warningsForComponents;
             });
         });
 
         console.log("Warnings: " + functionWarnings.length);
         console.log("Functions with warnings: " + Object.keys(locToFunctionWarnings).length);
-        console.log("Call sites with warnings: " + Object.keys(callSiteToWarnings).length);
         console.log();
-        console.log("Grouped by components (call warnings):");
-        Object.keys(componentsToCallWarnings).forEach(function(components) {
-            var warningsForComponents = componentsToCallWarnings[components];
-            console.log("  " + components + " : " + warningsForComponents.length);
-        });
         console.log("Grouped by components (function warnings):");
         Object.keys(componentsToWarnings).forEach(function(components) {
             var warningsForComponents = componentsToWarnings[components];
@@ -197,6 +190,8 @@
     }
 
     function analyzeTypeWarnings(allTypeWarnings) {
+        console.log("@@@ Analyzing type warnings:");
+
         var typeWarnings = removeMultipleFunctionsWarnings(allTypeWarnings);
 
         // merge by location
@@ -257,6 +252,7 @@
     }
 
     var loggedResults = readFile(process.argv[2]);
-    analyze(loggedResults);
+    var sourcemapDir = process.argv[3];
+    analyze(loggedResults, sourcemapDir);
 
 })();

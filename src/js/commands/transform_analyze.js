@@ -39,7 +39,7 @@ var child;
 var cur_dir = process.cwd();
 var path = require('path');
 
-if(process.argv.length !== 5) {
+if(process.argv.length < 5) {
 	console.log('\r\n' + 
 		        ' * Command Line Usage: \r\n' + 
 				' * 	node src/js/commands/run_test.js <jalangi homepath> <program to be instrumented> <analysis code>\r\n' + 
@@ -56,15 +56,17 @@ var run_start_time, run_end_time;
 // process.argv[2] -> jalangi_home dir
 // process.argv[3] -> program to be instrumented
 // process.argv[4] -> analysis code
+// process.argv[5] -> maxIIDs file (optional)
 var jalangi_home_dir = path.resolve(process.cwd() + '/' + process.argv[2]);
 var target_file = path.resolve(process.cwd() + '/' + process.argv[3]);
 var clientAnalysis = path.resolve(process.cwd() + '/' + process.argv[4])
 var inst_file = target_file.substring(0, target_file.lastIndexOf('.js')) + '_jalangi_.js';
-
+var maxIIDsFile = process.argv.length > 5 ? process.argv[5] : undefined;
 
 // instrument the target code
 inst_start_time = new Date();
-var inst_comm = 'node src/js/instrument/esnstrument.js ' + target_file;
+var maxIIDsFileOption = maxIIDsFile ? " --maxIIDsFile " + maxIIDsFile + " " : "";
+var inst_comm = 'node src/js/instrument/esnstrument.js '+ maxIIDsFileOption + target_file;
 console.log('instrumenting target: ' + target_file);
 console.log('please wait, it may take a while...');
 child = exec(inst_comm, {cwd: jalangi_home_dir}, function (error, stdout, stderr) {

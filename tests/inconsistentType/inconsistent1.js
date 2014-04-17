@@ -3,7 +3,7 @@
     function C(a) {
         this.a = a;
     }
-
+    
     var i = 0;
     while (i < 2) {
         i++;
