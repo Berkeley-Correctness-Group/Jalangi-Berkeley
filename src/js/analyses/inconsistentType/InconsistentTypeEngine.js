@@ -100,7 +100,6 @@
                         offset = 100000;
                     }
                 }
-
                 var tmap = getAndInit(tval, offset);
                 var locations = getAndInit(tmap, type);
                 locations[updateLocation] = true;

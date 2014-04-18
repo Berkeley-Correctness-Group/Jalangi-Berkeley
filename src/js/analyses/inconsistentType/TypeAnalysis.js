@@ -122,9 +122,9 @@
                             var typeMap = fieldMap[field];
                             if (util.sizeOfMap(typeMap) > 1) {
                                 lbl1: for (var type1 in typeMap) {
-                                    if (util.HOP(typeMap, type1)) {
+                                    if (util.HOP(typeMap, type1) && util.HOP(table, type1)) {
                                         for (var type2 in typeMap) {
-                                            if (util.HOP(typeMap, type2)) {
+                                            if (util.HOP(typeMap, type2) && util.HOP(table, type2)) {
                                                 if (type1 < type2 && getRoot(table, type1) !== getRoot(table, type2)) {
                                                     var typeDescription = toTypeDescription(typeOrFunctionName, iids);
                                                     var observedTypesAndLocations = [];
