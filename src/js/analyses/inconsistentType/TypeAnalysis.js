@@ -257,7 +257,8 @@
         var result = [];
         for (var loc in map) {
             if (util.HOP(map, loc)) {
-                result.push(iids[loc].toString());
+                var locStr = iids[loc] ? iids[loc].toString() : "<unknown location>";
+                result.push(locStr);
             }
         }
         return result;

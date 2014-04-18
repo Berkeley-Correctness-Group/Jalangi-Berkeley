@@ -37,9 +37,12 @@ excluded = [ ]
 workingDirName = "/tmp/jalangiWorkingDir/"
 
 #jalangiAnalysisFiles = [
-#    jalangiBerkeleyBaseDir+"src/js/analyses/executionCounters/ExecutionCountersEngine.js" ]
+#    jalangiBerkeleyBaseDir+"src/js/analyses/executionCounters/ExecutionCountersEngine.js"
+#]
 #jalangiAnalysis = jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine.js"
-jalangiAnalysisFiles = [ jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine2.js" ]
+jalangiAnalysisFiles = [
+    jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine2.js"
+]
 #jalangiAnalysisFiles = [ 
 #   jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
 #   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/TypeAnalysis.js",
