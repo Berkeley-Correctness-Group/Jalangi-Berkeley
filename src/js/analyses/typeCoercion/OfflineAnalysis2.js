@@ -19,6 +19,8 @@
 (function() {
 
     var fs = require('fs');
+    var offlineCommon = require('../OfflineAnalysesCommon.js');
+
     function readFile(fileName) {
         var data = fs.readFileSync(fileName);
         return JSON.parse(data);
@@ -33,7 +35,7 @@
         }
     }
 
-    function analyze(results) {
+    function analyze(results, iids) {
         var allLocation2TypePairs = {}; // string --> array of TypePairs
 
         // merge all results
@@ -49,7 +51,8 @@
             if (splitted.length !== 2)
                 throw "Illegal location: " + opAndLocation;
             var op = splitted[0];
-            var location = splitted[1];
+            var locationRaw = splitted[1];
+            var location = iids[locationRaw];
             var histogram = toHistogram(typePairs, op);
             var locAndHistos = opToLocAndHistos[op] || [];
             locAndHistos.push([location, histogram]);
@@ -118,5 +121,7 @@
 
     // main part
     var results = readFile(process.argv[2]);
-    analyze(results);
+    var sourcemapDir = process.argv[3];
+    var iids = offlineCommon.loadIIDs(sourcemapDir);
+    analyze(results, iids);
 })();

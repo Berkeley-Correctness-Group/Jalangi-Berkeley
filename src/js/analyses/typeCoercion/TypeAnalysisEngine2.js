@@ -23,14 +23,14 @@
     function TypeAnalysisEngine2(executionIndex) {
 
         // data structures
-        function TypePair(leftType, rightType, resultType, leftValue, rightValue, resultValue, stackTrace) {
+        function TypePair(leftType, rightType, resultType, leftValue, rightValue, resultValue/*, stackTrace*/) {
             this.leftType = leftType;
             this.rightType = rightType;
             this.resultType = resultType;
             this.leftValue = leftValue;
             this.rightValue = rightValue;
             this.resultValue = resultValue;
-            this.stackTrace = stackTrace;
+//            this.stackTrace = stackTrace;
         }
 
         // state
@@ -162,12 +162,12 @@
                 var rightType = typeOf(right);
 
                 if (leftType !== rightType) {
-                    var stackTrace = new Error().stack;
+//                    var stackTrace = new Error().stack;
                     var leftValue = toString(left);
                     var rightValue = toString(right);
                     var resultType = typeOf(result_c);
                     var resultValue = toString(result_c);
-                    var typePair = new TypePair(leftType, rightType, resultType, leftValue, rightValue, resultValue, stackTrace);
+                    var typePair = new TypePair(leftType, rightType, resultType, leftValue, rightValue, resultValue/*, stackTrace*/);
                     console.log("Created new type pair");
                     var location = op + " at " + getInfoString(iid);
                     addTypePair(location, typePair);
