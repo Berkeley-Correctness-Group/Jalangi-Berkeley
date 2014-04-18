@@ -65,11 +65,11 @@ public class ExperimentRunner {
 
 		// testToyExample();
 
-		testJoomla();
-		testJoomlaAdmin();
+//		testJoomla();
+//		testJoomlaAdmin();
 //		testCmsmadesimple();
 //		testMediawiki();
-//		testMoodle();
+		testMoodle();
 //		testDokuwiki();
 //		testOsclass();
 //		testPhpbb();

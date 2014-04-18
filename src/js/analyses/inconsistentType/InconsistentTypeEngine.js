@@ -21,16 +21,12 @@
 
     function InconsistentTypeEngine() {
         var smemory = sandbox.smemory;
-        var iidToLocation = sandbox.iidToLocation;
         var typeAnalysis = importModule("TypeAnalysis");
         var util = importModule("CommonUtil");
-
         var online = true;
         var printWarnings = true;
-        var visualizeAllTypes = true; // only for node.js execution (i.e., not in browser)
-        var visualizeWarningTypes = true; // only for node.js execution (i.e., not in browser)
-
-        var P_VALUE = 5.0;
+        var visualizeAllTypes = false; // only for node.js execution (i.e., not in browser)
+        var visualizeWarningTypes = false; // only for node.js execution (i.e., not in browser)
 
         // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
         var typeNameToFieldTypes = {}; // type name -> (field -> type name -> iid -> true)  --  for each type, gives the fields, their types, and where this field type has been observed
@@ -219,17 +215,12 @@
         };
 
         this.getField = function(iid, base, offset, val, isGlobal) {
-            //var ret = annotateObject(iid, val);
             if (val !== undefined) {
                 updateType(base, offset, val, iid);
             }
             //getConcrete(base)[getConcrete(offset)] = ret;
             return val;
         };
-
-//        this.read = function(iid, name, val) {
-//            return annotateObject(iid, val);
-//        }
 
         this.endExecution = function() {
             if (online) {
@@ -250,7 +241,6 @@
 
     if (sandbox.Constants.isBrowser) {
         sandbox.analysis = new InconsistentTypeEngine();
-
         window.addEventListener("beforeunload", function() {
             console.log("beforeunload --> logging results");
             sandbox.analysis.endExecution();

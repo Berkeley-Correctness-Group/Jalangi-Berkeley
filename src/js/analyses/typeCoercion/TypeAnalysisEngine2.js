@@ -16,8 +16,6 @@
 
 // Author: Michael Pradel
 
-// Author: Michael Pradel
-
 (function(module) {
 
     function TypeAnalysisEngine2(executionIndex) {

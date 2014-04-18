@@ -137,7 +137,6 @@
                                                     highlightedIIDs[typeOrFunctionName] = true;
                                                     var warning = new InconsistentTypeWarning(typeDescription, field, observedTypesAndLocations, highlightedIIDs);
                                                     warnings.push(warning);
-
                                                     break lbl1;
                                                 }
                                             }
