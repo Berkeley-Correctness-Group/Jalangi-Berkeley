@@ -16,25 +16,22 @@
 
 // Author: Michael Pradel
 
-// Author: Michael Pradel
-
 (function(module) {
 
     function TypeAnalysisEngine2(executionIndex) {
 
         // data structures
-        function TypePair(leftType, rightType, resultType, leftValue, rightValue, resultValue, stackTrace) {
+        function TypePair(leftType, rightType, resultType, leftValue, rightValue, resultValue) {
             this.leftType = leftType;
             this.rightType = rightType;
             this.resultType = resultType;
             this.leftValue = leftValue;
             this.rightValue = rightValue;
             this.resultValue = resultValue;
-            this.stackTrace = stackTrace;
         }
 
         // state
-        var location2TypePairs = {}; // string --> array of TypePairs
+        var locationAndOp2TypePairs = {}; // string --> array of TypePairs
 
         // functions
         function typeOf(v) {
@@ -79,26 +76,17 @@
             return "<ref>";
         }
 
-        function addTypePair(location, typePair) {
-            var pairs = location2TypePairs[location] || [];
+        function addTypePair(location, op, typePair) {
+            var locationAndOp = op+" at "+location;
+            var pairs = locationAndOp2TypePairs[locationAndOp] || [];
             pairs.push(typePair);
-            location2TypePairs[location] = pairs;
+            locationAndOp2TypePairs[locationAndOp] = pairs;
         }
 
         function logResult() {
-            var output = JSON.stringify(location2TypePairs);
+            var output = JSON.stringify(locationAndOp2TypePairs);
             window.$jalangiFFLogResult(output, true);
-            location2TypePairs = {};
-        }
-
-        function getInfoString(iid) {
-            if (module.iids) {
-                var arr = module.iids[iid];
-                if (arr) {
-                    return "(" + arr[0] + ":" + arr[1] + ":" + arr[2] + ")";
-                }
-            }
-            return iid + "";
+            locationAndOp2TypePairs = {};
         }
 
         // hooks
@@ -161,17 +149,14 @@
                 var leftType = typeOf(left);
                 var rightType = typeOf(right);
 
-                if (leftType !== rightType) {
-                    var stackTrace = new Error().stack;
+//                if (leftType !== rightType) {
                     var leftValue = toString(left);
                     var rightValue = toString(right);
                     var resultType = typeOf(result_c);
                     var resultValue = toString(result_c);
-                    var typePair = new TypePair(leftType, rightType, resultType, leftValue, rightValue, resultValue, stackTrace);
-                    console.log("Created new type pair");
-                    var location = op + " at " + getInfoString(iid);
-                    addTypePair(location, typePair);
-                }
+                    var typePair = new TypePair(leftType, rightType, resultType, leftValue, rightValue, resultValue);
+                    addTypePair(iid, op, typePair);
+//                }
             }
 
             return result_c;

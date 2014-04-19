@@ -21,15 +21,12 @@
 
     function InconsistentTypeEngine() {
         var smemory = sandbox.smemory;
-        var iidToLocation = sandbox.iidToLocation;
         var typeAnalysis = importModule("TypeAnalysis");
         var util = importModule("CommonUtil");
-
-        var online = true; // offline mode is only for in-browser analysis
+        var online = true;
         var printWarnings = true;
-        
-        var P_VALUE = 5.0;
-        
+        var visualizeAllTypes = true; // only for node.js execution (i.e., not in browser)
+        var visualizeWarningTypes = true; // only for node.js execution (i.e., not in browser)
 
         // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
         var typeNameToFieldTypes = {}; // type name -> (field -> type name -> iid -> true)  --  for each type, gives the fields, their types, and where this field type has been observed
@@ -103,7 +100,6 @@
                         offset = 100000;
                     }
                 }
-
                 var tmap = getAndInit(tval, offset);
                 var locations = getAndInit(tmap, type);
                 locations[updateLocation] = true;
@@ -186,8 +182,15 @@
                 typeNames:typeNames,
                 functionNames:functionNames
             };
-            console.log("Sending results to jalangiFF");
-            window.$jalangiFFLogResult(JSON.stringify(results), true);
+            if (sandbox.Constants.isBrowser) {
+                console.log("Sending results to jalangiFF");
+                window.$jalangiFFLogResult(JSON.stringify(results), true);
+            } else {
+                var fs = require("fs");
+                var benchmark = process.argv[3];
+                var wrappedResults = [{url:benchmark, value:results}];
+                fs.writeFileSync(process.cwd() + "/analysisResults.json", JSON.stringify(wrappedResults));
+            }
         }
 
         this.literal = function(iid, val) {
@@ -211,7 +214,6 @@
         };
 
         this.getField = function(iid, base, offset, val, isGlobal) {
-            //var ret = annotateObject(iid, val);
             if (val !== undefined) {
                 updateType(base, offset, val, iid);
             }
@@ -219,13 +221,9 @@
             return val;
         };
 
-//        this.read = function(iid, name, val) {
-//            return annotateObject(iid, val);
-//        }
-
         this.endExecution = function() {
             if (online) {
-                typeAnalysis.analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, sandbox.iids, printWarnings);
+                typeAnalysis.analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, sandbox.iids, printWarnings, visualizeAllTypes, visualizeWarningTypes);
             } else {
                 logResults();
             }
@@ -242,7 +240,6 @@
 
     if (sandbox.Constants.isBrowser) {
         sandbox.analysis = new InconsistentTypeEngine();
-
         window.addEventListener("beforeunload", function() {
             console.log("beforeunload --> logging results");
             sandbox.analysis.endExecution();

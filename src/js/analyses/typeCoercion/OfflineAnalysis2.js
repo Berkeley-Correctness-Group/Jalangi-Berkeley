@@ -19,21 +19,23 @@
 (function() {
 
     var fs = require('fs');
+    var offlineCommon = require('../OfflineAnalysesCommon.js');
+
     function readFile(fileName) {
         var data = fs.readFileSync(fileName);
         return JSON.parse(data);
     }
 
-    function mergeIntoAllData(location2TypePairs, allLocation2TypePairs) {
-        for (var location in location2TypePairs) {
-            var typePairs = location2TypePairs[location];
-            var allTypePairs = allLocation2TypePairs[location] || [];
+    function mergeIntoAllData(locationAndOp2TypePairs, allLocationAndOp2TypePairs) {
+        for (var location in locationAndOp2TypePairs) {
+            var typePairs = locationAndOp2TypePairs[location];
+            var allTypePairs = allLocationAndOp2TypePairs[location] || [];
             allTypePairs.push.apply(allTypePairs, typePairs);
-            allLocation2TypePairs[location] = allTypePairs;
+            allLocationAndOp2TypePairs[location] = allTypePairs;
         }
     }
 
-    function analyze(results) {
+    function analyze(results, iids) {
         var allLocation2TypePairs = {}; // string --> array of TypePairs
 
         // merge all results
@@ -49,7 +51,8 @@
             if (splitted.length !== 2)
                 throw "Illegal location: " + opAndLocation;
             var op = splitted[0];
-            var location = splitted[1];
+            var locationRaw = splitted[1];
+            var location = iids[locationRaw];
             var histogram = toHistogram(typePairs, op);
             var locAndHistos = opToLocAndHistos[op] || [];
             locAndHistos.push([location, histogram]);
@@ -82,10 +85,12 @@
             console.log("\n-----------------------");
             console.log(opAndLocation + ":");
             typePairs.forEach(function(typePair) {
-                console.log("------");
-                console.log("  values: " + typePair.leftValue + " " + op + " " + typePair.rightValue + " --> " + typePair.resultValue);
-                console.log("  types: " + typePair.leftType + " " + op + " " + typePair.rightType + " --> " + typePair.resultType);
-                console.log(typePair.stackTrace);
+                if (typePair.leftType !== typePair.rightType) {
+                    console.log("------");
+                    console.log("  values: " + typePair.leftValue + " " + op + " " + typePair.rightValue + " --> " + typePair.resultValue);
+                    console.log("  types: " + typePair.leftType + " " + op + " " + typePair.rightType + " --> " + typePair.resultType);
+                    console.log(typePair.stackTrace);
+                }
             });
         }
     }
@@ -118,5 +123,7 @@
 
     // main part
     var results = readFile(process.argv[2]);
-    analyze(results);
+    var sourcemapDir = process.argv[3];
+    var iids = offlineCommon.loadIIDs(sourcemapDir);
+    analyze(results, iids);
 })();

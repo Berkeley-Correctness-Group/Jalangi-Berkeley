@@ -22,6 +22,7 @@
      * @param {string} knownWarningsFile
      */
     function inspect(warningsToInspect, knownWarningsFile) {
+        console.log("\n--------------------- WarningInspector -----------------");
         console.log("Warnings to inspect: " + warningsToInspect.length);
         var knownWarnings = readFile(knownWarningsFile);
         console.log("Known warnings: " + knownWarnings.length);

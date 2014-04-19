@@ -80,7 +80,8 @@ public class ExperimentRunner {
 		// trigger beforeunload event after last benchmark
 		driver.get("about:blank");
 
-		driver.quit();
+		System.out.println("Almost done");
+//		driver.quit();
 
 		System.out.println("Done :-)");
 	}

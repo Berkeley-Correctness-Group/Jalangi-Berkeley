@@ -22,39 +22,68 @@
     var util = importModule("CommonUtil");
     var typeAnalysis = importModule("TypeAnalysis");
 
-    function generateDOT(table, roots, typeNameToFieldTypes, functionToSignature, typeNames, functionNames, iids) {
+    function generateDOT(table, roots, typeNameToFieldTypes, functionToSignature, typeNames, functionNames,
+          iids, highlightedIIDs, onlyHighlighted, fileNameOpt) {
         var nodes = [];
         var badNodes = [];
-        var srcNodes = [];
-        var edges = {};
+        var locationNodes = [];
 
         nodes.push("    number [label = \"<number>number\"]");
         nodes.push("    boolean [label = \"<boolean>boolean\"]");
         nodes.push("    string [label = \"<string>string\"]");
         nodes.push("    undefined [label = \"<undefined>undefined\"]");
         nodes.push("    " + escapeNode("object(null)") + " [label = \"<" + escapeNode("object(null)") + ">null\"]");
-        for (var node in roots) {
-            if (util.HOP(roots, node)) {
-                var tmp = escapeNode(node);
-                var nodeStr = "    " + tmp + " [label = \"<" + tmp + ">" + node.substring(0, node.indexOf("(")) + "\\ " + getName(node, typeNames, functionNames);
 
-                nodeStr = visitFieldsForDOT(table, functionToSignature, node, nodeStr, edges);
-                nodeStr = visitFieldsForDOT(table, typeNameToFieldTypes, node, nodeStr, edges);
+        var nodeToNodeStr = {};
+        var nodeToEdges = {}; // string -> string -> true
+        var reachableFromHighlighted = {};
+        var reachablesToCompleteOpt;
+        var reachablesChanged = true;
+        Object.keys(highlightedIIDs).forEach(function (iid) {
+            reachableFromHighlighted[iid] = true;
+        });
+        while (reachablesChanged) {
+            var oldNbReachables = Object.keys(reachableFromHighlighted).length;
+            for (var node in roots) {
+                if (util.HOP(roots, node)) {
+                    reachablesToCompleteOpt = undefined;
+                    if (util.HOP(reachableFromHighlighted, node)) {
+                        reachableFromHighlighted[node] = true;
+                        reachablesToCompleteOpt = reachableFromHighlighted;
+                    }
 
-                nodeStr = nodeStr + "\"]";
-                if (isGoodType(typeNameToFieldTypes, table, node) && isGoodType(functionToSignature, table, node)) {
-                    nodes.push(nodeStr);
-                } else {
-                    badNodes.push(nodeStr);
+                    var tmp = escapeNode(node);
+                    var edges = {};
+                    var nodeStr = "    " + tmp + " [label = \"<" + tmp + ">" + node.substring(0, node.indexOf("(")) + "\\ " + getName(node, typeNames, functionNames);
+                    nodeStr = visitFieldsForDOT(table, functionToSignature, node, nodeStr, edges, reachablesToCompleteOpt);
+                    nodeStr = visitFieldsForDOT(table, typeNameToFieldTypes, node, nodeStr, edges, reachablesToCompleteOpt);
+                    nodeStr = nodeStr + "\"]";
+                    nodeToNodeStr[node] = nodeStr;
+                    nodeToEdges[node] = edges;
                 }
             }
+            reachablesChanged = oldNbReachables < Object.keys(reachableFromHighlighted).length;
         }
 
-        createLocationNodes(table, edges, srcNodes, iids);
-        return writeDOTFile(nodes, edges, srcNodes, badNodes);
+        var allEdges = {};
+        for (var node in roots) {
+            if (!onlyHighlighted || reachableFromHighlighted[node]) {
+                if (util.HOP(highlightedIIDs, node)) {
+                    badNodes.push(nodeToNodeStr[node]);
+                } else {
+                    nodes.push(nodeToNodeStr[node]);
+                }
+                Object.keys(nodeToEdges[node]).forEach(function(edge) {
+                    allEdges[edge] = true;
+                });
+            }
+        }
+        createLocationNodes(table, allEdges, locationNodes, iids, onlyHighlighted ? reachableFromHighlighted : undefined);
+        var fileName = fileNameOpt ? fileNameOpt : "jalangi_types.dot";
+        return writeDOTFile(fileName, nodes, allEdges, locationNodes, badNodes);
     }
 
-    function visitFieldsForDOT(table, types, node, nodeStr, edges) {
+    function visitFieldsForDOT(table, types, node, nodeStr, edges, reachablesToCompleteOpt) {
         var fieldMap = types[node], tmp;
         for (var field in fieldMap) {
             if (util.HOP(fieldMap, field)) {
@@ -68,6 +97,10 @@
                     var tmp2 = escapeNode(type);
                     var edgeStr = "    " + escapeNode(node) + ":" + tmp + " -> " + tmp2 + ":" + tmp2;
                     edges[edgeStr] = true;
+
+                    if (reachablesToCompleteOpt) {
+                        reachablesToCompleteOpt[type] = true;
+                    }
                 }
             }
         }
@@ -88,17 +121,19 @@
         }
     }
 
-    function createLocationNodes(table, edges, srcNodes, iids) {
+    function createLocationNodes(table, edges, locationNodes, iids, iidsToConsiderOpt) {
         var locs = {};
 
         for (var node in table) {
             if (util.HOP(table, node) && node.indexOf("(") > 0 && node !== "object(null)") {
-                var loc, root = table[node];
-                loc = locs[root];
-                if (loc === undefined) {
-                    loc = locs[root] = {};
+                if (!iidsToConsiderOpt || iidsToConsiderOpt[node]) {
+                    var loc, root = table[node];
+                    loc = locs[root];
+                    if (loc === undefined) {
+                        loc = locs[root] = {};
+                    }
+                    loc[infoWithLocation(node, iids)] = true;
                 }
-                loc[infoWithLocation(node, iids)] = true;
             }
         }
 
@@ -118,24 +153,23 @@
                     }
                 }
                 nodeStr = nodeStr + "\"]";
-                srcNodes.push(nodeStr);
+                locationNodes.push(nodeStr);
                 var edgeStr = "    " + tmp + ":" + tmp + " -> " + tmp + "_loc";
                 edges[edgeStr] = true;
             }
         }
-
     }
 
-    function writeDOTFile(nodes, edges, srcNodes, badNodes) {
+    function writeDOTFile(fileName, nodes, edges, locationNodes, badNodes) {
         var dot = 'digraph LikelyTypes {\n    rankdir = "LR"\n    node [fontname=Sans]\n\n';
 
         var i, len;
 
         dot += '    subgraph cluster_notes {\n';
         dot += '        node [shape = record, fillcolor=yellow, style=filled];\n';
-        len = srcNodes.length;
+        len = locationNodes.length;
         for (i = 0; i < len; i++) {
-            dot = dot + "    " + srcNodes[i] + ';\n';
+            dot = dot + "    " + locationNodes[i] + ';\n';
         }
         dot += '    }\n';
 
@@ -158,45 +192,9 @@
         }
 
         dot = dot + "}\n";
-        require('fs').writeFileSync("jalangi_types.dot", dot);
-        console.log("Generated " + process.cwd() + "/jalangi_types.dot.  Install graphviz and run \"dot -Tpng jalangi_types.dot -o jalangi_types.png; open jalangi_types.png\" to visualize the inferred types.");
+        require('fs').writeFileSync(fileName, dot);
+        console.log("Generated " + process.cwd() + "/" + fileName + ".  Install graphviz and run \"dot -Tpng " + fileName + ".dot -o jalangi_types.png; open jalangi_types.png\" to visualize the inferred types.");
         return dot;
-    }
-
-    function isGoodType(map, table, oloc) {
-        var done = {};
-        oloc = typeAnalysis.getRoot(table, oloc);
-        if (!util.HOP(done, oloc)) {
-            done[oloc] = true;
-            var fieldMap = map[oloc];
-            for (var field in fieldMap) {
-                if (util.HOP(fieldMap, field)) {
-                    if (field === "undefined") {
-                        return false;
-                    }
-                }
-            }
-            for (var field in fieldMap) {
-                if (util.HOP(fieldMap, field)) {
-                    var typeMap = fieldMap[field];
-                    if (util.sizeOfMap(typeMap) > 1) {
-                        lbl1: for (var type1 in typeMap) {
-                            if (util.HOP(typeMap, type1)) {
-                                for (var type2 in typeMap) {
-                                    if (util.HOP(typeMap, type2)) {
-                                        if (type1 < type2 && typeAnalysis.getRoot(table, type1) !== typeAnalysis.getRoot(table, type2)) {
-                                            return false;
-                                            break lbl1;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return true;
     }
 
     function infoWithLocation(type, iids) {
