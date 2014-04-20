@@ -21,6 +21,7 @@
 
     function InconsistentTypeEngine() {
         var smemory = sandbox.smemory;
+        var iidToLocation = sandbox.iidToLocation;
         var typeAnalysis = importModule("TypeAnalysis");
         var util = importModule("CommonUtil");
         var online = true;
@@ -223,7 +224,7 @@
 
         this.endExecution = function() {
             if (online) {
-                typeAnalysis.analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, sandbox.iids, printWarnings, visualizeAllTypes, visualizeWarningTypes);
+                typeAnalysis.analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes);
             } else {
                 logResults();
             }

@@ -3,17 +3,18 @@
     var util = importModule("CommonUtil");
     var visualization = importModule("Visualization");
 
-    function analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, iids, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
+
+    function analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
         var tableAndRoots = equiv(typeNameToFieldTypes);
-        var typeWarnings = analyze(typeNameToFieldTypes, tableAndRoots[0], iids);
-        var functionWarnings = analyze(functionToSignature, tableAndRoots[0], iids);
+        var typeWarnings = analyze(typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
+        var functionWarnings = analyze(functionToSignature, tableAndRoots[0], iidToLocation);
 
         if (visualizeAllTypes) {
             var allHighlightedIIDs = {};
             addHighlightedIIDs(allHighlightedIIDs, typeWarnings);
             addHighlightedIIDs(allHighlightedIIDs, functionWarnings);
             visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature,
-                  typeNames, functionNames, iids, allHighlightedIIDs, false);
+                  typeNames, functionNames, iidToLocation, allHighlightedIIDs, false);
         }
 
         typeWarnings.forEach(function(w) {
@@ -22,7 +23,7 @@
             }
             if (visualizeWarningTypes) {
                 visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature,
-                      typeNames, functionNames, iids, w.highlightedIIDs, true, "warning" + w.id + ".dot");
+                      typeNames, functionNames, iidToLocation, w.highlightedIIDs, true, "warning" + w.id + ".dot");
             }
         });
         functionWarnings.forEach(function(w) {
@@ -31,7 +32,7 @@
             }
             if (visualizeWarningTypes) {
                 visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature,
-                      typeNames, functionNames, iids, w.highlightedIIDs, true, "warning" + w.id + ".dot");
+                      typeNames, functionNames, iidToLocation, w.highlightedIIDs, true, "warning" + w.id + ".dot");
             }
         });
 
@@ -96,7 +97,7 @@
         return this.kind + " originated at " + this.location;
     };
 
-    function analyze(nameToFieldMap, table, iids) {
+    function analyze(nameToFieldMap, table, iidToLocation) {
         var warnings = [];
         var done = {};
         for (var typeOrFunctionName in nameToFieldMap) {
@@ -108,8 +109,8 @@
                     for (var field in fieldMap) {
                         if (util.HOP(fieldMap, field)) {
                             if (field === "undefined") {
-                                var typeDescription = toTypeDescription(typeOrFunctionName, iids);
-                                var locations = toLocations(typeMap, iids);
+                                var typeDescription = toTypeDescription(typeOrFunctionName, iidToLocation);
+                                var locations = toLocations(typeMap, iidToLocation);
                                 var highlightedIIDs = {};
                                 highlightedIIDs[typeOrFunctionName] = true;
                                 var warning = new UndefinedFieldWarning(typeDescription, locations, highlightedIIDs);
@@ -126,11 +127,11 @@
                                         for (var type2 in typeMap) {
                                             if (util.HOP(typeMap, type2) && util.HOP(table, type2)) {
                                                 if (type1 < type2 && getRoot(table, type1) !== getRoot(table, type2)) {
-                                                    var typeDescription = toTypeDescription(typeOrFunctionName, iids);
+                                                    var typeDescription = toTypeDescription(typeOrFunctionName, iidToLocation);
                                                     var observedTypesAndLocations = [];
                                                     for (var type3 in typeMap) {
-                                                        var observedType = toTypeDescription(type3, iids);
-                                                        var locations = toLocations(typeMap[type3], iids);
+                                                        var observedType = toTypeDescription(type3, iidToLocation);
+                                                        var locations = toLocations(typeMap[type3], iidToLocation);
                                                         observedTypesAndLocations.push([observedType, locations]);
                                                     }
                                                     var highlightedIIDs = {};
@@ -239,25 +240,25 @@
         });
     }
 
-    function toTypeDescription(type, iids) {
+    function toTypeDescription(type, iidToLocation) {
         if (type.indexOf("(") > 0) {
             var type1 = type.substring(0, type.indexOf("("));
             var iid = type.substring(type.indexOf("(") + 1, type.indexOf(")"));
             if (iid === "null") {
                 return new TypeDescription("null", "");
             } else {
-                return new TypeDescription(type1, iids[iid].toString());
+                return new TypeDescription(type1, iidToLocation(iid));
             }
         } else {
             return new TypeDescription(type, "");
         }
     }
 
-    function toLocations(map, iids) {
+    function toLocations(map, iidToLocation) {
         var result = [];
         for (var loc in map) {
             if (util.HOP(map, loc)) {
-                var locStr = iids[loc] ? iids[loc].toString() : "<unknown location>";
+                var locStr = iidToLocation(loc);
                 result.push(locStr);
             }
         }
@@ -265,21 +266,21 @@
     }
 
     // TODO replace by toLocations
-    function getLocationsInfo(map, iids) {
+    function getLocationsInfo(map, iidToLocation) {
         var str = "";
         for (var loc in map) {
             if (util.HOP(map, loc)) {
-                str += "        found at " + iids[loc] + ",\n";
+                str += "        found at " + iidToLocation(loc) + ",\n";
             }
         }
         return str;
     }
 
-    function getTypeInfo(typeMap, iids) {
+    function getTypeInfo(typeMap, iidToLocation) {
         var str = "";
         for (var type1 in typeMap) {
             if (util.HOP(typeMap, type1)) {
-                str += getLocationsInfo(typeMap[type1], iids);
+                str += getLocationsInfo(typeMap[type1], iidToLocation);
             }
         }
         return str;

@@ -23,7 +23,7 @@
     var typeAnalysis = importModule("TypeAnalysis");
 
     function generateDOT(table, roots, typeNameToFieldTypes, functionToSignature, typeNames, functionNames,
-          iids, highlightedIIDs, onlyHighlighted, fileNameOpt) {
+          iidToLocation, highlightedIIDs, onlyHighlighted, fileNameOpt) {
         var nodes = [];
         var badNodes = [];
         var locationNodes = [];
@@ -78,7 +78,7 @@
                 });
             }
         }
-        createLocationNodes(table, allEdges, locationNodes, iids, onlyHighlighted ? reachableFromHighlighted : undefined);
+        createLocationNodes(table, allEdges, locationNodes, iidToLocation, onlyHighlighted ? reachableFromHighlighted : undefined);
         var fileName = fileNameOpt ? fileNameOpt : "jalangi_types.dot";
         return writeDOTFile(fileName, nodes, allEdges, locationNodes, badNodes);
     }
@@ -121,7 +121,7 @@
         }
     }
 
-    function createLocationNodes(table, edges, locationNodes, iids, iidsToConsiderOpt) {
+    function createLocationNodes(table, edges, locationNodes, iidToLocation, iidsToConsiderOpt) {
         var locs = {};
 
         for (var node in table) {
@@ -132,7 +132,7 @@
                     if (loc === undefined) {
                         loc = locs[root] = {};
                     }
-                    loc[infoWithLocation(node, iids)] = true;
+                    loc[infoWithLocation(node, iidToLocation)] = true;
                 }
             }
         }
@@ -197,14 +197,14 @@
         return dot;
     }
 
-    function infoWithLocation(type, iids) {
+    function infoWithLocation(type, iidToLocation) {
         if (type.indexOf("(") > 0) {
             var type1 = type.substring(0, type.indexOf("("));
             var iid = type.substring(type.indexOf("(") + 1, type.indexOf(")"));
             if (iid === "null") {
                 return " null";
             } else {
-                return "originated at " + iids[iid].toString();
+                return "originated at " + iidToLocation(iid);
             }
         } else {
             return type;
