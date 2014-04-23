@@ -113,7 +113,7 @@
          * @param {object} obj
          * @returns {object} The given object
          */
-        function annotateObject(creationLocation, obj) {
+        function annotateObject(creationLocation, obj, optionalTypeName) {
             var type, i, s, sobj;
 
             var sobj = smemory.getShadowObject(obj);
@@ -122,8 +122,11 @@
                 if (sobj.shadow === undefined) {
                     type = typeof obj;
                     if ((type === "object" || type === "function") && obj !== null && obj.name !== "eval") {
-                        if (isArr(obj)) {
+                        if (Array.isArray(obj)) {
                             type = "array";
+                        }
+                        if (optionalTypeName) {
+                            type = optionalTypeName;
                         }
                         s = type + "(" + creationLocation + ")";
                         sobj.shadow = s;
@@ -193,6 +196,18 @@
                 fs.writeFileSync(process.cwd() + "/analysisResults.json", JSON.stringify(wrappedResults));
             }
         }
+
+        this.functionEnter = function (iid, fun, dis /* this */) {
+            annotateObject(iid, smemory.getCurrentFrame(), "frame");
+        };
+
+        this.readPre = function (iid, name, val, isGlobal) {
+            updateType(smemory.getFrame(name),name, val, iid);
+        };
+
+        this.writePre = function (iid, name, val, oldValue) {
+            updateType(smemory.getFrame(name),name, val, iid);
+        };
 
         this.literal = function(iid, val) {
             return annotateObject(iid, val);
