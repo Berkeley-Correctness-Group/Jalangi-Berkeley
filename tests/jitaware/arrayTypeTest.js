@@ -19,6 +19,10 @@
 var array1 = [];
 array1[1] = 2;
 array1[2] = 3.3;
+array1.push(1);
+array1.pop();
+array1.test = 'test';
+array1.test2;
 
 
 var array2 = new Array();
@@ -35,7 +39,13 @@ fakearray[2] = 1;
 var array4 = [];
 array4[1] = 2;
 array4[2] = -2;
+console.log(typeof array4);
 
 var array5 = [];
 array5[1] = 2.0;
 array5[200] = 123123123123.123123123123123123;
+
+var array6 = [];
+array6[1] = 2;
+array6[2] = 3;
+array6.push({});

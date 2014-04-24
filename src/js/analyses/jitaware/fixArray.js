@@ -106,50 +106,80 @@ J$.analysis = {};
         }
     }
 
+    function SetArrayPropertyHandler(iid, base, offset, val){
+        if(Array.isArray(base) && typeof offset === 'number'){
+            var shadowInfo = smemory.getShadowObject(base);
+            if(!shadowInfo.types) shadowInfo.types = {};
+            if(!shadowInfo.count)
+                shadowInfo.count = 1;
+            else
+                shadowInfo.count++;
+
+            var type = typeof val;
+            if(type === 'number') { // distinguish between int and double
+                if(val === val|0)
+                    type = 'int';
+                else
+                    type = 'double';
+            }
+
+            shadowInfo.readOnly = false;
+            shadowInfo.count++;
+
+            if(!shadowInfo.maxIndex) {
+                shadowInfo.maxIndex = 0;
+            }
+
+            if(shadowInfo.maxIndex < offset){
+                shadowInfo.maxIndex = offset;
+            }
+
+            if(type!=='int' && type!=='double')
+                shadowInfo.isNonNumeric = true;
+
+            if(shadowInfo.isNonNumeric === true) {
+                // do nothing
+            } else {
+                testElementFit(shadowInfo, val);
+            }
+
+            if(shadowInfo.types[type]){
+                shadowInfo.types[type]++;
+            } else {
+                shadowInfo.types[type] = 1;
+            }
+        }
+
+        if(Array.isArray(base) && typeof offset === 'string' && isNaN(parseInt(offset))){
+            var shadowInfo = smemory.getShadowObject(base);
+            shadowInfo.propsSet[offset] = true;
+        }
+    }
+
+    function getArrayPropertyHandler(iid, base, offset, val){
+        if(Array.isArray(base) && typeof offset === 'number'){
+            var shadowInfo = smemory.getShadowObject(base);
+            shadowInfo.count++;
+        }
+
+        if(Array.isArray(base) && typeof offset === 'string' && isNaN(parseInt(offset))){
+            var shadowInfo = smemory.getShadowObject(base);
+            shadowInfo.propsGet[offset] = true;
+        }
+    }
+
     function ArrayType() {
         // called before setting field to an entity (e.g., object, function etc.)
         // base is the entity, offset is the field name, so val === base[offset]
         // should return val
         this.putFieldPre = function (iid, base, offset, val) {
-            if(Array.isArray(base) && typeof offset === 'number'){
-                var shadowInfo = smemory.getShadowObject(base);
-                if(!shadowInfo.types) shadowInfo.types = {};
-                if(!shadowInfo.count)
-                    shadowInfo.count = 1;
-                else
-                    shadowInfo.count++;
+            SetArrayPropertyHandler(iid, base, offset, val);
+            return val;
+        }
 
-                var type = typeof val;
-                if(type === 'number') { // distinguish between int and double
-                    if(val === val|0)
-                        type = 'int';
-                    else
-                        type = 'double';
-                }
-
-                if(!shadowInfo.maxIndex) {
-                    shadowInfo.maxIndex = 0;
-                }
-
-                if(shadowInfo.maxIndex < offset){
-                    shadowInfo.maxIndex = offset;
-                }
-
-                if(type!=='int' && type!=='double')
-                    shadowInfo.isNonNumeric = true;
-
-                if(shadowInfo.isNonNumeric === true) {
-                    // do nothing
-                } else {
-                    testElementFit(shadowInfo, val);
-                }
-
-                if(shadowInfo.types[type]){
-                    shadowInfo.types[type]++;
-                } else {
-                    shadowInfo.types[type] = 1;
-                }
-            }
+        // before retrieving field from an entity
+        this.getField = function (iid, base, offset, val) {
+            getArrayPropertyHandler(iid, base, offset, val);
             return val;
         }
 
@@ -160,9 +190,15 @@ J$.analysis = {};
                 var shadowInfo = smemory.getShadowObject(val);
                 if(!shadowInfo.source) {
                     shadowInfo.source = iid;
-                    if(!arraydb[iid+"_"])
-                        arraydb[iid+"_"] = [];
-                    arraydb[iid+"_"].push(val);
+                    shadowInfo.readOnly = true;
+                    shadowInfo.functions_use = {};
+                    shadowInfo.typeof_use = false;
+                    shadowInfo.propsSet = {};
+                    shadowInfo.propsGet = {};
+                    shadowInfo.count = 1;
+                    if(!arraydb[iid])
+                        arraydb[iid] = [];
+                    arraydb[iid].push(val);
                 }
             }
             return val;
@@ -176,45 +212,143 @@ J$.analysis = {};
                 var shadowInfo = smemory.getShadowObject(val);
                 if(!shadowInfo.source) {
                     shadowInfo.source = iid;
-                    if(!arraydb[iid+"_"])
-                        arraydb[iid+"_"] = [];
-                    arraydb[iid+"_"].push(val);
+                    shadowInfo.readOnly = true;
+                    shadowInfo.functions_use = {};
+                    shadowInfo.typeof_use = false;
+                    shadowInfo.propsSet = {};
+                    shadowInfo.propsGet = {};
+                    shadowInfo.count = 1;
+                    if(!arraydb[iid])
+                        arraydb[iid] = [];
+                    arraydb[iid].push(val);
+                }
+            }
+
+            if(f === ARRAY_CONSTRUCTOR.prototype.push && Array.isArray(base)){
+                var shadowInfo = smemory.getShadowObject(base);
+                if(shadowInfo.source) {
+                    shadowInfo.readOnly = false;
+                    shadowInfo.functions_use.push = true;
+                    SetArrayPropertyHandler(iid, base, base.length, args[0]);
+                }
+            } else if(f === ARRAY_CONSTRUCTOR.prototype.pop && Array.isArray(base)){
+                var shadowInfo = smemory.getShadowObject(base);
+                if(shadowInfo.source) {
+                    shadowInfo.readOnly = false;
+                    shadowInfo.functions_use.pop = true;
+                    shadowInfo.count++;
+                }
+            } else if(Array.isArray(base)) {
+                var shadowInfo = smemory.getShadowObject(base);
+                if(shadowInfo.source) {
+                    shadowInfo.functions_use[f.name] = true;
+                    shadowInfo.count++;
                 }
             }
             return val;
         }
 
+        // during a unary operation
+        // result_c is the result and should be returned
+        this.unary = function (iid, op, left, result_c) {
+            if(Array.isArray(left)){
+                if(op === 'typeof'){
+                    var shadowInfo = smemory.getShadowObject(left);
+                    if(shadowInfo.source) {
+                        shadowInfo.typeof_use = true;
+                        shadowInfo.count++;
+                    }
+                }
+            }
+            return result_c;
+        }
+
         this.endExecution = function () {
-            var failDB = {};
-            console.log('The following array could be fix typed:');
-            for(var prop in arraydb) {
-                if(HOP(arraydb, prop)){
-                    var innerDB = arraydb[prop];
+            var failArraySource = [];
+            var reportDB = {};
+            var readOnlyDB = {};
+            console.log('gathering data...');
+
+            iid_loop:
+            for(var iid in arraydb) {
+                reportDB[iid] = {maxIndices: [], fitarray: {}, functions_use:[],
+                    typeof_use: false, delete_use: false, length_use: false,
+                    propsSet: {}, propsGet: {}, passToExternalFunction: false, count: 0};
+
+                if(HOP(arraydb, iid)){
+                    var innerDB = arraydb[iid];
                     inner_loop:
                     for(var i=0;i<innerDB.length;i++){
                         var array = innerDB[i];
                         var shadowInfo = smemory.getShadowObject(array);
-                        if(shadowInfo.isNonNumeric === true){
-                            var failmsg = '[X] array created @ [iid: ' + shadowInfo.source + ']' + iidToLocation(shadowInfo.source);
-                            failDB[failmsg] = 1;
-                            continue inner_loop;
+                        if((shadowInfo.source+ '') !== (iid+'')) {
+                            throw new Error('iid does not equal to shadowInfo.source!');
                         }
 
+                        // if array contains non-numeric element, remove it from the reportDB and put it into failedArraySource
+                        if(shadowInfo.isNonNumeric === true){
+                            delete reportDB[iid];
+                            failArraySource[shadowInfo.source] = 'array stores non-numeric elements';
+                            continue iid_loop;
+                        }
+
+
+                        if(!HOP(readOnlyDB, iid)){
+                            readOnlyDB[iid] = true;
+                        }
+
+                        if(shadowInfo.readOnly === false){
+                            readOnlyDB[iid] = false;
+                        }
+
+                        reportDB[iid].count += shadowInfo.count;
+
+                        // collect array fit info.
                         if(shadowInfo.types) {
-                            console.log('array created @ [iid: ' + shadowInfo.source + ']' + iidToLocation(shadowInfo.source));
-                            console.log('max index:' + shadowInfo.maxIndex);
-                            for(var type in shadowInfo.types) {
-                                if(HOP(shadowInfo.types, type)){
-                                    console.log('\t' + '['+ type +']:\t' + shadowInfo.types[type]);
-                                }
-                            }
+                            reportDB[iid].maxIndices[shadowInfo.maxIndex] = 1;
 
                             // print suggestions for array type
                             if(shadowInfo.fitarray){
                                 for(var arrtype in shadowInfo.fitarray){
                                     if(HOP(shadowInfo.fitarray, arrtype)){
-                                        console.log('\t\t' + arrtype + ':\t' + shadowInfo.fitarray[arrtype]);
+                                        // init type info in reportDB[iid]
+                                        if(!HOP(reportDB[iid].fitarray, arrtype)){
+                                            (reportDB[iid].fitarray)[arrtype] = true;
+                                        }
+                                        if((shadowInfo.fitarray)[arrtype] === false){
+                                            (reportDB[iid].fitarray)[arrtype] = false;
+                                        }
                                     }
+                                }
+                            }
+
+                            if(shadowInfo.functions_use){
+                                for(var fun in shadowInfo.functions_use){
+                                    if(HOP(shadowInfo.functions_use, fun)){
+                                        reportDB[iid]['functions_use'][fun] = true;
+                                    }
+                                }
+                            }
+
+                            if(shadowInfo.propsSet) {
+                                for(var offset in shadowInfo.propsSet){
+                                    if(HOP(shadowInfo.propsSet, offset)){
+                                        reportDB[iid]['propsSet'][offset] = true;
+                                    }
+                                }
+                            }
+
+                            if(shadowInfo.propsGet) {
+                                for(var offset in shadowInfo.propsGet){
+                                    if(HOP(shadowInfo.propsGet, offset)){
+                                        reportDB[iid]['propsGet'][offset] = true;
+                                    }
+                                }
+                            }
+
+                            if(HOP(shadowInfo, 'typeof_use')) {
+                                if(shadowInfo.typeof_use === true){
+                                    reportDB[iid]['typeof_use'] = true;
                                 }
                             }
                         }
@@ -222,11 +356,87 @@ J$.analysis = {};
                 }
             }
 
-            console.log('array created at the following locations can not be special-typed:');
+            // print final results
+            console.log('Array created at the following locations can not be special-typed:');
             // print array constructing locations that could not be typed
-            for(var prop in failDB){
-                if(HOP(failDB, prop)){
-                    console.log(prop);
+            for(var iid in failArraySource){
+                if(HOP(failArraySource, iid)){
+                    console.log('[x]\t' + iidToLocation(iid) + '\t' + failArraySource[iid]);
+                }
+            }
+
+            console.log('Following arrays can be typed:');
+            for(var iid in reportDB){
+                if(HOP(reportDB, iid)){
+                    // print location
+                    console.log('location: ' + iidToLocation(iid));
+                    console.log('\t[Oper-Count]:\t' + reportDB[iid].count);
+
+                    if(readOnlyDB[iid]===true){
+                        console.log('\t[READONLY]');
+                    } else {
+                        // print max indices
+                        var maxIndicesBuffer = [];
+                        for(var index in reportDB[iid].maxIndices){
+                            if(HOP(reportDB[iid].maxIndices, index)){
+                                maxIndicesBuffer.push(index);
+                            }
+                        }
+                        console.log('\t[Max-Indices]:\t' + JSON.stringify(maxIndicesBuffer));
+
+                        // print typed arrays that can be cast to
+                        var arrayFitBuffer = [];
+                        for(var arrType in reportDB[iid].fitarray){
+                            if(HOP(reportDB[iid].fitarray, arrType)){
+                                if((reportDB[iid].fitarray)[arrType] === true) {
+                                    arrayFitBuffer.push(arrType);
+                                }
+                            }
+                        }
+                        console.log('\t[Refactor-Opts]: ' + JSON.stringify(arrayFitBuffer));
+                    }
+
+                    if(HOP(reportDB[iid], 'functions_use')){
+                        var funUseBuffer = [];
+                        for(var fun in reportDB[iid]['functions_use']){
+                            if(HOP(reportDB[iid]['functions_use'], fun)){
+                                funUseBuffer.push(fun);
+                            }
+                        }
+                        if(funUseBuffer.length>0) {
+                            console.log('\t[Func-Used]: ' + JSON.stringify(funUseBuffer));
+                        }
+                    }
+
+                    if(HOP(reportDB[iid], 'propsSet')){
+                        var propSetBuffer = [];
+                        for(var p in reportDB[iid]['propsSet']){
+                            if(HOP(reportDB[iid]['propsSet'], p)){
+                                propSetBuffer.push(p);
+                            }
+                        }
+                        if(propSetBuffer.length>0) {
+                            console.log('\t[Prop-Set]: ' + JSON.stringify(propSetBuffer));
+                        }
+                    }
+
+                    if(HOP(reportDB[iid], 'propsGet')){
+                        var propGetBuffer = [];
+                        for(var p in reportDB[iid]['propsGet']){
+                            if(HOP(reportDB[iid]['propsGet'], p)){
+                                propGetBuffer.push(p);
+                            }
+                        }
+                        if(propGetBuffer.length>0) {
+                            console.log('\t[Prop-Get]: ' + JSON.stringify(propGetBuffer));
+                        }
+                    }
+
+                    if(HOP(reportDB[iid], 'typeof_use')){
+                        if(reportDB[iid].typeof_use === true){
+                            console.log('\t[Typeof]: \'typeof\' applied');
+                        }
+                    }
                 }
             }
         }
