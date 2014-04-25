@@ -152,7 +152,9 @@ J$.analysis = {};
 
         if(Array.isArray(base) && typeof offset === 'string' && isNaN(parseInt(offset))){
             var shadowInfo = smemory.getShadowObject(base);
-            shadowInfo.propsSet[offset] = true;
+            if(shadowInfo.source) {
+                shadowInfo.propsSet[offset] = true;
+            }
         }
     }
 
@@ -164,7 +166,9 @@ J$.analysis = {};
 
         if(Array.isArray(base) && typeof offset === 'string' && isNaN(parseInt(offset))){
             var shadowInfo = smemory.getShadowObject(base);
-            shadowInfo.propsGet[offset] = true;
+            if(shadowInfo.source){
+                shadowInfo.propsGet[offset] = true;
+            }
         }
     }
 
@@ -357,15 +361,8 @@ J$.analysis = {};
             }
 
             // print final results
-            console.log('Array created at the following locations can not be special-typed:');
-            // print array constructing locations that could not be typed
-            for(var iid in failArraySource){
-                if(HOP(failArraySource, iid)){
-                    console.log('[x]\t' + iidToLocation(iid) + '\t' + failArraySource[iid]);
-                }
-            }
-
-            console.log('Following arrays can be typed:');
+            console.log('-------------Fix Array Refactor Report-------------');
+            console.log('Array created at the following locations may be special-typed:');
             for(var iid in reportDB){
                 if(HOP(reportDB, iid)){
                     // print location
@@ -437,6 +434,15 @@ J$.analysis = {};
                             console.log('\t[Typeof]: \'typeof\' applied');
                         }
                     }
+                }
+            }
+
+            console.log('---------------------------------------------------');
+            // print array constructing locations that could not be typed
+            console.log('Following arrays can not be typed:');
+            for(var iid in failArraySource){
+                if(HOP(failArraySource, iid)){
+                    console.log('[x]\t' + iidToLocation(iid) + '\t' + failArraySource[iid]);
                 }
             }
         }
