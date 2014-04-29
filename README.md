@@ -64,6 +64,7 @@ npm test
 First make sure you have Jalangi Installed.
 
 There are two ways to run an analysis on a target program:
+
 1. Use the ```jalangi.py``` command line tool in the Jalangi Project:
 In the Jalangi-Berkeley directory:
 ```
