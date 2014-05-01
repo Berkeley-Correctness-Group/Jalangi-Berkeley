@@ -49,3 +49,6 @@ var array6 = [];
 array6[1] = 2;
 array6[2] = 3;
 array6.push({});
+
+var array7 = [];
+array7[2] = 1;
