@@ -77,6 +77,11 @@ To run an analysis to find inconsistent types:
 python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/inconsistentType/InconsistentTypeEngine.js tests/inconsistentType/inconsistent1
 ```
 
+To run an analysis to find arrays that can be cast to typed arrays:
+```
+python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/jitaware/fixArray tests/jitaware/arrayTypeTest
+```
+
 ### Run Browser Experiments
 
 For now, this experiment only supports Firefox and Chrome on Mac OS.
