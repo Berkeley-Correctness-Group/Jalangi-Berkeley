@@ -6,7 +6,9 @@
     var allFiles = fs.readdirSync("./tests/inconsistentType/");
     var invoked = 0;
     var executed = 0;
-    var failed = 0;
+    var failedTotal = 0;
+    var failedFalsePositive = 0;
+    var failedFalseNegative = 0;
     var testRunning = false;
     var tests = allFiles.filter(function(file) {
         return (file.indexOf(".js") === file.length - 3 &&
@@ -31,24 +33,26 @@
         testRunning = true;
         invoked++;
         var cmd = "python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/inconsistentType/InconsistentTypeEngine.js tests/inconsistentType/" + file.replace(/.js$/, "");
-        child_process.exec(cmd, 
+        child_process.exec(cmd,
               function(error, stdout, stderr) {
                   if (!error) {
                       var hasWarning = stdout.indexOf("Warning") >= 0;
                       if (expectWarning && !hasWarning) {
                           console.log(file + ": FAILED (didn't get expected warning)");
-                          failed++;
+                          failedTotal++;
+                          failedFalseNegative++;
                       } else if (!expectWarning && hasWarning) {
                           console.log(file + ": FAILED (get unexpected warning)");
 //                          console.log(stdout);
-                          failed++;
+                          failedTotal++;
+                          failedFalsePositive++;
                       } else {
                           console.log(file + ": OK");
                       }
                   } else {
                       console.log("Error: Couldn't execute test!");
                       console.log(stderr);
-                      failed++;
+                      failedTotal++;
                   }
                   executed++;
                   testRunning = false;
@@ -60,7 +64,7 @@
             setTimeout(printResults, 100);
             return;
         }
-        console.log("Executed: " + executed + ", failed: " + failed);
+        console.log("Executed: " + executed + ", failed: " + failedTotal + " (" + failedFalsePositive + " false positives, " + failedFalseNegative + " false negatives)");
     }
 
 })();
