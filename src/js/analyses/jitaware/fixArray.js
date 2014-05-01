@@ -31,6 +31,7 @@ J$.analysis = {};
     var arraydb = {};
 
     var uint8arr = new Uint8Array(1);
+    var uint8clamparr = new Uint8ClampedArray(1);
     var uint16arr = new Uint8Array(1);
     var uint32arr = new Uint32Array(1);
     var int8arr = new Int8Array(1);
@@ -44,6 +45,7 @@ J$.analysis = {};
         if(!shadowInfo.fitarray){ // init array fit spectrum
             shadowInfo.fitarray = {};
             shadowInfo.fitarray.uint8arr = true;
+            shadowInfo.fitarray.uint8clamparr = true;
             shadowInfo.fitarray.uint16arr = true;
             shadowInfo.fitarray.uint32arr = true;
             shadowInfo.fitarray.int8arr = true;
@@ -59,6 +61,12 @@ J$.analysis = {};
                 uint8arr[0] = val;
                 if(val !== uint8arr[0]){
                     shadowInfo.fitarray.uint8arr = false;
+                }
+            }
+            if(shadowInfo.fitarray.uint8clamparr){
+                uint8clamparr[0] = val;
+                if(val !== uint8clamparr[0]){
+                    shadowInfo.fitarray.uint8clamparr = false;
                 }
             }
             if(shadowInfo.fitarray.uint16arr){
