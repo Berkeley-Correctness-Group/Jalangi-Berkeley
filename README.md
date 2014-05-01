@@ -61,12 +61,6 @@ cd ../jalangi
 npm test
 ```
 ### Run Experiments
-First make sure you have Jalangi Installed.
-
-There are two ways to run an analysis on a target program:
-
-(1) Use the ```jalangi.py``` in the Jalangi Project.
-
 In the Jalangi-Berkeley directory:
 ```
 python <Jalangi root path>/jalangi/scripts/jalangi.py direct -a <analysis code file> <program to be instrumented>
@@ -77,24 +71,10 @@ For example, to run the jit-compiler inefficient code pattern experiment:
 ```
 python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/jitaware/JITAware tests/jitaware/JITAwareTest
 ```
-(2) Use ```transform_analyze.js``` in this repository.
 
-In the Jalangi-Berkeley directory:
+To run an analysis to find inconsistent types:
 ```
-node src/js/commands/transform_analyze.js <jalangi home directory> <program to be instrumented> <analysis code file>
-```
-All files paths should be relative path to the root directory of this repository.
-
-For example, to run an analysis to find inconsistent types:
-```
-node src/js/commands/transform_analyze.js ../jalangi tests/inconsistentType/inconsistent3.js src/js/analyses/inconsistentType/InconsistentTypeEngine
-```
-
-More Examples:
-
-In the Jalangi-Berkeley directory:
-```
-node src/js/commands/transform_analyze.js ../jalangi ../jalangi/tests/octane/pdfjs.js ../jalangi/src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB
+python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/inconsistentType/InconsistentTypeEngine.js tests/inconsistentType/inconsistent1
 ```
 
 ### Run Browser Experiments
