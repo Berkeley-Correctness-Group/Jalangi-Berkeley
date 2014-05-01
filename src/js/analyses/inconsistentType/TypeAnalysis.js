@@ -198,6 +198,9 @@
                                 }
                                 var typeMap1 = fieldMap1[field1];
                                 var typeMap2 = fieldMap2[field1];
+                                if (util.sizeOfMap(typeMap1) !== util.sizeOfMap(typeMap2)) {
+                                    continue loop2;
+                                }
                                 for (var type1 in typeMap1) {
                                     if (util.HOP(typeMap1, type1)) {
                                         var found = false;

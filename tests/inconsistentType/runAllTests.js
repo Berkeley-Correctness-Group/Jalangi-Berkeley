@@ -30,7 +30,8 @@
         }
         testRunning = true;
         invoked++;
-        child_process.exec("node src/js/commands/transform_analyze.js ../jalangi tests/inconsistentType/" + file + " src/js/analyses/inconsistentType/InconsistentTypeEngine",
+        var cmd = "python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/inconsistentType/InconsistentTypeEngine.js tests/inconsistentType/" + file.replace(/.js$/, "");
+        child_process.exec(cmd, 
               function(error, stdout, stderr) {
                   if (!error) {
                       var hasWarning = stdout.indexOf("Warning") >= 0;

@@ -6,3 +6,4 @@ do
   dot -Tps ${f} > ${f}.ps
 done
 
+dot -Tps jalangi_tmp/jalangi_types.dot > jalangi_tmp/jalangi_types.ps
