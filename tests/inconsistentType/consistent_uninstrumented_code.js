@@ -18,13 +18,16 @@
 
 (function() {
     
-    var s;
-    if (typeof window === 'undefined') {
-        s = global.process.title;
-    } else {
-        s = window.content.screenX;
-    }
+    // minimal version of code from crypto-aes (sunspider)
+    // (has caused false positive due to incorrect handling of objects created in uninstrumented code)
     
-//    console.log("s="+s);
+    var a1 = [1,2];
+    var a2 = [1].concat([2]);
+    
+    function foo(x) {}
+    
+    foo(a1);
+    foo(a2);
+        
     
 })();

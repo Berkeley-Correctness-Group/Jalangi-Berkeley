@@ -18,7 +18,7 @@
 
 (function() {
     
-    // incorrect warning that results when reading a field value created in uninstrumented code
+    // reading a field value created in uninstrumented code
     
     var o1 = global.process.features;
     

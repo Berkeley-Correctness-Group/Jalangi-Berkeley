@@ -111,6 +111,7 @@
          * Attach shadow with type name to object.
          * @param {number} creationLocation
          * @param {object} obj
+         * @param {string} optionalTypeName
          * @returns {object} The given object
          */
         function annotateObject(creationLocation, obj, optionalTypeName) {
