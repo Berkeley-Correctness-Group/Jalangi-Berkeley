@@ -166,7 +166,7 @@ shutil.copyfile(tmpOrig, orig)
 #if instrCodeOption == "instrumentCode":
 #  cmd = ["node", "/home/m/research/projects/jalangi/src/js/instrument/esnstrument.js", "--instrumentCode", orig]
 #else:
-cmd = [ "node", "/home/m/research/projects/jalangi/src/js/instrument/esnstrument.js", "--maxIIDsFile", workingDirName+"maxIIDs.json", "--noEvalWrap", orig ]
+cmd = [ "node", "/home/m/research/projects/jalangi/src/js/instrument/esnstrument.js", "--maxIIDsFile", workingDirName+"maxIIDs.json", "--instrEval false", orig ]
 print "Calling instrumenter with\n"+' '.join(cmd)
 subprocess.call(cmd)
 

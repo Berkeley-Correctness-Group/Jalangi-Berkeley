@@ -65,8 +65,8 @@ public class ExperimentRunner {
 
 		// testToyExample();
 
-		testJoomla();
-		testJoomlaAdmin();
+//		testJoomla();
+//		testJoomlaAdmin();
 //		testCmsmadesimple();
 //		testMediawiki();
 //		testMoodle();
@@ -74,7 +74,7 @@ public class ExperimentRunner {
 //		testOsclass();
 //		testPhpbb();
 //		testWordpress();
-//		testZurmo();
+		testZurmo();
 //		testProcesswire();
 
 		// trigger beforeunload event after last benchmark
