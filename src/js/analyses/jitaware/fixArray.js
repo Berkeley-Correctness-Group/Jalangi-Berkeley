@@ -368,79 +368,91 @@ J$.analysis = {};
                 }
             }
 
+            // prioritize warnings
+            // currently based on array operation count
+            var iidArray = [];
+            for(var iid in reportDB){
+                if(HOP(reportDB, iid)){
+                    iidArray.push({'iid':iid, value: reportDB[iid].count});
+                }
+            }
+            // prioritization function
+            iidArray.sort(function (a, b){
+                return b.value - a.value;
+            });
+
             // print final results
             console.log('-------------Fix Array Refactor Report-------------');
             console.log('Array created at the following locations may be special-typed:');
-            for(var iid in reportDB){
-                if(HOP(reportDB, iid)){
-                    // print location
-                    console.log('location: ' + iidToLocation(iid));
-                    console.log('\t[Oper-Count]:\t' + reportDB[iid].count);
+            for (var i = 0; i < iidArray.length; i++) {
+                var iid = iidArray[i].iid;
+                // print location
+                console.log('location: ' + iidToLocation(iid));
+                console.log('\t[Oper-Count]:\t' + reportDB[iid].count);
 
-                    if(readOnlyDB[iid]===true){
-                        console.log('\t[READONLY]');
-                    } else {
-                        // print max indices
-                        var maxIndicesBuffer = [];
-                        for(var index in reportDB[iid].maxIndices){
-                            if(HOP(reportDB[iid].maxIndices, index)){
-                                maxIndicesBuffer.push(index);
-                            }
-                        }
-                        console.log('\t[Max-Indices]:\t' + JSON.stringify(maxIndicesBuffer));
-
-                        // print typed arrays that can be cast to
-                        var arrayFitBuffer = [];
-                        for(var arrType in reportDB[iid].fitarray){
-                            if(HOP(reportDB[iid].fitarray, arrType)){
-                                if((reportDB[iid].fitarray)[arrType] === true) {
-                                    arrayFitBuffer.push(arrType);
-                                }
-                            }
-                        }
-                        console.log('\t[Refactor-Opts]: ' + JSON.stringify(arrayFitBuffer));
-                    }
-
-                    if(HOP(reportDB[iid], 'functions_use')){
-                        var funUseBuffer = [];
-                        for(var fun in reportDB[iid]['functions_use']){
-                            if(HOP(reportDB[iid]['functions_use'], fun)){
-                                funUseBuffer.push(fun);
-                            }
-                        }
-                        if(funUseBuffer.length>0) {
-                            console.log('\t[Func-Used]: ' + JSON.stringify(funUseBuffer));
+                if (readOnlyDB[iid] === true) {
+                    console.log('\t[READONLY]');
+                } else {
+                    // print max indices
+                    var maxIndicesBuffer = [];
+                    for (var index in reportDB[iid].maxIndices) {
+                        if (HOP(reportDB[iid].maxIndices, index)) {
+                            maxIndicesBuffer.push(index);
                         }
                     }
+                    console.log('\t[Max-Indices]:\t' + JSON.stringify(maxIndicesBuffer));
 
-                    if(HOP(reportDB[iid], 'propsSet')){
-                        var propSetBuffer = [];
-                        for(var p in reportDB[iid]['propsSet']){
-                            if(HOP(reportDB[iid]['propsSet'], p)){
-                                propSetBuffer.push(p);
+                    // print typed arrays that can be cast to
+                    var arrayFitBuffer = [];
+                    for (var arrType in reportDB[iid].fitarray) {
+                        if (HOP(reportDB[iid].fitarray, arrType)) {
+                            if ((reportDB[iid].fitarray)[arrType] === true) {
+                                arrayFitBuffer.push(arrType);
                             }
                         }
-                        if(propSetBuffer.length>0) {
-                            console.log('\t[Prop-Set]: ' + JSON.stringify(propSetBuffer));
+                    }
+                    console.log('\t[Refactor-Opts]: ' + JSON.stringify(arrayFitBuffer));
+                }
+
+                if (HOP(reportDB[iid], 'functions_use')) {
+                    var funUseBuffer = [];
+                    for (var fun in reportDB[iid]['functions_use']) {
+                        if (HOP(reportDB[iid]['functions_use'], fun)) {
+                            funUseBuffer.push(fun);
                         }
                     }
+                    if (funUseBuffer.length > 0) {
+                        console.log('\t[Func-Used]: ' + JSON.stringify(funUseBuffer));
+                    }
+                }
 
-                    if(HOP(reportDB[iid], 'propsGet')){
-                        var propGetBuffer = [];
-                        for(var p in reportDB[iid]['propsGet']){
-                            if(HOP(reportDB[iid]['propsGet'], p)){
-                                propGetBuffer.push(p);
-                            }
-                        }
-                        if(propGetBuffer.length>0) {
-                            console.log('\t[Prop-Get]: ' + JSON.stringify(propGetBuffer));
+                if (HOP(reportDB[iid], 'propsSet')) {
+                    var propSetBuffer = [];
+                    for (var p in reportDB[iid]['propsSet']) {
+                        if (HOP(reportDB[iid]['propsSet'], p)) {
+                            propSetBuffer.push(p);
                         }
                     }
+                    if (propSetBuffer.length > 0) {
+                        console.log('\t[Prop-Set]: ' + JSON.stringify(propSetBuffer));
+                    }
+                }
 
-                    if(HOP(reportDB[iid], 'typeof_use')){
-                        if(reportDB[iid].typeof_use === true){
-                            console.log('\t[Typeof]: \'typeof\' applied');
+                if (HOP(reportDB[iid], 'propsGet')) {
+                    var propGetBuffer = [];
+                    for (var p in reportDB[iid]['propsGet']) {
+                        if (HOP(reportDB[iid]['propsGet'], p)) {
+                            propGetBuffer.push(p);
                         }
+                    }
+                    if (propGetBuffer.length > 0) {
+                        console.log('\t[Prop-Get]: ' + JSON.stringify(propGetBuffer));
+                    }
+                }
+
+                if (HOP(reportDB[iid], 'typeof_use')) {
+                    if (reportDB[iid].typeof_use === true) {
+                        console.log('\t[Typeof]: \'typeof\' applied');
                     }
                 }
             }
@@ -468,4 +480,3 @@ J$.analysis = {};
         module.exports = ArrayType;
     }
 })(typeof J$ === 'undefined'? (J$={}):J$));
-
