@@ -75,7 +75,8 @@
             console.log(Object.keys(typeData.typeNameToFieldTypes).length + " types, " + Object.keys(typeData.functionToSignature).length + " functions");
             var iids = offlineCommon.loadIIDs(sourcemapDir);
             var iidFct = function(iid) {
-                return iids[iid].toString();
+                var triple = iids[iid];
+                return triple ? triple.toString() : "<unknown location>";
             };
             var warnings = typeAnalysis.analyzeTypes(typeData.typeNameToFieldTypes, typeData.functionToSignature, typeData.typeNames, typeData.functionNames, iidFct,
                   false, visualizeAllTypes, visualizeWarningTypes);
