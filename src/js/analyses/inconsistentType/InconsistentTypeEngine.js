@@ -192,22 +192,22 @@
                 window.$jalangiFFLogResult(JSON.stringify(results), true);
             } else {
                 var fs = require("fs");
-                var benchmark = process.argv[3];
+                var benchmark = process.argv[1];
                 var wrappedResults = [{url:benchmark, value:results}];
                 fs.writeFileSync(process.cwd() + "/analysisResults.json", JSON.stringify(wrappedResults));
             }
         }
 
-        this.functionEnter = function (iid, fun, dis /* this */) {
+        this.functionEnter = function(iid, fun, dis /* this */) {
             annotateObject(iid, smemory.getCurrentFrame(), "frame");
         };
 
-        this.readPre = function (iid, name, val, isGlobal) {
-            updateType(smemory.getFrame(name),name, val, iid);
+        this.readPre = function(iid, name, val, isGlobal) {
+            updateType(smemory.getFrame(name), name, val, iid);
         };
 
-        this.writePre = function (iid, name, val, oldValue) {
-            updateType(smemory.getFrame(name),name, val, iid);
+        this.writePre = function(iid, name, val, oldValue) {
+            updateType(smemory.getFrame(name), name, val, iid);
         };
 
         this.literal = function(iid, val) {
