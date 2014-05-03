@@ -74,7 +74,11 @@
             var typeData = benchmark2TypeData[benchmark];
             console.log(Object.keys(typeData.typeNameToFieldTypes).length + " types, " + Object.keys(typeData.functionToSignature).length + " functions");
             var iids = offlineCommon.loadIIDs(sourcemapDir);
-            var warnings = typeAnalysis.analyzeTypes(typeData.typeNameToFieldTypes, typeData.functionToSignature, typeData.typeNames, typeData.functionNames, iids,
+            var iidFct = function(iid) {
+                var triple = iids[iid];
+                return triple ? triple.toString() : "<unknown location>";
+            };
+            var warnings = typeAnalysis.analyzeTypes(typeData.typeNameToFieldTypes, typeData.functionToSignature, typeData.typeNames, typeData.functionNames, iidFct,
                   false, visualizeAllTypes, visualizeWarningTypes);
             var typeWarnings = warnings[0];
 //            typeWarnings.forEach(function(warning) {
@@ -251,8 +255,9 @@
         return result;
     }
 
-    var loggedResults = readFile(process.argv[2]);
-    var sourcemapDir = process.argv[3];
+    var benchmarkDir = process.argv[2];
+    var loggedResults = readFile(benchmarkDir + "/analysisResults.json");
+    var sourcemapDir = benchmarkDir+"/sourcemaps/";
     analyze(loggedResults, sourcemapDir);
 
 })();

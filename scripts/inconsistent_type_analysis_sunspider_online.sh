@@ -1,5 +1,7 @@
 #!/bin/bash
 
+rm -rf sunspider
+mkdir sunspider
 for bm in `ls ../jalangi/tests/sunspider1/*.js | grep -v "_jalangi_" | xargs`
 do
   echo "####################################"
@@ -7,8 +9,10 @@ do
   bm_short=`basename ${bm}`
   bm_no_ext=`echo ${bm} | sed 's/.js$//'`
   python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/inconsistentType/InconsistentTypeEngine.js ${bm_no_ext}
-  mv jalangi_tmp/analysisResults.json ${bm_short}_analysisResults.json
-  mv jalangi_tmp/jalangi_sourcemap.json ${bm_short}_sourcemap.json
+  mkdir sunspider/${bm_short}
+  mv jalangi_tmp/analysisResults.json sunspider/${bm_short}/analysisResults.json
+  mkdir sunspider/${bm_short}/sourcemaps
+  mv jalangi_tmp/jalangi_sourcemap.json sunspider/${bm_short}/sourcemaps/sourcemap.json
 done
 
 

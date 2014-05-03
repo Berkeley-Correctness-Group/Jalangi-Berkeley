@@ -129,10 +129,15 @@
                                                 if (type1 < type2 && getRoot(table, type1) !== getRoot(table, type2)) {
                                                     var typeDescription = toTypeDescription(typeOrFunctionName, iidToLocation);
                                                     var observedTypesAndLocations = [];
+                                                    var observedRoots = {}; // report each root type at most once
                                                     for (var type3 in typeMap) {
-                                                        var observedType = toTypeDescription(type3, iidToLocation);
-                                                        var locations = toLocations(typeMap[type3], iidToLocation);
-                                                        observedTypesAndLocations.push([observedType, locations]);
+                                                        var observedRoot = getRoot(table, type3);
+                                                        if (!util.HOP(observedRoots, observedRoot)) {
+                                                            observedRoots[observedRoot] = true;
+                                                            var observedType = toTypeDescription(type3, iidToLocation);
+                                                            var locations = toLocations(typeMap[type3], iidToLocation);
+                                                            observedTypesAndLocations.push([observedType, locations]);
+                                                        }
                                                     }
                                                     var highlightedIIDs = {};
                                                     highlightedIIDs[typeOrFunctionName] = true;

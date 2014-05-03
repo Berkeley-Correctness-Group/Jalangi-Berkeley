@@ -193,7 +193,7 @@
 
         dot = dot + "}\n";
         require('fs').writeFileSync(fileName, dot);
-        console.log("Generated " + process.cwd() + "/" + fileName + ".  Install graphviz and run \"dot -Tpng " + fileName + ".dot -o jalangi_types.png; open jalangi_types.png\" to visualize the inferred types.");
+//        console.log("Generated " + process.cwd() + "/" + fileName + ".  Install graphviz and run \"dot -Tpng " + fileName + ".dot -o jalangi_types.png; open jalangi_types.png\" to visualize the inferred types.");
         return dot;
     }
 
