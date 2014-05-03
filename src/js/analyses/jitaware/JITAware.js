@@ -188,15 +188,38 @@ J$.analysis = {};
             }
         }
 
+        function dumpSig(sig){
+            var str = ''
+            for(var prop in sig) {
+                var name = prop;
+                var value = sig[prop]
+                if(prop === 'pto'){
+                    name = 'prototype';
+                    value = JSON.stringify(value);
+                } else if (prop === 'obj_layout') {
+                    name = 'layout';
+                    if(value[value.length-1] === '|'){
+                        value = value.substring(0, value.length-1);
+                    }
+                }
+
+                if(prop === 'con') {
+                    continue;
+                }
+                str += '[' + name + ']: [ ' + value + ' ] | ';
+            }
+            return str;
+        }
+
         function objSigToString (sig) {
             var str = '';
             try {
                 var sterm_obj = sig.sterm_obj;
                 sig.sterm_obj = 'hide';
-                str += JSON.stringify(sig);
+                str += dumpSig(sig);
                 sig.sterm_obj = sterm_obj;
                 if(sig.con && sig.con.name){
-                    str = str + " | constructor: " + sig.con.name;
+                    str = str + "constructor: " + sig.con.name;
                 }
 
                 if(sig.pto && sig.pto.constructor){
@@ -299,7 +322,7 @@ J$.analysis = {};
                         console.log('[location: ' + iidToLocation(jitArr[i].iid) + '] <- No. layouts: ' + query_sig.length);
                         console.log('\thidden class switching rate: ' + query_sig.classChangeCnt/query_sig.totalCnt + '(' + query_sig.classChangeCnt + '/' + query_sig.totalCnt + ')');
                         for(var j=0;j<query_sig.length;j++) {
-                            console.log('count: ' + query_sig[j].count + ' -> layout:' + objSigToString(query_sig[j].sig));
+                            console.log('count: ' + query_sig[j].count + ' -> Object Info:' + objSigToString(query_sig[j].sig));
                             var num_obj = 0;
                             var num_create_location = 0;
                             var set = {};
