@@ -20,6 +20,7 @@
     
     // taken from sunspider's 3d-cube benchmark
     // -- not a bug, but bad style (the result of CalcCross should be stored in a fresh variable)
+    // -- filtered because type of CalcCross' return value is a structural subtype of A's prior type
     
     function CalcNormal(V0, V1, V2) {
         var A = new Array();
