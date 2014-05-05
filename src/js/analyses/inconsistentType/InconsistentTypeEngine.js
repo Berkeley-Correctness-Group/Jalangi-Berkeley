@@ -35,6 +35,8 @@
         var typeNames = {};
         var functionNames = {};
 
+        annotateGlobalFrame();
+
         function isArr(val) {
             return Object.prototype.toString.call(val) === '[object Array]';
         }
@@ -142,6 +144,14 @@
                 }
             }
             return obj;
+        }
+
+        function annotateGlobalFrame() {
+            var f = smemory.getCurrentFrame();
+            while (smemory.getParentFrame(f) !== undefined) {
+                f = smemory.getParentFrame(f);
+            }
+            annotateObject(undefined, f, "global scope");
         }
 
         function setTypeInFunSignature(value, tval, offset, callLocation) {
