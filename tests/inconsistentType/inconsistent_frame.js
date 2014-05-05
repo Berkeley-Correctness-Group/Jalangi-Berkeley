@@ -7,4 +7,3 @@ function foo(i) {
 }
 
 foo(9);
-foo(10);
