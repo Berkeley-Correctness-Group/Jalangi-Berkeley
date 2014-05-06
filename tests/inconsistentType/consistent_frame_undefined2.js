@@ -18,29 +18,17 @@
 
 (function() {
 
-    // simple version of a false positive from joomla/mootools
-    
-    function clone(object) {
-        var clone = {};
-        for (var key in object)
-            clone[key] = cloneOf(object[key]);
-        return clone;
-    }
-
-    function cloneOf(item) {
-        if (typeof item === 'object') {
-            return clone(item);
+    var worklist = [3, 6, 1, -4, 1, 4, 2];
+    var sumJustBeforeNegativeNb;  // may be undefined
+    var sum = 0;
+    while (worklist.length > 0) {
+        var item = worklist.pop();
+        if (item < 0) {
+            sumJustBeforeNegativeNb = sum;
         } else {
-            return item;
+            sumJustBeforeNegativeNb = undefined;  // explicitly set to undefined
         }
+        sum += item;
     }
-    
-    var original1 = {a: 23};
-    var clone1 = clone(original1);
-    console.log(clone1.a);
-    
-    var original2 = {a: true};
-    var clone2 = clone(original2);
-    console.log(clone2.a);
 
 })();
