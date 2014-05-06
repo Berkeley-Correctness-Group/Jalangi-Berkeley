@@ -17,12 +17,13 @@
               (file.indexOf("inconsistent") === 0 || file.indexOf("consistent") === 0));
     });
     var testsToDo = testsToAnalyze.length;
-    console.log("Tests to run: "+testsToDo);
+    console.log("Tests to run: " + testsToDo);
     while (testsToAnalyze.length > 0) {
         var test = testsToAnalyze.pop();
         var expectWarning = test.indexOf("inconsistent") === 0;
         runTest(test, runAndAnalyzeTest.bind(null, test, expectWarning));
     }
+    var output = [];
     printResults();
 
     function runTest(file, continuation) {
@@ -36,7 +37,8 @@
               function(error, stdout, stderr) {
                   if (error) {
                       testsToDo--;
-                      console.log("  "+file+ " crashes, will not analyze it.");
+                      process.stdout.write(".");
+                      output.push("  " + file + " crashes, will not analyze it.");
                   } else {
                       setTimeout(continuation, 0);
                   }
@@ -56,16 +58,18 @@
                   if (!error) {
                       var hasWarning = stdout.indexOf("Warning") >= 0;
                       if (expectWarning && !hasWarning) {
-                          console.log("  "+file + ": FAILED (didn't get expected warning)");
+                          process.stdout.write(".");
+                          output.push("  " + file + ": FAILED (didn't get expected warning)");
                           failedTotal++;
                           failedFalseNegative++;
                       } else if (!expectWarning && hasWarning) {
-                          console.log("  "+file + ": FAILED (get unexpected warning)");
-//                          console.log(stdout);
+                          process.stdout.write(".");
+                          output.push("  " + file + ": FAILED (get unexpected warning)");
                           failedTotal++;
                           failedFalsePositive++;
                       } else {
-                          console.log("  "+file + ": OK");
+                          process.stdout.write(".");
+                          output.push("  " + file + ": OK");
                       }
                   } else {
                       console.log("Error: Couldn't execute test!");
@@ -83,6 +87,10 @@
             setTimeout(printResults, 100);
             return;
         }
+        console.log();
+        output.sort().forEach(function(line) {
+            console.log(line);
+        });
         console.log("Executed: " + executedAndAnalyzed + ", failed: " + failedTotal + " (" + failedFalsePositive + " false positives, " + failedFalseNegative + " false negatives)");
     }
 

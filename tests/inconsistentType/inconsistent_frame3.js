@@ -17,20 +17,11 @@
 // Author: Michael Pradel
 
 (function() {
+   
+    var f = function() {};
     
-    // false positive if we don't consider structural subtypes
-    // (where a missing property is not used in the function with the warning)
-    
-    function foo(a) {
-        a.prop1;
-        // no access to prop2 in this function
-    }
-    foo.yyy = 4;
-    
-    var a1 = { prop1: true };    
-    var a2 = { prop1: true, prop2: true };
-    foo(a1);
-    foo(a2);
-    
+    var x = { a: true, b: f };
+    x.b();
+    x.b = "xyz";
     
 })();
