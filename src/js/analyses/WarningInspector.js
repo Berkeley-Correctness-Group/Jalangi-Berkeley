@@ -23,17 +23,19 @@
      */
     function inspect(warningsToInspect, knownWarningsFile) {
         console.log("\n--------------------- WarningInspector -----------------");
-        console.log("Warnings to inspect: " + warningsToInspect.length);
+        console.log("Warnings given to inspector: " + warningsToInspect.length);
         var knownWarnings = readFile(knownWarningsFile);
         console.log("Known warnings: " + knownWarnings.length);
         warningsToInspect.forEach(function(warning) {
             // if all ids of the warnings are known, no need to inspect it again
             var knownIds = 0;
+            var commentsOfKnown = {};
             warning.ids.forEach(function(id) {
                 var isKnown = false;
                 knownWarnings.some(function(knownWarning) {
                     if (knownWarning.id === id) {
                         isKnown = true;
+                        commentsOfKnown[knownWarning.comment] = true;
                         return true;
                     }
                 });
@@ -41,10 +43,7 @@
                     knownIds++;
             });
             if (warning.ids.length === knownIds) {
-                warning.ids.forEach(function(id) {
-                    console.log("Skipping known warning: " + id);
-                });
-
+                console.log("Skipping known warning: "+Object.keys(commentsOfKnown));
             } else {
                 console.log("===============================\n" + warning.text + "\n");
                 var inspectedIdsTemplates = warning.ids.map(function(id) {

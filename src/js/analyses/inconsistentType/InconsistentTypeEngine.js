@@ -213,11 +213,15 @@
         };
 
         this.readPre = function(iid, name, val, isGlobal) {
-            updateType(smemory.getFrame(name), name, val, iid);
+            if (name !== "this") {
+                updateType(smemory.getFrame(name), name, val, iid);
+            }
         };
 
         this.writePre = function(iid, name, val, oldValue) {
-            updateType(smemory.getFrame(name), name, val, iid);
+            if (name !== "this") {
+                updateType(smemory.getFrame(name), name, val, iid);
+            }
         };
 
         this.literal = function(iid, val) {

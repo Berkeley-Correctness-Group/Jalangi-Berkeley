@@ -81,29 +81,16 @@
             var warnings = typeAnalysis.analyzeTypes(typeData.typeNameToFieldTypes, typeData.functionToSignature, typeData.typeNames, typeData.functionNames, iidFct,
                   false, visualizeAllTypes, visualizeWarningTypes);
             var typeWarnings = warnings[0];
-//            typeWarnings.forEach(function(warning) {
-//                console.log(warning.toString());
-//            });
             var functionWarnings = warnings[1];
-//            functionWarnings.forEach(function(warning) {
-//                console.log(warning.toString());
-//            });
 
-
-
-            getWarningStats(typeWarnings, functionWarnings);
+            warningStats(typeWarnings, functionWarnings);
             console.log();
             analyzeFunctionWarnings(functionWarnings);
             analyzeTypeWarnings(typeWarnings);
         }
     }
 
-    function CallWarning(callSiteLoc, fctLoc) {
-        this.callSiteLoc = callSiteLoc;
-        this.fctLoc = fctLoc;
-    }
-
-    function getWarningStats(typeWarnings, functionWarnings) {
+    function warningStats(typeWarnings, functionWarnings) {
         // merge by location
         var locToTypeWarnings = {};
         typeWarnings.forEach(function(warning) {
@@ -134,19 +121,6 @@
             warningsAtLoc.push(warning);
             locToFunctionWarnings[warning.typeDescription.location] = warningsAtLoc;
         });
-
-        // merge by call site
-//        var callSiteToWarnings = {}; // string -> array of InconsistentTypeWarning
-//        functionWarnings.forEach(function(w) {
-//            w.observedTypesAndLocations.forEach(function(typeAndLocs) {
-//                var callSites = typeAndLocs[1];
-//                callSites.forEach(function(callSite) {
-//                    var warningsForCallSite = callSiteToWarnings[callSite] || [];
-//                    warningsForCallSite.push(w);
-//                    callSiteToWarnings[callSite] = warningsForCallSite;
-//                });
-//            });
-//        });
 
         // group by caller component and callee component
         var componentsToWarnings = {}; // string of format "callerComponent->calleeComponent" -> array of InconsistentTypeWarning
@@ -193,10 +167,8 @@
         inspector.inspect(toInspect, inspectedWarningsFile);
     }
 
-    function analyzeTypeWarnings(allTypeWarnings) {
+    function analyzeTypeWarnings(typeWarnings) {
         console.log("@@@ Analyzing type warnings:");
-
-        var typeWarnings = removeMultipleFunctionsWarnings(allTypeWarnings);
 
         // merge by location
         var locToTypeWarnings = {};
@@ -229,30 +201,6 @@
             }
         });
         inspector.inspect(toInspect, inspectedWarningsFile);
-
-
-    }
-
-    /**
-     * Removes each warning about a property that points to
-     * multiple different functions
-     * @param {array of InconsistentTypeWarning} warnings
-     * @returns {array of InconsistentTypeWarning} filtered warnings
-     */
-    function removeMultipleFunctionsWarnings(warnings) {
-        var result = [];
-        warnings.forEach(function(w) {
-            var includesNonFunction = false;
-            w.observedTypesAndLocations.some(function(typeAndLocs) {
-                if (typeAndLocs[0].kind !== "function") {
-                    return includesNonFunction = true;
-                }
-            });
-            if (includesNonFunction) {
-                result.push(w);
-            }
-        });
-        return result;
     }
 
     var benchmarkDir = process.argv[2];
