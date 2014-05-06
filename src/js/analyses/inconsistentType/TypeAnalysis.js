@@ -197,7 +197,7 @@
      * @param {string} type1
      * @param {string} type2
      * @returns {Boolean}
-     */    
+     */
     function structuralSubTypes(table, getFieldTypes, type1, type2) {
         return isStructuralSubtypeOrSameType(table, getFieldTypes, type1, type2) || isStructuralSubtypeOrSameType(table, getFieldTypes, type2, type1);
     }
