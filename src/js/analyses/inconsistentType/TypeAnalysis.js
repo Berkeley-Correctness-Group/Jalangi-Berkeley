@@ -3,11 +3,18 @@
     var util = importModule("CommonUtil");
     var visualization = importModule("Visualization");
 
-
     function analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
+        var getFieldTypes = function(typeName) {
+            if (typeName.indexOf("function(") === 0) {
+                return functionToSignature[typeName];
+            } else {
+                return typeNameToFieldTypes[typeName];
+            }
+        };
+
         var tableAndRoots = equiv(typeNameToFieldTypes);
-        var typeWarnings = analyze(typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
-        var functionWarnings = analyze(functionToSignature, tableAndRoots[0], iidToLocation);
+        var typeWarnings = analyze(typeNameToFieldTypes, tableAndRoots[0], iidToLocation, getFieldTypes);
+        var functionWarnings = analyze(functionToSignature, tableAndRoots[0], iidToLocation, getFieldTypes);
 
         if (visualizeAllTypes) {
             var allHighlightedIIDs = {};
@@ -97,7 +104,7 @@
         return this.kind + " originated at " + this.location;
     };
 
-    function analyze(nameToFieldMap, table, iidToLocation) {
+    function analyze(nameToFieldMap, table, iidToLocation, getFieldTypes) {
         var warnings = [];
         var done = {};
         for (var typeOrFunctionName in nameToFieldMap) {
@@ -127,23 +134,27 @@
                                         for (var type2 in typeMap) {
                                             if (util.HOP(typeMap, type2) && util.HOP(table, type2)) {
                                                 if (type1 < type2 && getRoot(table, type1) !== getRoot(table, type2)) {
-                                                    var typeDescription = toTypeDescription(typeOrFunctionName, iidToLocation);
-                                                    var observedTypesAndLocations = [];
-                                                    var observedRoots = {}; // report each root type at most once
-                                                    for (var type3 in typeMap) {
-                                                        var observedRoot = getRoot(table, type3);
-                                                        if (!util.HOP(observedRoots, observedRoot)) {
-                                                            observedRoots[observedRoot] = true;
-                                                            var observedType = toTypeDescription(type3, iidToLocation);
-                                                            var locations = toLocations(typeMap[type3], iidToLocation);
-                                                            observedTypesAndLocations.push([observedType, locations]);
+                                                    if (!structuralSubTypes(table, getFieldTypes, type1, type2) &&
+                                                          !potentiallyCompatibleFunctions(getFieldTypes, type1, type2)) {
+                                                        // types are inconsistent: report warning
+                                                        var typeDescription = toTypeDescription(typeOrFunctionName, iidToLocation);
+                                                        var observedTypesAndLocations = [];
+                                                        var observedRoots = {}; // report each root type at most once
+                                                        for (var type3 in typeMap) {
+                                                            var observedRoot = getRoot(table, type3);
+                                                            if (!util.HOP(observedRoots, observedRoot)) {
+                                                                observedRoots[observedRoot] = true;
+                                                                var observedType = toTypeDescription(type3, iidToLocation);
+                                                                var locations = toLocations(typeMap[type3], iidToLocation);
+                                                                observedTypesAndLocations.push([observedType, locations]);
+                                                            }
                                                         }
+                                                        var highlightedIIDs = {};
+                                                        highlightedIIDs[typeOrFunctionName] = true;
+                                                        var warning = new InconsistentTypeWarning(typeDescription, field, observedTypesAndLocations, highlightedIIDs);
+                                                        warnings.push(warning);
+                                                        break lbl1;
                                                     }
-                                                    var highlightedIIDs = {};
-                                                    highlightedIIDs[typeOrFunctionName] = true;
-                                                    var warning = new InconsistentTypeWarning(typeDescription, field, observedTypesAndLocations, highlightedIIDs);
-                                                    warnings.push(warning);
-                                                    break lbl1;
                                                 }
                                             }
                                         }
@@ -156,6 +167,78 @@
             }
         }
         return warnings;
+    }
+
+    /**
+     * Returns true if both types are functions and if we don't know the
+     * signature of at least one of them (i.e., they may have compatible 
+     * signatures).
+     * @param {function} getFieldTypes
+     * @param {string} type1
+     * @param {string} type2
+     * @returns {Boolean}
+     */
+    function potentiallyCompatibleFunctions(getFieldTypes, type1, type2) {
+        if (type1.indexOf("function(") === 0 && type2.indexOf("function(") === 0) {
+            var signature1 = getFieldTypes(type1);
+            var signature2 = getFieldTypes(type2);
+            if (signature1 === undefined || signature2 === undefined)
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if two types are structural subtypes, that is, if all field types
+     * of one type are exactly the same as the corresponding field types of the
+     * other type.
+     * @param {map: string->string} table
+     * @param {function} getFieldTypes
+     * @param {string} type1
+     * @param {string} type2
+     * @returns {Boolean}
+     */    
+    function structuralSubTypes(table, getFieldTypes, type1, type2) {
+        return isStructuralSubtypeOrSameType(table, getFieldTypes, type1, type2) || isStructuralSubtypeOrSameType(table, getFieldTypes, type2, type1);
+    }
+
+    function isStructuralSubtypeOrSameType(table, getFieldTypes, superType, subType) {
+        var superPropNameToTypes = getFieldTypes(superType);
+        var subPropNameToTypes = getFieldTypes(subType);
+        if (!superPropNameToTypes || !subPropNameToTypes)
+            return false;  // at least one is a primitive type
+        if (superPropNameToTypes && subPropNameToTypes && Object.keys(superPropNameToTypes).length > Object.keys(subPropNameToTypes).length)
+            return false;
+        for (var propName in superPropNameToTypes) {
+            if (util.HOP(superPropNameToTypes, propName)) {
+                if (!util.HOP(subPropNameToTypes, propName))
+                    return false;  // missing property
+                if (!haveSingleRoot(table, superPropNameToTypes[propName], subPropNameToTypes[propName]))
+                    return false;  // same property name but inconsistent types
+            }
+        }
+        return true;
+    }
+
+    function haveSingleRoot(table, types1, types2) {
+        var theRoot;
+        for (var t1 in types1) {
+            if (util.HOP(types1, t1)) {
+                var root = getRoot(table, t1);
+                if (theRoot && root !== theRoot)
+                    return false;
+                theRoot = root;
+            }
+        }
+        for (var t2 in types2) {
+            if (util.HOP(types2, t2)) {
+                var root = getRoot(table, t2);
+                if (theRoot && root !== theRoot)
+                    return false;
+                theRoot = root;
+            }
+        }
+        return true;
     }
 
     function getRoot(table, typeOrFunctionName) {
@@ -293,7 +376,6 @@
         }
         return str;
     }
-
 
     // boilerplate to use this file both in browser and in node application
     var module;
