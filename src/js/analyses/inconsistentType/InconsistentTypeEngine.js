@@ -24,7 +24,7 @@
         var iidToLocation = sandbox.iidToLocation;
         var typeAnalysis = importModule("TypeAnalysis");
         var util = importModule("CommonUtil");
-        var online = true;
+        var online = false;
         var printWarnings = true;
         var visualizeAllTypes = true; // only for node.js execution (i.e., not in browser)
         var visualizeWarningTypes = true; // only for node.js execution (i.e., not in browser)

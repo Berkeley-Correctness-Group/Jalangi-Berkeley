@@ -152,12 +152,12 @@
             var warningsForComponents = componentsToWarnings[components];
             if (components.indexOf("other") !== -1) {
                 warningsForComponents.forEach(function(w) {
-                    var warningIds = [];
+                    var warningIds = {}; // string -> true
                     var calleeLoc = w.typeDescription.location;
                     w.observedTypesAndLocations.forEach(function(typeAndLocs) {
                         var callSites = typeAndLocs[1];
                         callSites.forEach(function(callSite) {
-                            warningIds.push(callSite + " --> " + calleeLoc);
+                            warningIds[callSite + " --> " + calleeLoc] = true;
                         });
                     });
                     toInspect.push(new inspector.Warning(w.toString(), warningIds));
@@ -186,7 +186,7 @@
             // focus on non-library warnings
             var component = benchmarkHelper.locationToComponent(loc);
             if (component !== "jquery") {
-                var warningIds = [];
+                var warningIds = {}; // string->true
                 var warningText = "";
                 var warningsForLoc = locToTypeWarnings[loc];
                 warningsForLoc.forEach(function(warning) {
@@ -194,7 +194,7 @@
                     warning.observedTypesAndLocations.forEach(function(typeAndLocs) {
                         var observedType = typeAndLocs[0].location;
                         var warningId = warning.fieldName + " of " + warning.typeDescription.location + " has type " + observedType;
-                        warningIds.push(warningId);
+                        warningIds[warningId] = true;
                     });
                 });
                 toInspect.push(new inspector.Warning(warningText, warningIds));

@@ -1,6 +1,7 @@
 (function() {
 
     var fs = require('fs');
+    var util = require('./CommonUtil.js');
 
     function readFile(fileName) {
         var data = fs.readFileSync(fileName);
@@ -12,6 +13,10 @@
         this.comment = comment;
     }
 
+    /**
+     * @param {string} text
+     * @param {string->true} ids
+     */
     function Warning(text, ids) {
         this.text = text;
         this.ids = ids;
@@ -30,7 +35,7 @@
             // if all ids of the warnings are known, no need to inspect it again
             var knownIds = 0;
             var commentsOfKnown = {};
-            warning.ids.forEach(function(id) {
+            Object.keys(warning.ids).forEach(function(id) {
                 var isKnown = false;
                 knownWarnings.some(function(knownWarning) {
                     if (knownWarning.id === id) {
@@ -42,11 +47,11 @@
                 if (isKnown)
                     knownIds++;
             });
-            if (warning.ids.length === knownIds) {
-                console.log("Skipping known warning: "+Object.keys(commentsOfKnown));
+            if (Object.keys(warning.ids).length === knownIds) {
+                console.log("Skipping known warning: " + Object.keys(commentsOfKnown));
             } else {
                 console.log("===============================\n" + warning.text + "\n");
-                var inspectedIdsTemplates = warning.ids.map(function(id) {
+                var inspectedIdsTemplates = Object.keys(warning.ids).map(function(id) {
                     return new InspectedId(id, "TEMPLATE");
                 });
                 console.log(JSON.stringify(inspectedIdsTemplates, 0, 2));
