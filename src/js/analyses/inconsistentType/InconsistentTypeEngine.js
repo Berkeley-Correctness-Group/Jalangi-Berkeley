@@ -21,6 +21,7 @@
 
     function InconsistentTypeEngine() {
         var smemory = sandbox.smemory;
+        console.log("Hi there! smemory is "+smemory);
         var iidToLocation = sandbox.iidToLocation;
         var typeAnalysis = importModule("TypeAnalysis");
         var util = importModule("CommonUtil");

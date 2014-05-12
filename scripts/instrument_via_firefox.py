@@ -40,13 +40,14 @@ workingDirName = "/tmp/jalangiWorkingDir/"
 #    jalangiBerkeleyBaseDir+"src/js/analyses/executionCounters/ExecutionCountersEngine.js"
 #]
 #jalangiAnalysis = jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine.js"
-jalangiAnalysisFiles = [
-    jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine2.js"
+#jalangiAnalysisFiles = [
+#    jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine2.js"
+#]
+jalangiAnalysisFiles = [ 
+   jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/TypeAnalysis.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/InconsistentTypeEngine.js"
 ]
-#jalangiAnalysisFiles = [ 
-#   jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
-#   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/TypeAnalysis.js",
-#   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/InconsistentTypeEngine.js" ]
 #jalangiAnalysis = jalangiBaseDir+"src/js/analyses/logundefinedread/logUndefinedRead.js"
 
 # constants
@@ -166,7 +167,7 @@ shutil.copyfile(tmpOrig, orig)
 #if instrCodeOption == "instrumentCode":
 #  cmd = ["node", "/home/m/research/projects/jalangi/src/js/instrument/esnstrument.js", "--instrumentCode", orig]
 #else:
-cmd = [ "node", "/home/m/research/projects/jalangi/src/js/instrument/esnstrument.js", "--maxIIDsFile", workingDirName+"maxIIDs.json", "--instrEval false", orig ]
+cmd = [ "node", "/home/m/research/projects/jalangi/src/js/instrument/esnstrument.js", "--dirIIDFile", workingDirName, "--noInstrEval", "--inlineIID", orig ]
 print "Calling instrumenter with\n"+' '.join(cmd)
 subprocess.call(cmd)
 
@@ -179,12 +180,10 @@ if libOption == "jalangiLibs":
   addJalangiLibs(f)
 # add instrumented code  
 f.write(open(instr).read()+"\n\n") 
-# add sourcemap
-f.write(open("jalangi_sourcemap.js").read()+"\n\n")
 f.close()
   
 if libOption == "jalangiLibs":
   shutil.copyfile(tmpInstr, instr+"_withJalangiLibs")
 
-shutil.move("jalangi_sourcemap.js", os.path.join(workingDir, uniqueFileName+"_jalangi_sourcemap.js"))
-shutil.move("jalangi_sourcemap.json", os.path.join(workingDir, uniqueFileName+"_jalangi_sourcemap.json"))
+shutil.move(workingDirName+"jalangi_sourcemap.js", os.path.join(workingDir, uniqueFileName+"_jalangi_sourcemap.js"))
+shutil.move(workingDirName+"jalangi_sourcemap.json", os.path.join(workingDir, uniqueFileName+"_jalangi_sourcemap.json"))

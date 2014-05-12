@@ -17,3 +17,4 @@
 // Author: Michael Pradel
 
 window.JALANGI_MODE='inbrowser';
+window.USE_SMEMORY=true;
