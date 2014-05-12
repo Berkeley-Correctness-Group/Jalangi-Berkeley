@@ -208,7 +208,33 @@ f2(1,2);
 f2('1','2');
 f2(1,2);
 f2('1','2');
-f2('2',1)
+f2('2',1);
 
+
+// test case 9 checking arguments leaking
+console.log('------------------ test case 9 ------------------');
+function argsLeaking() {
+    return arguments;
+}
+
+console.log('args leaking case #1');
+argsLeaking();
+
+function argsLeaking2() {
+    var tmp = arguments;
+    return tmp;
+}
+
+console.log('args leaking case #2');
+argsLeaking2();
+argsLeaking2();
+
+globalObj1 = 1;
+function argsLeaking3() {
+    globalObj1 = arguments;
+}
+
+console.log('args leaking case #3');
+argsLeaking3();
 
 // print result

@@ -601,7 +601,58 @@ J$.analysis = {};
             }
         }
 
+        function getGlobal() {
+            /*if(typeof window !== 'undefined'){
+                return window;
+            } else if (typeof GLOBAL !== 'undefined') {
+                return GLOBAL;
+            }*/
+            return global;
+        }
+
+        function checkArgumentsObjLeaking(iid, val) {
+            if(val){
+                var shadow_obj = smemory.getShadowObject(val);
+                if(shadow_obj && shadow_obj.isArgumentsObj) {
+                    addCountByIndexArr(['JIT-checker', 'arguments-obj-leaking', iid]);
+                }
+            }
+        }
+
+        function getGlobalVariableByName(name) {
+            var value;
+            try{
+                value = eval(name);
+                //console.log(value);
+            }catch(e){ /*console.log(e)*/ }
+            return value;
+        }
+
         // ---- JIT library functions end ----
+
+        var lastReadIID;
+        this.read = function (iid, name, val, isGlobal) {
+            lastReadIID = iid;
+            if(name === 'arguments') {
+                var shadow_obj = smemory.getShadowObject(val);
+                shadow_obj.isArgumentsObj = true;
+            }
+            return val;
+        }
+
+        this.return_ = function (val) {
+            checkArgumentsObjLeaking(lastReadIID, val);
+            return val;
+        }
+
+        this.write = function (iid, name, val) {
+            //check assigning arguments to a global variable
+            //var global = getGlobal();
+            if (typeof getGlobalVariableByName(name) !== 'undefined') {
+                checkArgumentsObjLeaking(iid, val);
+            }
+            return val;
+        }
 
         this.getFieldPre = function (iid, base, offset) {
             checkUpdateObjIdSync(base);
@@ -612,7 +663,6 @@ J$.analysis = {};
                 checkIfReadingAnUninitializedArrayElement(base, offset, iid);
                 checkIfObjectIsPolymorphic(base, iid);
             }
-
             return val;
         }
 
@@ -705,6 +755,7 @@ J$.analysis = {};
 
         this.printResult = function () {
             try {
+                console.log();
                 console.log("----------------------------");
                 console.log('Report of polymorphic statements:');
                 printPolymorphicInfo();
@@ -823,6 +874,25 @@ J$.analysis = {};
                 console.log("---------------------------");
                 console.log('total signature generated: ' + totalSigCnt);
                 console.log('total get signature: ' + total_get_sig_cnt);
+
+                console.log("---------------------------");
+                console.log('Report of arguments leaking:');
+                var argsLeakingArr = [];
+                var argsLeakingDB = getByIndexArr(['JIT-checker', 'arguments-obj-leaking']);
+                num = 0;
+                for (var prop in argsLeakingDB) {
+                    if (HOP(argsLeakingDB, prop)) {
+                        argsLeakingArr.push({'iid': prop, 'count': argsLeakingDB[prop].count});
+                        num++;
+                    }
+                }
+                argsLeakingArr.sort(function compare(a, b) {
+                    return b.count - a.count;
+                });
+                for (var i = 0; i < argsLeakingArr.length && i < warning_limit; i++) {
+                    console.log(' * [location: ' + iidToLocation(argsLeakingArr[i].iid) + '] <- No. usages: ' + argsLeakingArr[i].count);
+                }
+                console.log('Number of statements that leaks arguments object: ' + num);
             } catch (e) {
                 console.log("error!!");
                 console.log(e);
@@ -849,13 +919,3 @@ J$.analysis = {};
 //@todo: for each signature property, remember where the property was appended(iid)
 //@todo: delete a.b  (transform into) -->> a = J$.De(‘a’, a, ‘b’, b)
 //@todo: check duplicating huge hidden class
-
-//done:
-//@todo: currently run_test.js does not support iid to location transition (done)
-//@todo: record number of different objects (for each distinct hidden class for each polymorphic code) (done)
-//@todo: add a criterion that measures the hidden class switching rate (done)
-//@todo: checking polymorphic constructor and report separately (done)
-//@todo: check polymorphic function calls (done)
-//@todo: implement array -> XIntXArray check and test on navier-stokes.js (done)
-//@todo: finish experiments on octane benchmark (done)
-//@todo: do experiment on JSBench (done)
