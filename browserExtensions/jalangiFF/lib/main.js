@@ -18,6 +18,8 @@
 
 (function() {
 
+    console.log("jalangiFF: running");
+
     // imports
     var pageMod = require("sdk/page-mod");
     var commonUtil = require('./commonUtil.js');
@@ -48,7 +50,7 @@
                 pageWorker = this;
                 pageWorker.port.on("logResult", logResult);
             });
-
+            console.log("jalangiFF: attached to page");
         }
     });
 

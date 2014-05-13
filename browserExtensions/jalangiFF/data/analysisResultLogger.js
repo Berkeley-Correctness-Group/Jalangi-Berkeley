@@ -18,6 +18,8 @@
 
 (function() {
 
+    console.log("jalangiFF: page script running");
+
     var commonUtil = unwrapObject(window).$jalangiFFCommonUtil;
 
     unwrapObject(window).$jalangiFFLogResult = function(json, append) {
