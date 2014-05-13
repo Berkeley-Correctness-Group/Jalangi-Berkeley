@@ -164,6 +164,10 @@ if cachedOrigFile != None:
     print "Reusing cached file "+cachedInstrFile
     sys.exit(0)
 
+# beautify source code
+cmd = [ "js-beautify", "-r", tmpOrig ]
+subprocess.call(cmd)
+
 uniqueFileName = makeUniqueFileName()
 orig = os.path.join(workingDir, uniqueFileName)
 
