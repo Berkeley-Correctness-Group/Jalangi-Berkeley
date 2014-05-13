@@ -204,7 +204,9 @@
                 var fs = require("fs");
                 var benchmark = process.argv[1];
                 var wrappedResults = [{url:benchmark, value:results}];
-                fs.writeFileSync(process.cwd() + "/analysisResults.json", JSON.stringify(wrappedResults));
+                var outFile = process.cwd() + "/analysisResults.json";
+                console.log("Writing analysis results to "+outFile);
+                fs.writeFileSync(outFile, JSON.stringify(wrappedResults));
             }
         }
 
@@ -269,8 +271,8 @@
         }
     }
 
+    sandbox.analysis = new InconsistentTypeEngine();
     if (sandbox.Constants.isBrowser) {
-        sandbox.analysis = new InconsistentTypeEngine();
         window.addEventListener("beforeunload", function() {
             console.log("beforeunload --> logging results");
             sandbox.analysis.endExecution();
@@ -281,8 +283,6 @@
                 sandbox.analysis.endExecution();
             }
         });
-    } else {
-        module.exports = InconsistentTypeEngine;
     }
 
 }(typeof J$ === 'undefined' ? (J$ = {}) : J$));

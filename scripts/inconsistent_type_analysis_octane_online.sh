@@ -2,7 +2,7 @@
 
 rm -rf octane
 mkdir octane
-for bm in `ls -1 tests/octane2/index_*.html | grep -e "deltablue\|raytrace" | xargs`
+for bm in `ls -1 tests/octane2/index_*.html | xargs`
 do
   echo "####################################"
   echo ${bm}
