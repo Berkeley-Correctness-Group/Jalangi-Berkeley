@@ -28,7 +28,7 @@
             var typeDiff = computeTypeDiff(w, getFieldTypes);
             if (printWarnings) {
                 console.log(w.toString());
-                console.log(typeDiff);
+                console.log(typeDiff.toString());
             }
             if (visualizeWarningTypes) {
                 visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature,
@@ -39,7 +39,7 @@
             var typeDiff = computeTypeDiff(w, getFieldTypes);
             if (printWarnings) {
                 console.log(w.toString());
-                console.log(typeDiff);
+                console.log(typeDiff.toString());
             }
             if (visualizeWarningTypes) {
                 visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature,
@@ -97,6 +97,7 @@
     /**
      * @param {string} kind
      * @param {string} location
+     * @param {string} typeName
      */
     function TypeDescription(kind, location, typeName) {
         util.assert(typeof location === "string", location + " -- " + typeof location + " -- " + JSON.stringify(location));
@@ -340,6 +341,18 @@
         this.commonExpressions = commonExpressions;
         this.diffExpressions = diffExpressions;
     }
+    
+    TypeDiff.prototype.toString = function() {
+        var s = "";
+        for (var expr in this.diffExpressions) {
+            if (util.HOP(this.diffExpressions, expr)) {
+                s += expr+" has types "+Object.keys(this.diffExpressions[expr]).toString()+"\n";
+            }
+        }
+        if (s[s.length-1] === '\n')
+            s = s.slice(0, s.length-1);
+        return s;
+    };
 
     function computeTypeDiff(warning, getFieldTypes) {
         // for each observed type, compute all possible expressions and their types
