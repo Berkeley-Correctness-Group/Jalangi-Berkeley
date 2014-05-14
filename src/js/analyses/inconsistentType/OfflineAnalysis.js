@@ -12,6 +12,7 @@
     var inspectedWarningsFile = "/home/m/research/experiments/inconsistentTypes/inspectedWarnings.json";
     var visualizeAllTypes = true;
     var visualizeWarningTypes = true;
+    var maxTypes = 3; // ignore warnings with more than maxTypes differnt types
 
     function readFile(fileName) {
         var data = fs.readFileSync(fileName);
@@ -82,12 +83,22 @@
                   false, visualizeAllTypes, visualizeWarningTypes);
             var typeWarnings = warnings[0];
             var functionWarnings = warnings[1];
+            
+            // TODO only for experimenting
+            typeWarnings = filter(typeWarnings);
+            functionWarnings = filter(functionWarnings);
 
             warningStats(typeWarnings, functionWarnings);
             console.log();
             analyzeFunctionWarnings(functionWarnings);
             analyzeTypeWarnings(typeWarnings);
         }
+    }
+
+    function filter(warnings) {
+        return warnings.filter(function(w) {
+           return w.observedTypesAndLocations.length <= maxTypes; 
+        });
     }
 
     function warningStats(typeWarnings, functionWarnings) {
