@@ -3,6 +3,8 @@
     var util = importModule("CommonUtil");
     var visualization = importModule("Visualization");
 
+    var maxTypesForTypeDiff = 5;
+
     function analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
         var getFieldTypes = function(typeName) {
             if (typeName.indexOf("function(") === 0) {
@@ -25,10 +27,11 @@
         }
 
         typeWarnings.forEach(function(w) {
-            var typeDiff = computeTypeDiff(w, getFieldTypes);
+            if (w.observedTypesAndLocations.length <= maxTypesForTypeDiff) {
+                w.typeDiff = computeTypeDiff(w, getFieldTypes);
+            }
             if (printWarnings) {
                 console.log(w.toString());
-                console.log(typeDiff.toString());
             }
             if (visualizeWarningTypes) {
                 visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature,
@@ -36,11 +39,13 @@
             }
         });
         functionWarnings.forEach(function(w) {
-            var typeDiff = computeTypeDiff(w, getFieldTypes);
+            if (w.observedTypesAndLocations.length <= maxTypesForTypeDiff) {
+                w.typeDiff = computeTypeDiff(w, getFieldTypes);
+            }
             if (printWarnings) {
                 console.log(w.toString());
-                console.log(typeDiff.toString());
             }
+
             if (visualizeWarningTypes) {
                 visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature,
                       typeNames, functionNames, iidToLocation, w.highlightedIIDs, true, "warning" + w.id + ".dot");
@@ -75,6 +80,9 @@
                 s += "        found at " + location + "\n";
             });
         });
+        if (this.typeDiff) {
+            s += "\n    Type diff:\n" + this.typeDiff.toString() + "\n";
+        }
         return s;
     };
 
@@ -275,12 +283,12 @@
         while (changed) {
             changed = false;
             for (var name1 in roots) {
-                if (util.HOP(roots, name1) && name1.indexOf("function") !== 0) {
+                if (util.HOP(roots, name1) /*&& name1.indexOf("function") !== 0*/) {
                     loop2: for (var name2 in roots) {
                         if (util.HOP(roots, name2) &&
                               name1 < name2 &&
-                              (root1 = getRoot(table, name1)) !== (root2 = getRoot(table, name2)) &&
-                              name2.indexOf("function") !== 0) {
+                              (root1 = getRoot(table, name1)) !== (root2 = getRoot(table, name2)) /*&&
+                              name2.indexOf("function") !== 0*/) {
                             var fieldMap1 = typeName2FieldTypes[name1];
                             var fieldMap2 = typeName2FieldTypes[name2];
                             if (util.sizeOfMap(fieldMap1) !== util.sizeOfMap(fieldMap2)) {
@@ -341,16 +349,16 @@
         this.commonExpressions = commonExpressions;
         this.diffExpressions = diffExpressions;
     }
-    
+
     TypeDiff.prototype.toString = function() {
         var s = "";
         for (var expr in this.diffExpressions) {
             if (util.HOP(this.diffExpressions, expr)) {
-                s += expr+" has types "+Object.keys(this.diffExpressions[expr]).toString()+"\n";
+                s += "        " + expr + " has types " + Object.keys(this.diffExpressions[expr]).toString() + "\n";
             }
         }
-        if (s[s.length-1] === '\n')
-            s = s.slice(0, s.length-1);
+        if (s[s.length - 1] === '\n')
+            s = s.slice(0, s.length - 1);
         return s;
     };
 
@@ -417,9 +425,9 @@
 
         var result = {}; // expression (string) --> type (string)
         var worklist = []; // workitems
-        var visitedTypes = {};
-        visitedTypes[type] = true;
-        worklist.push(new WorkItem("", visitedTypes, type));
+        var initiallyVisitedTypes = {};
+        initiallyVisitedTypes[type] = true;
+        worklist.push(new WorkItem("", initiallyVisitedTypes, type));
         while (worklist.length > 0) {
             var item = worklist.pop();
             var fieldTypes = getFieldTypes(item.type);

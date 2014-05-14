@@ -18,14 +18,8 @@
 
 (function() {
     
-    function generic(x) {
-        x;
-    }
-    
-    var x1 = {a:true, b:{x:23, y:"aa"}, c:{r:"bb", s:23}};
-    generic(x1);
-    
-    var x2 = {a:{r:"bb", s:23}, b:true, c:{x:23, y:"aa"}};
-    generic(x2);
+    var f;
+    f = function() {};
+    f = function() {};
     
 })();

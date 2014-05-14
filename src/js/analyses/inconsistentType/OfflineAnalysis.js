@@ -10,9 +10,9 @@
 
     // parameters
     var inspectedWarningsFile = "/home/m/research/experiments/inconsistentTypes/inspectedWarnings.json";
-    var visualizeAllTypes = true;
+    var visualizeAllTypes = false;
     var visualizeWarningTypes = true;
-    var maxTypes = 3; // ignore warnings with more than maxTypes differnt types
+    var maxTypes = 3; // ignore warnings with more than maxTypes different types
 
     function readFile(fileName) {
         var data = fs.readFileSync(fileName);
