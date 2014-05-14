@@ -25,8 +25,10 @@
         }
 
         typeWarnings.forEach(function(w) {
+            var typeDiff = computeTypeDiff(w, getFieldTypes);
             if (printWarnings) {
                 console.log(w.toString());
+                console.log(typeDiff);
             }
             if (visualizeWarningTypes) {
                 visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature,
@@ -34,8 +36,10 @@
             }
         });
         functionWarnings.forEach(function(w) {
+            var typeDiff = computeTypeDiff(w, getFieldTypes);
             if (printWarnings) {
                 console.log(w.toString());
+                console.log(typeDiff);
             }
             if (visualizeWarningTypes) {
                 visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature,
@@ -94,10 +98,11 @@
      * @param {string} kind
      * @param {string} location
      */
-    function TypeDescription(kind, location) {
+    function TypeDescription(kind, location, typeName) {
         util.assert(typeof location === "string", location + " -- " + typeof location + " -- " + JSON.stringify(location));
         this.kind = kind;
         this.location = location;
+        this.typeName = typeName;
     }
 
     TypeDescription.prototype.toString = function() {
@@ -331,17 +336,119 @@
         });
     }
 
+    function TypeDiff(commonExpressions, diffExpressions) {
+        this.commonExpressions = commonExpressions;
+        this.diffExpressions = diffExpressions;
+    }
+
+    function computeTypeDiff(warning, getFieldTypes) {
+        // for each observed type, compute all possible expressions and their types
+        var observedTypeToExpressions = {}; // observed type (string) --> expression (string) --> type of expression (string)
+        warning.observedTypesAndLocations.forEach(function(tl) {
+            var observedType = tl[0].typeName;
+            var expressions = allExpressions(observedType, getFieldTypes);
+            observedTypeToExpressions[observedType] = expressions;
+        });
+
+        var commonExpressions = {}; // expression (string) --> type of expression (string)
+        var diffExpressions = {};   // expression (string) --> set of type of expression (string -> true)
+        var allObservedTypes = Object.keys(observedTypeToExpressions);
+        util.assert(allObservedTypes.length > 1);
+        // find expressions that are common to all observed types
+        var someType = allObservedTypes[0];
+        var expressionToType = observedTypeToExpressions[someType];
+        Object.keys(expressionToType).forEach(function(expression) {
+            // check if expression exists and has the same type for all other observed types
+            var common = true;
+            allObservedTypes.slice(1).some(function(otherType) {
+                var otherExpressionToType = observedTypeToExpressions[otherType];
+                if (!util.HOP(otherExpressionToType, expression) ||
+                      otherExpressionToType[expression] !== expressionToType[expression]) {
+                    common = false;
+                    return true; // stop search
+                }
+            });
+            if (common) {
+                commonExpressions[expression] = expressionToType[expression];
+            }
+        });
+        // find expressions that are not common to all observed types
+        allObservedTypes.forEach(function(observedType) {
+            var expressionToType = observedTypeToExpressions[observedType];
+            for (var expression in expressionToType) {
+                if (util.HOP(expressionToType, expression)) {
+                    if (!util.HOP(commonExpressions, expression)) {
+                        var allTypesOfExpression = diffExpressions[expression] || {};
+                        allTypesOfExpression[expressionToType[expression]] = true;
+                        diffExpressions[expression] = allTypesOfExpression;
+                    }
+                }
+            }
+        });
+
+        return new TypeDiff(commonExpressions, diffExpressions);
+    }
+
+    /**
+     * Compute the smallest set of all unique expressions, and the type they have.
+     * @param {string} type
+     * @param {function} getFieldTypes
+     * @returns {string -> string}
+     */
+    function allExpressions(type, getFieldTypes) {
+        function WorkItem(prefix, visitedTypes, type) {
+            this.prefix = prefix;
+            this.visitedTypes = visitedTypes;
+            this.type = type;
+        }
+
+        var result = {}; // expression (string) --> type (string)
+        var worklist = []; // workitems
+        var visitedTypes = {};
+        visitedTypes[type] = true;
+        worklist.push(new WorkItem("", visitedTypes, type));
+        while (worklist.length > 0) {
+            var item = worklist.pop();
+            var fieldTypes = getFieldTypes(item.type);
+            if (fieldTypes === undefined || Object.keys(fieldTypes).length === 0) {
+                // reached primitive type, or type without properties; stop exploring
+                result[item.prefix] = item.type;
+            } else {
+                for (var prop in fieldTypes) {
+                    if (util.HOP(fieldTypes, prop)) {
+                        var newPrefix = item.prefix + "." + prop;
+                        var propTypes = fieldTypes[prop];
+                        for (var propType in propTypes) {
+                            if (util.HOP(propTypes, propType)) {
+                                if (util.HOP(item.visitedTypes, propType)) {
+                                    // reached already visited type; stop exploring
+                                    result[newPrefix] = propType;
+                                } else {
+                                    // reached not yet visited type; explore further
+                                    var newVisitedTypes = util.cloneSet(item.visitedTypes);
+                                    newVisitedTypes[propType] = true;
+                                    worklist.push(new WorkItem(item.prefix + "." + prop, newVisitedTypes, propType));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     function toTypeDescription(type, iidToLocation) {
         if (type.indexOf("(") > 0) {
             var type1 = type.substring(0, type.indexOf("("));
             var iid = type.substring(type.indexOf("(") + 1, type.indexOf(")"));
             if (iid === "null") {
-                return new TypeDescription("null", "");
+                return new TypeDescription("null", "", "null");
             } else {
-                return new TypeDescription(type1, iidToLocation(iid));
+                return new TypeDescription(type1, iidToLocation(iid), type);
             }
         } else {
-            return new TypeDescription(type, "");
+            return new TypeDescription(type, "", type);
         }
     }
 

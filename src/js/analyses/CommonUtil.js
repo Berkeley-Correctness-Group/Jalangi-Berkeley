@@ -19,6 +19,15 @@
             throw new Error(msg);
     }
 
+    function cloneSet(s) {
+        var r = {};
+        for (var p in s) {
+            if (HOP(s, p))
+                r[p] = true;
+        }
+        return r;
+    }
+
     // boilerplate to use this file both in browser and in node application
     var module;
     if (typeof exports !== "undefined") {
@@ -34,5 +43,6 @@
     module.HOP = HOP;
     module.sizeOfMap = sizeOfMap;
     module.assert = assert;
+    module.cloneSet = cloneSet;
 
 })();
