@@ -5,54 +5,28 @@
 
     var maxTypesForTypeDiff = 5;
 
-    function analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
-        var getFieldTypes = function(typeName) {
-            if (typeName.indexOf("function(") === 0) {
-                return functionToSignature[typeName];
-            } else {
-                return typeNameToFieldTypes[typeName];
-            }
-        };
-
+    function analyzeTypes(typeNameToFieldTypes, typeNames, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
         var tableAndRoots = equiv(typeNameToFieldTypes);
-        var typeWarnings = analyze(typeNameToFieldTypes, tableAndRoots[0], iidToLocation, getFieldTypes);
-        var functionWarnings = analyze(functionToSignature, tableAndRoots[0], iidToLocation, getFieldTypes);
+        var typeWarnings = analyze(typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
 
         if (visualizeAllTypes) {
             var allHighlightedIIDs = {};
             addHighlightedIIDs(allHighlightedIIDs, typeWarnings);
-            addHighlightedIIDs(allHighlightedIIDs, functionWarnings);
-            visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature,
-                  typeNames, functionNames, iidToLocation, allHighlightedIIDs, false);
+            visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, typeNames, iidToLocation, allHighlightedIIDs, false);
         }
 
         typeWarnings.forEach(function(w) {
             if (w.observedTypesAndLocations.length <= maxTypesForTypeDiff) {
-                w.typeDiff = computeTypeDiff(w, getFieldTypes);
+                w.typeDiff = computeTypeDiff(w, typeNameToFieldTypes);
             }
             if (printWarnings) {
                 console.log(w.toString());
             }
             if (visualizeWarningTypes) {
-                visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature,
-                      typeNames, functionNames, iidToLocation, w.highlightedIIDs, true, "warning" + w.id + ".dot");
+                visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, typeNames, iidToLocation, w.highlightedIIDs, true, "warning" + w.id + ".dot");
             }
         });
-        functionWarnings.forEach(function(w) {
-            if (w.observedTypesAndLocations.length <= maxTypesForTypeDiff) {
-                w.typeDiff = computeTypeDiff(w, getFieldTypes);
-            }
-            if (printWarnings) {
-                console.log(w.toString());
-            }
-
-            if (visualizeWarningTypes) {
-                visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, functionToSignature,
-                      typeNames, functionNames, iidToLocation, w.highlightedIIDs, true, "warning" + w.id + ".dot");
-            }
-        });
-
-        return [typeWarnings, functionWarnings];
+        return typeWarnings;
     }
 
     var warningCtr = 0;
@@ -118,15 +92,15 @@
         return this.kind + " originated at " + this.location;
     };
 
-    function analyze(nameToFieldMap, table, iidToLocation, getFieldTypes) {
+    function analyze(typeNameToFieldTypes, table, iidToLocation) {
         var warnings = [];
         var done = {};
-        for (var typeOrFunctionName in nameToFieldMap) {
-            if (util.HOP(nameToFieldMap, typeOrFunctionName)) {
+        for (var typeOrFunctionName in typeNameToFieldTypes) {
+            if (util.HOP(typeNameToFieldTypes, typeOrFunctionName)) {
                 typeOrFunctionName = getRoot(table, typeOrFunctionName);
                 if (!util.HOP(done, typeOrFunctionName)) {
                     done[typeOrFunctionName] = true;
-                    var fieldMap = nameToFieldMap[typeOrFunctionName];
+                    var fieldMap = typeNameToFieldTypes[typeOrFunctionName];
                     for (var field in fieldMap) {
                         if (util.HOP(fieldMap, field)) {
                             if (field === "undefined") {
@@ -148,8 +122,8 @@
                                         for (var type2 in typeMap) {
                                             if (util.HOP(typeMap, type2) && util.HOP(table, type2)) {
                                                 if (type1 < type2 && getRoot(table, type1) !== getRoot(table, type2)) {
-                                                    if (!structuralSubTypes(table, getFieldTypes, type1, type2) &&
-                                                          !potentiallyCompatibleFunctions(getFieldTypes, type1, type2)) {
+                                                    if (!structuralSubTypes(table, typeNameToFieldTypes, type1, type2) &&
+                                                          !potentiallyCompatibleFunctions(typeNameToFieldTypes, type1, type2)) {
                                                         // types are inconsistent: report warning
                                                         var typeDescription = toTypeDescription(typeOrFunctionName, iidToLocation);
                                                         var observedTypesAndLocations = [];
@@ -187,15 +161,15 @@
      * Returns true if both types are functions and if we don't know the
      * signature of at least one of them (i.e., they may have compatible 
      * signatures).
-     * @param {function} getFieldTypes
+     * @param {} getFieldTypes
      * @param {string} type1
      * @param {string} type2
      * @returns {Boolean}
      */
-    function potentiallyCompatibleFunctions(getFieldTypes, type1, type2) {
+    function potentiallyCompatibleFunctions(typeNameToFieldTypes, type1, type2) {
         if (type1.indexOf("function(") === 0 && type2.indexOf("function(") === 0) {
-            var signature1 = getFieldTypes(type1);
-            var signature2 = getFieldTypes(type2);
+            var signature1 = typeNameToFieldTypes[type1];
+            var signature2 = typeNameToFieldTypes[type2];
             if (signature1 === undefined || signature2 === undefined)
                 return true;
         }
@@ -207,18 +181,18 @@
      * of one type are exactly the same as the corresponding field types of the
      * other type.
      * @param {map: string->string} table
-     * @param {function} getFieldTypes
+     * @param {} getFieldTypes
      * @param {string} type1
      * @param {string} type2
      * @returns {Boolean}
      */
-    function structuralSubTypes(table, getFieldTypes, type1, type2) {
-        return isStructuralSubtypeOrSameType(table, getFieldTypes, type1, type2) || isStructuralSubtypeOrSameType(table, getFieldTypes, type2, type1);
+    function structuralSubTypes(table, typeNameToFieldTypes, type1, type2) {
+        return isStructuralSubtypeOrSameType(table, typeNameToFieldTypes, type1, type2) || isStructuralSubtypeOrSameType(table, typeNameToFieldTypes, type2, type1);
     }
 
-    function isStructuralSubtypeOrSameType(table, getFieldTypes, superType, subType) {
-        var superPropNameToTypes = getFieldTypes(superType);
-        var subPropNameToTypes = getFieldTypes(subType);
+    function isStructuralSubtypeOrSameType(table, typeNameToFieldTypes, superType, subType) {
+        var superPropNameToTypes = typeNameToFieldTypes[superType];
+        var subPropNameToTypes = typeNameToFieldTypes[subType];
         if (!superPropNameToTypes || !subPropNameToTypes)
             return false;  // at least one is a primitive type
         if (superPropNameToTypes && subPropNameToTypes && Object.keys(superPropNameToTypes).length > Object.keys(subPropNameToTypes).length)
@@ -283,12 +257,12 @@
         while (changed) {
             changed = false;
             for (var name1 in roots) {
-                if (util.HOP(roots, name1) && name1.indexOf("function") !== 0) {
+                if (util.HOP(roots, name1)/* && name1.indexOf("function") !== 0*/) {
                     loop2: for (var name2 in roots) {
                         if (util.HOP(roots, name2) &&
                               name1 < name2 &&
-                              (root1 = getRoot(table, name1)) !== (root2 = getRoot(table, name2)) &&
-                               name2.indexOf("function") !== 0) {
+                              (root1 = getRoot(table, name1)) !== (root2 = getRoot(table, name2))/* &&
+                               name2.indexOf("function") !== 0*/) {
                             var fieldMap1 = typeName2FieldTypes[name1];
                             var fieldMap2 = typeName2FieldTypes[name2];
                             if (util.sizeOfMap(fieldMap1) !== util.sizeOfMap(fieldMap2)) {
@@ -366,12 +340,12 @@
         return s;
     };
 
-    function computeTypeDiff(warning, getFieldTypes) {
+    function computeTypeDiff(warning, typeNameToFieldTypes) {
         // for each observed type, compute all possible expressions and their types
         var observedTypeToExpressions = {}; // observed type (string) --> expression (string) --> type of expression (string)
         warning.observedTypesAndLocations.forEach(function(tl) {
             var observedType = tl[0].typeName;
-            var expressions = allExpressions(observedType, getFieldTypes);
+            var expressions = allExpressions(observedType, typeNameToFieldTypes);
             observedTypeToExpressions[observedType] = expressions;
         });
 
@@ -417,10 +391,10 @@
     /**
      * Compute the smallest set of all unique expressions, and the type they have.
      * @param {string} type
-     * @param {function} getFieldTypes
+     * @param {} getFieldTypes
      * @returns {string -> string}
      */
-    function allExpressions(type, getFieldTypes) {
+    function allExpressions(type, typeNameToFieldTypes) {
         function WorkItem(prefix, visitedTypes, type) {
             this.prefix = prefix;
             this.visitedTypes = visitedTypes;
@@ -434,7 +408,7 @@
         worklist.push(new WorkItem("", initiallyVisitedTypes, type));
         while (worklist.length > 0) {
             var item = worklist.pop();
-            var fieldTypes = getFieldTypes(item.type);
+            var fieldTypes = typeNameToFieldTypes[item.type];
             if (fieldTypes === undefined || Object.keys(fieldTypes).length === 0) {
                 // reached primitive type, or type without properties; stop exploring
                 result[item.prefix] = item.type;

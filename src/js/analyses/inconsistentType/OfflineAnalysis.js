@@ -19,16 +19,14 @@
         return JSON.parse(data);
     }
 
-    function TypeData(typeNameToFieldTypes, functionToSignature, typeNames, functionNames) {
+    function TypeData(typeNameToFieldTypes, typeNames) {
         this.typeNameToFieldTypes = typeNameToFieldTypes;
-        this.functionToSignature = functionToSignature;
         this.typeNames = typeNames;
-        this.functionNames = functionNames;
     }
 
-    function mergeTypeData(typeData, typeNameToFieldTypes, functionToSignature, typeNames, functionNames) {
-        mergeToLeft(typeData.typeNameToFieldTypes, typeNameToFieldTypes, typeNames, functionNames);
-        mergeToLeft(typeData.functionToSignature, functionToSignature, typeNames, functionNames);
+    function mergeTypeData(allTypeData, typeData) {
+        mergeToLeft(allTypeData.typeNameToFieldTypes, typeData.typeNameToFieldTypes);
+        mergeToLeft(allTypeData.typeNames, typeData.typeNames);
     }
 
     function mergeToLeft(left, right) {
@@ -45,63 +43,55 @@
         return left;
     }
 
-    function WarningStats(typeWarnings, functionWarnings, typeWarningsByLoc, functionWarningsByLoc) {
+    function WarningStats(typeWarnings, typeWarningsByLoc) {
         this.typeWarnings = typeWarnings;
-        this.functionWarnings = functionWarnings;
         this.typeWarningsByLoc = typeWarningsByLoc;
-        this.functionWarningsByLoc = functionWarningsByLoc;
     }
 
     WarningStats.prototype.toString = function() {
-        return this.typeWarnings + "," + this.functionWarnings + "," + this.typeWarningsByLoc + "," + this.functionWarningsByLoc;
+        return this.typeWarnings + "," + this.typeWarningsByLoc;
     };
 
     WarningStats.prototype.headerString = function() {
-        return "typeWarnings,functionWarnings,typeWarningsByLoc,functionWarningsByLoc";
+        return "typeWarnings,typeWarningsByLoc";
     };
 
     function analyze(loggedResults, sourcemapDir) {
         var benchmark2TypeData = {};
         loggedResults.forEach(function(loggedResult) {
             var benchmark = benchmarkHelper.urlToBenchmark(loggedResult.url);
-            var typeData = benchmark2TypeData[benchmark] || new TypeData({}, {}, {}, {});
-            mergeTypeData(typeData, loggedResult.value.typeNameToFieldTypes, loggedResult.value.functionToSignature,
-                  loggedResult.value.typeNames, loggedResult.value.functionNames);
+            var typeData = benchmark2TypeData[benchmark] || new TypeData({}, {});
+            mergeTypeData(typeData, loggedResult.value);
             benchmark2TypeData[benchmark] = typeData;
         });
 
         for (var benchmark in benchmark2TypeData) {
             console.log("========== Benchmark: " + benchmark + " ============");
             var typeData = benchmark2TypeData[benchmark];
-            console.log(Object.keys(typeData.typeNameToFieldTypes).length + " types, " + Object.keys(typeData.functionToSignature).length + " functions");
+            console.log(Object.keys(typeData.typeNameToFieldTypes).length + " types");
             var iids = offlineCommon.loadIIDs(sourcemapDir);
             var iidFct = function(iid) {
                 var triple = iids[iid];
                 return triple ? triple.toString() : "<unknown location>";
             };
-            var warnings = typeAnalysis.analyzeTypes(typeData.typeNameToFieldTypes, typeData.functionToSignature, typeData.typeNames, typeData.functionNames, iidFct,
-                  false, visualizeAllTypes, visualizeWarningTypes);
-            var typeWarnings = warnings[0];
-            var functionWarnings = warnings[1];
-            
-            // TODO only for experimenting
-            typeWarnings = filter(typeWarnings);
-            functionWarnings = filter(functionWarnings);
+            var typeWarnings = typeAnalysis.analyzeTypes(typeData.typeNameToFieldTypes, typeData.typeNames, iidFct, false, visualizeAllTypes, visualizeWarningTypes);
 
-            warningStats(typeWarnings, functionWarnings);
+            // TODO only for experimenting
+//            typeWarnings = filter(typeWarnings);
+
+            warningStats(typeWarnings);
             console.log();
-            analyzeFunctionWarnings(functionWarnings);
             analyzeTypeWarnings(typeWarnings);
         }
     }
 
     function filter(warnings) {
         return warnings.filter(function(w) {
-           return w.observedTypesAndLocations.length <= maxTypes; 
+            return w.observedTypesAndLocations.length <= maxTypes;
         });
     }
 
-    function warningStats(typeWarnings, functionWarnings) {
+    function warningStats(typeWarnings) {
         // merge by location
         var locToTypeWarnings = {};
         typeWarnings.forEach(function(warning) {
@@ -109,73 +99,10 @@
             warningsAtLoc.push(warning);
             locToTypeWarnings[warning.typeDescription.location] = warningsAtLoc;
         });
-        var locToFunctionWarnings = {};
-        functionWarnings.forEach(function(warning) {
-            var warningsAtLoc = locToFunctionWarnings[warning.typeDescription.location] || [];
-            warningsAtLoc.push(warning);
-            locToFunctionWarnings[warning.typeDescription.location] = warningsAtLoc;
-        });
 
-        var warningStats = new WarningStats(typeWarnings.length, functionWarnings.length,
-              Object.keys(locToTypeWarnings).length, Object.keys(locToFunctionWarnings).length);
+        var warningStats = new WarningStats(typeWarnings.length, Object.keys(locToTypeWarnings).length);
         console.log(warningStats.headerString());
         console.log(warningStats.toString());
-    }
-
-    function analyzeFunctionWarnings(functionWarnings) {
-        console.log("@@@ Analyzing function warnings:");
-
-        // merge by location of function definition
-        var locToFunctionWarnings = {};
-        functionWarnings.forEach(function(warning) {
-            var warningsAtLoc = locToFunctionWarnings[warning.typeDescription.location] || [];
-            warningsAtLoc.push(warning);
-            locToFunctionWarnings[warning.typeDescription.location] = warningsAtLoc;
-        });
-
-        // group by caller component and callee component
-        var componentsToWarnings = {}; // string of format "callerComponent->calleeComponent" -> array of InconsistentTypeWarning
-        Object.keys(locToFunctionWarnings).forEach(function(functionLoc) {
-            var warningsForFunction = locToFunctionWarnings[functionLoc];
-            warningsForFunction.forEach(function(warningForFunction) {
-                var calleeLoc = warningForFunction.typeDescription.location;
-                var calleeComponent = benchmarkHelper.locationToComponent(calleeLoc);
-                var callerComponent = benchmarkHelper.locationToComponent(functionLoc);
-                var components = callerComponent + "->" + calleeComponent;
-
-                var warningsForComponents = componentsToWarnings[components] || [];
-                warningsForComponents.push(warningForFunction);
-                componentsToWarnings[components] = warningsForComponents;
-            });
-        });
-
-        console.log("Warnings: " + functionWarnings.length);
-        console.log("Functions with warnings: " + Object.keys(locToFunctionWarnings).length);
-        console.log();
-        console.log("Grouped by components (function warnings):");
-        Object.keys(componentsToWarnings).forEach(function(components) {
-            var warningsForComponents = componentsToWarnings[components];
-            console.log("  " + components + " : " + warningsForComponents.length);
-        });
-
-        var toInspect = [];
-        Object.keys(componentsToWarnings).forEach(function(components) {
-            var warningsForComponents = componentsToWarnings[components];
-            if (components.indexOf("other") !== -1) {
-                warningsForComponents.forEach(function(w) {
-                    var warningIds = {}; // string -> true
-                    var calleeLoc = w.typeDescription.location;
-                    w.observedTypesAndLocations.forEach(function(typeAndLocs) {
-                        var callSites = typeAndLocs[1];
-                        callSites.forEach(function(callSite) {
-                            warningIds[callSite + " --> " + calleeLoc] = true;
-                        });
-                    });
-                    toInspect.push(new inspector.Warning(w.toString(), warningIds));
-                });
-            }
-        });
-        inspector.inspect(toInspect, inspectedWarningsFile);
     }
 
     function analyzeTypeWarnings(typeWarnings) {
@@ -198,17 +125,29 @@
             var component = benchmarkHelper.locationToComponent(loc);
             if (component !== "jquery") {
                 var warningIds = {}; // string->true
+                var warningNbs = {}; // number->true
                 var warningText = "";
                 var warningsForLoc = locToTypeWarnings[loc];
                 warningsForLoc.forEach(function(warning) {
                     warningText += warning.toString() + "\n";
                     warning.observedTypesAndLocations.forEach(function(typeAndLocs) {
-                        var observedType = typeAndLocs[0].location;
-                        var warningId = warning.fieldName + " of " + warning.typeDescription.location + " has type " + observedType;
-                        warningIds[warningId] = true;
+                        if (warning.typeDescription.kind === "function") {
+                            // function warnings: list each (caller,callee) pair only once
+                            var callSites = typeAndLocs[1];
+                            var calleeLoc = warning.typeDescription.location;
+                            callSites.forEach(function(callSite) {
+                                warningIds[callSite + " --> " + calleeLoc] = true;
+                            });
+                        } else {
+                            // non-function warnings: list each type
+                            var observedType = typeAndLocs[0].location;
+                            var warningId = warning.fieldName + " of " + warning.typeDescription.location + " has type " + observedType;
+                            warningIds[warningId] = true;
+                        }
                     });
+                    warningNbs[warning.id] = true;
                 });
-                toInspect.push(new inspector.Warning(warningText, warningIds));
+                toInspect.push(new inspector.Warning(warningText, warningIds, warningNbs));
             }
         });
         inspector.inspect(toInspect, inspectedWarningsFile);
@@ -216,7 +155,7 @@
 
     var benchmarkDir = process.argv[2];
     var loggedResults = readFile(benchmarkDir + "/analysisResults.json");
-    var sourcemapDir = benchmarkDir+"/sourcemaps/";
+    var sourcemapDir = benchmarkDir + "/sourcemaps/";
     analyze(loggedResults, sourcemapDir);
 
 })();
