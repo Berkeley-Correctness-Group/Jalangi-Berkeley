@@ -283,12 +283,12 @@
         while (changed) {
             changed = false;
             for (var name1 in roots) {
-                if (util.HOP(roots, name1) /*&& name1.indexOf("function") !== 0*/) {
+                if (util.HOP(roots, name1) && name1.indexOf("function") !== 0) {
                     loop2: for (var name2 in roots) {
                         if (util.HOP(roots, name2) &&
                               name1 < name2 &&
-                              (root1 = getRoot(table, name1)) !== (root2 = getRoot(table, name2)) /*&&
-                              name2.indexOf("function") !== 0*/) {
+                              (root1 = getRoot(table, name1)) !== (root2 = getRoot(table, name2)) &&
+                               name2.indexOf("function") !== 0) {
                             var fieldMap1 = typeName2FieldTypes[name1];
                             var fieldMap2 = typeName2FieldTypes[name2];
                             if (util.sizeOfMap(fieldMap1) !== util.sizeOfMap(fieldMap2)) {
@@ -352,9 +352,13 @@
 
     TypeDiff.prototype.toString = function() {
         var s = "";
+        var ctr = 0;
         for (var expr in this.diffExpressions) {
             if (util.HOP(this.diffExpressions, expr)) {
-                s += "        " + expr + " has types " + Object.keys(this.diffExpressions[expr]).toString() + "\n";
+                ctr++;
+                if (ctr < 5) {  // report only a few examples
+                    s += "        " + expr + " has types " + Object.keys(this.diffExpressions[expr]).toString() + "\n";
+                }
             }
         }
         if (s[s.length - 1] === '\n')
