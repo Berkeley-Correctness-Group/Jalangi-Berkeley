@@ -28,6 +28,20 @@
         return r;
     }
 
+    function mergeToLeft(left, right) {
+        if (right === true) {
+            return true;
+        }
+        Object.keys(right).forEach(function(rKey) {
+            if (HOP(left, rKey)) {
+                left[rKey] = mergeToLeft(left[rKey], right[rKey]);
+            } else {
+                left[rKey] = right[rKey];
+            }
+        });
+        return left;
+    }
+
     // boilerplate to use this file both in browser and in node application
     var module;
     if (typeof exports !== "undefined") {
@@ -44,5 +58,6 @@
     module.sizeOfMap = sizeOfMap;
     module.assert = assert;
     module.cloneSet = cloneSet;
+    module.mergeToLeft = mergeToLeft;
 
 })();

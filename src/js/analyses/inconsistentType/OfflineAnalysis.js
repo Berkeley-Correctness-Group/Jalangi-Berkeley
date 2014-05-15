@@ -25,22 +25,8 @@
     }
 
     function mergeTypeData(allTypeData, typeData) {
-        mergeToLeft(allTypeData.typeNameToFieldTypes, typeData.typeNameToFieldTypes);
-        mergeToLeft(allTypeData.typeNames, typeData.typeNames);
-    }
-
-    function mergeToLeft(left, right) {
-        if (right === true) {
-            return true;
-        }
-        Object.keys(right).forEach(function(rKey) {
-            if (util.HOP(left, rKey)) {
-                left[rKey] = mergeToLeft(left[rKey], right[rKey]);
-            } else {
-                left[rKey] = right[rKey];
-            }
-        });
-        return left;
+        util.mergeToLeft(allTypeData.typeNameToFieldTypes, typeData.typeNameToFieldTypes);
+        util.mergeToLeft(allTypeData.typeNames, typeData.typeNames);
     }
 
     function WarningStats(typeWarnings, typeWarningsByLoc) {
