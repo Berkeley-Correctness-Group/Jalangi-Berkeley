@@ -25,22 +25,18 @@
         var typeAnalysis = importModule("TypeAnalysis");
         var util = importModule("CommonUtil");
         var callGraph = importModule("CallGraph");
+        var argPrefix = "__";
         var online = false;
         var printWarnings = true;
-        var visualizeAllTypes = true; // only for node.js execution (i.e., not in browser)
-        var visualizeWarningTypes = true; // only for node.js execution (i.e., not in browser)
+        var visualizeAllTypes = false; // only for node.js execution (i.e., not in browser)
+        var visualizeWarningTypes = false; // only for node.js execution (i.e., not in browser)
+        
 
         // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
-        var typeNameToFieldTypes = {}; // type name -> (field -> type name -> iid -> true)  --  for each type, gives the fields, their types, and where this field type has been observed
-        var functionToSignature = {};  // function name -> ({"this", "return", "arg1", ...} -> type name -> iid -> true)  --  for each function, gives the receiver, argument, and return types, and where these types have been observed
+        var typeNameToFieldTypes = {}; // type or function name -> (field or this/return/argx -> type name -> iid -> true)  --  for each type/function, gives the fields, their types, and where this field type has been observed
         var typeNames = {};
-        var functionNames = {};
 
         annotateGlobalFrame();
-
-        function isArr(val) {
-            return Object.prototype.toString.call(val) === '[object Array]';
-        }
 
         var getSymbolic = this.getSymbolic = function(obj) {
             var sobj = smemory.getShadowObject(obj);
@@ -69,7 +65,7 @@
          */
         function addFunctionOrTypeName(name, obj) {
             if (name.indexOf("function") === 0) {
-                functionNames[name] = obj.name ? obj.name : "";
+                typeNames[name] = obj.name ? obj.name : "";
             } else {
                 typeNames[name] = obj.constructor ? obj.constructor.name : "";
             }
@@ -181,12 +177,12 @@
             functionName = getSymbolic(f);
             if (functionName) {
                 addFunctionOrTypeName(functionName, f);
-                tval = getAndInit(functionToSignature, functionName);
+                tval = getAndInit(typeNameToFieldTypes, functionName);
                 setTypeInFunSignature(returnValue, tval, "return", callLocation);
                 setTypeInFunSignature(base, tval, "this", callLocation);
                 var len = args.length;
                 for (var i = 0; i < len; ++i) {
-                    setTypeInFunSignature(args[i], tval, "arg" + (i + 1), callLocation);
+                    setTypeInFunSignature(args[i], tval, argPrefix+"arg" + (i + 1), callLocation);
                 }
             }
         }
@@ -194,9 +190,7 @@
         function logResults() {
             var results = {
                 typeNameToFieldTypes:typeNameToFieldTypes,
-                functionToSignature:functionToSignature,
                 typeNames:typeNames,
-                functionNames:functionNames,
                 callGraph:callGraph.data
             };
             if (sandbox.Constants.isBrowser) {
@@ -268,7 +262,7 @@
 
         this.endExecution = function() {
             if (online) {
-                typeAnalysis.analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes);
+                typeAnalysis.analyzeTypes(typeNameToFieldTypes, typeNames, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes);
             } else {
                 logResults();
             }

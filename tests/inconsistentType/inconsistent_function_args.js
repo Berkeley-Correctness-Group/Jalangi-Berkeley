@@ -1,7 +1,8 @@
 (function() {
 
     function foo(x, y) {
-        
+        x;
+        y;
     }
 
     var a;

@@ -16,10 +16,12 @@
     /**
      * @param {string} text
      * @param {string->true} ids
+     * @param {number->true} warningNbs
      */
-    function Warning(text, ids) {
+    function Warning(text, ids, warningNbs) {
         this.text = text;
         this.ids = ids;
+        this.warningNbs = warningNbs;
     }
 
     /**
@@ -53,7 +55,7 @@
                     knownIds++;
             });
             if (Object.keys(warning.ids).length === knownIds) {
-                console.log("Skipping known warning: " + Object.keys(commentsOfKnown));
+                console.log("Skipping known warning (" + Object.keys(warning.warningNbs) + "): " + Object.keys(commentsOfKnown));
             } else {
                 console.log("===============================\n" + warning.text + "\n");
                 var inspectedIdsTemplates = Object.keys(warning.ids).map(function(id) {
@@ -64,7 +66,7 @@
             }
         });
     }
-
+    
     exports.inspect = inspect;
     exports.Warning = Warning;
 
