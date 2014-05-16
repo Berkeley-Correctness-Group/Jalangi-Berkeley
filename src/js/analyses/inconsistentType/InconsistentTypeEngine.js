@@ -24,6 +24,7 @@
         var iidToLocation = sandbox.iidToLocation;
         var typeAnalysis = importModule("TypeAnalysis");
         var util = importModule("CommonUtil");
+        var callGraph = importModule("CallGraph");
         var online = false;
         var printWarnings = true;
         var visualizeAllTypes = true; // only for node.js execution (i.e., not in browser)
@@ -195,7 +196,8 @@
                 typeNameToFieldTypes:typeNameToFieldTypes,
                 functionToSignature:functionToSignature,
                 typeNames:typeNames,
-                functionNames:functionNames
+                functionNames:functionNames,
+                callGraph:callGraph.data
             };
             if (sandbox.Constants.isBrowser) {
                 console.log("Sending results to jalangiFF");
@@ -212,7 +214,13 @@
 
         this.functionEnter = function(iid, fun, dis /* this */) {
             annotateObject(iid, smemory.getCurrentFrame(), "frame");
+            callGraph.fEnter(smemory);
         };
+
+        this.functionExit = function(iid, fun, dis /* this */) {
+            callGraph.fExit(smemory);
+        };
+
 
         this.readPre = function(iid, name, val, isGlobal) {
             if (name !== "this") {
@@ -233,6 +241,10 @@
         this.putFieldPre = function(iid, base, offset, val) {
             updateType(base, offset, val, iid);
             return val;
+        };
+
+        this.invokeFunPre = function (iid, f, base, args, isConstructor) {
+            callGraph.perpareBind(smemory, f, getSymbolic(f));
         };
 
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {

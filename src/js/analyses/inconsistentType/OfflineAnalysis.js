@@ -7,6 +7,7 @@
     var util = require('../CommonUtil.js');
     var inspector = require('../WarningInspector.js');
     var benchmarkHelper = require('./BenchmarkHelper.js');
+		var callGraph = require('./CallGraphOffline.js');
 
     // parameters
     var inspectedWarningsFile = "/home/m/research/experiments/inconsistentTypes/inspectedWarnings.json";
@@ -61,11 +62,13 @@
 
     function analyze(loggedResults, sourcemapDir) {
         var benchmark2TypeData = {};
+				var callGraphMapping = {};
         loggedResults.forEach(function(loggedResult) {
             var benchmark = benchmarkHelper.urlToBenchmark(loggedResult.url);
-            var typeData = benchmark2TypeData[benchmark] || new TypeData({}, {}, {}, {});
+            var typeData = benchmark2TypeData[benchmark] || new TypeData({}, {}, {}, {}, {});
             mergeTypeData(typeData, loggedResult.value.typeNameToFieldTypes, loggedResult.value.functionToSignature,
                   loggedResult.value.typeNames, loggedResult.value.functionNames);
+						callGraph.addGraph(callGraphMapping, benchmark, loggedResult.value.callGraph, mergeToLeft);
             benchmark2TypeData[benchmark] = typeData;
         });
 
@@ -80,8 +83,11 @@
             };
             var warnings = typeAnalysis.analyzeTypes(typeData.typeNameToFieldTypes, typeData.functionToSignature, typeData.typeNames, typeData.functionNames, iidFct,
                   false, visualizeAllTypes, visualizeWarningTypes);
+						
+						warnings = callGraph.filterWarnings(callGraphMapping, benchmark, warnings);
             var typeWarnings = warnings[0];
             var functionWarnings = warnings[1];
+
 
             warningStats(typeWarnings, functionWarnings);
             console.log();
