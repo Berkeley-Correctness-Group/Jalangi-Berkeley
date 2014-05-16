@@ -57,19 +57,15 @@
 	}
 
 	function joinWarnFromTo(disjointUnion, swarn, ewarn) {
-//		console.log(JSON.stringify(swarn) + " -> " + JSON.stringify(ewarn));
 		var a = disjointFind(disjointUnion.map, swarn);
 		var b = disjointFind(disjointUnion.map, ewarn);
 		if (a !== b) {
 			disjointUnion.map[a] = b;
-	//		console.log(disjointUnion.map);
 		}
 	}
 
 	function considerEdge(disjointUnion, snode, enode) {
 		var swarns = disjointUnion.nameToWarn[snode];
-//		console.log(disjointUnion.nameToWarn);
-//		console.log(enode);
 		var ewarns = disjointUnion.nameToWarn[enode];
 		if(swarns !== undefined) {
 			swarns.forEach(function(swarn) {
@@ -95,6 +91,8 @@
 				Object.keys(callgraph.calls[frame_name]).forEach(function (target_frame) {
 					var target_fn = disjointUnion.frameToFn[target_frame];
 					considerEdge(disjointUnion, frame_name, target_fn);
+// Added because function compression removes function arg and return warnings.
+					considerEdge(disjointUnion, frame_name, target_frame);
 					considerEdge(disjointUnion, target_fn + "_ret", frame_name);
 					considerEdge(disjointUnion, target_fn + "_ret", fnname + "_ret");
 				});
@@ -104,31 +102,22 @@
 
 	function findMappableBugs(frameList, callgraph, warnings) {
 		var fnwarns = [];
-		var fnwarnslocs = [];
 		var nameToWarn = {};
-		var i = 0;
-		warnings.forEach(function (warnlist) {
-			var j = 0;
-			warnlist.forEach(function (warn) {
-				Object.keys(warn.highlightedIIDs).forEach(function (iid) {
-					if (callgraph.frame_fn[iid] !== undefined || frameList[iid] !== undefined) {
-						if (warn.fieldName == "return") {
-							iid = iid + "_ret";
-						}
-						nameToWarn[iid] = nameToWarn[iid] || [];
-						nameToWarn[iid].push(fnwarns.length);
-						fnwarns.push(warn);
-						fnwarnslocs.push([i, j]);
-//console.log(warn);
+		warnings.forEach(function (warn) {
+			Object.keys(warn.highlightedIIDs).forEach(function (iid) {
+				if (callgraph.frame_fn[iid] !== undefined || frameList[iid] !== undefined) {
+					if (warn.fieldName == "return") {
+						iid = iid + "_ret";
 					}
-				});
-				j += 1;
+					nameToWarn[iid] = nameToWarn[iid] || [];
+					nameToWarn[iid].push(fnwarns.length);
+					fnwarns.push(warn);
+				}
 			});
-			i += 1;
 		});
-		return {fnwarns:fnwarns, locs:fnwarnslocs, nameToWarn:nameToWarn,
-		 frameList:frameList, callgraph:callgraph,
-		 frameToFn:flipMapping(callgraph.frame_fn)};
+		return {fnwarns:fnwarns, nameToWarn:nameToWarn,
+		 	frameList:frameList, callgraph:callgraph,
+		 	frameToFn:flipMapping(callgraph.frame_fn)};
 	}
 
 	function initDisjoint(disjointUnion) {
@@ -144,6 +133,8 @@
 		groups = {};
 		for (var i = 0; i < map.length; i++) {
 			if (map[i] >= 0) {
+				// Unfortunately this isn't the best leader. (need to transform into DAG and 
+				// find sources and sinks to get true leader).
 				var leader = disjointFind(map, i);
 				groups[leader] = groups[leader] || [];
 				groups[leader].push(i);
@@ -157,19 +148,17 @@
 		var callgraph = disjointUnion.callgraph;
 		var frameList = disjointUnion.frameList;
 		var map = disjointUnion.map;
-		return warnings.map(function (warnlist) {
-			return warnlist.filter(function (warn) {
-				var keep = true;
-				Object.keys(warn.highlightedIIDs).forEach(function (iid) {
-					if (callgraph.frame_fn[iid] !== undefined || frameList[iid] !== undefined) {
-						if (map[i] >= 0) {
-							keep = false;
-						}
-						i ++;
+		return warnings.filter(function (warn) {
+			var keep = true;
+			Object.keys(warn.highlightedIIDs).forEach(function (iid) {
+				if (callgraph.frame_fn[iid] !== undefined || frameList[iid] !== undefined) {
+					if (map[i] >= 0) {
+						keep = false;
 					}
-				});
-				return keep;
+					i ++;
+				}
 			});
+			return keep;
 		});
 	}
 
@@ -179,28 +168,14 @@
 		mapping[benchmark] = graph;
 	};
 
-	exports.filterWarnings = function (mapping, benchmark, warnings) {
-//		console.log(JSON.stringify(warnings));
-//		return [[],[]];
-		var callgraph = mapping[benchmark];
+	exports.filterWarnings = function (callgraph, warnings) {
 		var frameList = getFrameList(callgraph);
 
-//		console.log(JSON.stringify(warnings));
-//		console.log(JSON.stringify(mapping));
-		
-
 		var disjointUnion = findMappableBugs(frameList, callgraph, warnings);
-//		console.log(compareWarn(disjointUnion, 0, 1));
-//		console.log(disjointUnion);
 		initDisjoint(disjointUnion);
-//		console.log(disjointUnion);
 		checkAllEdges(disjointUnion);
-//		console.log(disjointUnion.map);
 		groups = groupWarnings(disjointUnion);
-//		console.log(groups);
 
 		return removeDuplicates(disjointUnion, warnings, groups);
-
-//		return [[],[]]; //[[warnings[0][0]], []];
 	};
 })();

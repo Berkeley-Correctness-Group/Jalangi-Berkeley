@@ -49,6 +49,8 @@
         loggedResults.forEach(function(loggedResult) {
             var benchmark = benchmarkHelper.urlToBenchmark(loggedResult.url);
             var typeData = benchmark2TypeData[benchmark] || new TypeData({}, {});
+						typeData.callGraph = typeData.callGraph || {};
+						util.mergeToLeft(typeData.callGraph, loggedResult.value.callGraph);
             mergeTypeData(typeData, loggedResult.value);
             benchmark2TypeData[benchmark] = typeData;
         });
@@ -64,7 +66,7 @@
             };
             var typeWarnings = typeAnalysis.analyzeTypes(typeData.typeNameToFieldTypes, typeData.typeNames, iidFct, false, visualizeAllTypes, visualizeWarningTypes);
 						
-						//warnings = callGraph.filterWarnings(callGraphMapping, benchmark, warnings);
+						typeWarnings = callGraph.filterWarnings(typeData.callGraph, typeWarnings);
 
             // TODO only for experimenting
 //            typeWarnings = filter(typeWarnings);
