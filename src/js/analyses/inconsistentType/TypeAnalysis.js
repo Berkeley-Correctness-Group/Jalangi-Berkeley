@@ -6,7 +6,9 @@
     var maxTypesForTypeDiff = 5;
 
     function analyzeTypes(typeNameToFieldTypes, typeNames, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
-        var tableAndRoots = equiv(typeNameToFieldTypes);
+//        equiv2(typeNameToFieldTypes);  // TODO continue here...
+        
+        var tableAndRoots = equiv(typeNameToFieldTypes); // TODO revise equiv(), should use canonical representation of types
         var typeWarnings = analyze(typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
 
         if (visualizeAllTypes) {
@@ -238,6 +240,16 @@
         return ret;
     }
 
+    function equiv2(typeNameToFieldTypes) {
+        for (var name in typeNameToFieldTypes) {
+            if (util.HOP(typeNameToFieldTypes, name)) {
+                canonicalRepresentation(name, typeNameToFieldTypes);
+                
+                // ...
+            }
+        }
+    }
+
     function equiv(typeName2FieldTypes) {
         var table = {};
         var roots = {};
@@ -257,12 +269,11 @@
         while (changed) {
             changed = false;
             for (var name1 in roots) {
-                if (util.HOP(roots, name1)/* && name1.indexOf("function") !== 0*/) {
+                if (util.HOP(roots, name1)) {
                     loop2: for (var name2 in roots) {
                         if (util.HOP(roots, name2) &&
                               name1 < name2 &&
-                              (root1 = getRoot(table, name1)) !== (root2 = getRoot(table, name2))/* &&
-                               name2.indexOf("function") !== 0*/) {
+                              (root1 = getRoot(table, name1)) !== (root2 = getRoot(table, name2))) {
                             var fieldMap1 = typeName2FieldTypes[name1];
                             var fieldMap2 = typeName2FieldTypes[name2];
                             if (util.sizeOfMap(fieldMap1) !== util.sizeOfMap(fieldMap2)) {
@@ -424,7 +435,7 @@
                                     result[newPrefix] = propType;
                                 } else {
                                     // reached not yet visited type; explore further
-                                    var newVisitedTypes = util.cloneSet(item.visitedTypes);
+                                    var newVisitedTypes = util.shallowClone(item.visitedTypes);
                                     newVisitedTypes[propType] = true;
                                     worklist.push(new WorkItem(item.prefix + "." + prop, newVisitedTypes, propType));
                                 }
@@ -435,6 +446,106 @@
             }
         }
         return result;
+    }
+
+    function CanonicalNode(id, kind, fields) {
+        this.id = id;
+        this.kind = kind;
+        this.fields = fields;
+    }
+
+    CanonicalNode.prototype.clone = function() {
+        var result = new CanonicalNode(this.id, this.kind, {});
+        for (var fName in this.fields) {
+            if (util.HOP(this.fields, fName)) {
+                var field = this.fields[fName];
+                if (typeof field === "number") {
+                    result[fName] = field;
+                } else {
+                    util.assert(typeof field === "object");
+                    result[fName] = field.clone();
+                }
+            }
+        }
+        return result;
+    };
+
+    function TypePath(canonicalRootNode, typeNameToIdOpt, lastIdOpt) {
+        this.canonicalRootNode = canonicalRootNode;
+        this.typeNameToId = typeNameToIdOpt || {};
+        this.lastId = lastIdOpt || 0;
+    }
+
+    TypePath.prototype.clone = function() {
+        var clonedRootNode = this.canonicalRootNode.clone();
+        return new TypePath(clonedRootNode, util.shallowClone(this.typeNameToId), this.lastId);
+    };
+
+    function canonicalRepresentation(type, typeNameToFieldTypes) {
+        function WorkItem(typePath, canonicalNode, type) {
+            this.typePath = typePath;
+            this.canonicalNode = canonicalNode;
+            this.type = type;
+        }
+        var startNode = new CanonicalNode(0, getKind(type), {});
+        var typePath = new TypePath(startNode);
+        typePath.typeNameToId[type] = 0;
+        var canonicalPaths = [typePath];
+        var worklist = [];
+        worklist.push(new WorkItem(typePath, startNode, type));
+        while (worklist.length > 0) {
+            var item = worklist.pop();
+            var fieldNameToTypes = typeNameToFieldTypes[item.type];
+            if (fieldNameToTypes === undefined || Object.keys(fieldNameToTypes).length === 0) {
+                // primitive type or type without properties; stop exploring
+            } else {
+                Object.keys(fieldNameToTypes).sort().forEach(function(fieldName) {
+                    var fieldTypes = fieldNameToTypes[fieldName];
+                    util.assert(Object.keys(fieldTypes).length > 0);
+                    var fieldTypesCtr = 0;
+                    Object.keys(fieldTypes).forEach(function(fieldType) {
+                        fieldTypesCtr++;
+                        if (item.typePath.typeNameToId[fieldType] !== undefined) {
+                            // already seen this type; don't recurse
+                            item.canonicalNode.fields[fieldName] = item.typePath.typeNameToId[fieldType];
+                        } else {
+                            // a not yet explored type; continue to explore
+                            item.typePath.lastId++;
+                            var newNode = new CanonicalNode(item.typePath.lastId, getKind(fieldType), {});
+                            item.typePath.typeNameToId[fieldType] = item.typePath.lastId;
+                            item.canonicalNode.fields[fieldName] = newNode;
+                            
+                            var typePath;
+                            if (fieldTypesCtr === 1) {
+                                typePath = item.typePath;
+                            } else {
+                                typePath = item.typePath.clone();
+                                canonicalPaths.push(typePath);
+                            }
+                            var newItem = new WorkItem(typePath, newNode, fieldType);
+                            worklist.push(newItem);
+                        }
+                    });
+                });
+            }
+        }
+
+        // TODO merge all canonical paths and return a single string
+//        return canonicalPaths.joinTODO();
+        console.log(JSON.stringify(canonicalPaths));
+    }
+
+    function getKind(type) {
+        if (type === "undefined" || type === "null" || type === "object" || type === "function"
+              || type === "string" || type === "number" || type === "boolean" || type.indexOf("global scope") === 0)
+            return type;
+        else if (type.indexOf("object(") === 0)
+            return "object";
+        else if (type.indexOf("function(") === 0)
+            return "function";
+        else if (type.indexOf("frame(") === 0)
+            return "frame";
+        util.assert(false, type);
     }
 
     function toTypeDescription(type, iidToLocation) {
