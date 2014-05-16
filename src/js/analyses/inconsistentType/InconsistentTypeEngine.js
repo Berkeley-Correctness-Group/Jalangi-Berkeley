@@ -25,7 +25,7 @@
         var typeAnalysis = importModule("TypeAnalysis");
         var util = importModule("CommonUtil");
         var argPrefix = "__";
-        var online = true;
+        var online = false;
         var printWarnings = true;
         var visualizeAllTypes = false; // only for node.js execution (i.e., not in browser)
         var visualizeWarningTypes = false; // only for node.js execution (i.e., not in browser)
