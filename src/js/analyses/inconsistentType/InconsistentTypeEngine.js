@@ -28,7 +28,7 @@
         var online = true;
         var printWarnings = true;
         var visualizeAllTypes = false; // only for node.js execution (i.e., not in browser)
-        var visualizeWarningTypes = true; // only for node.js execution (i.e., not in browser)
+        var visualizeWarningTypes = false; // only for node.js execution (i.e., not in browser)
         
 
         // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean

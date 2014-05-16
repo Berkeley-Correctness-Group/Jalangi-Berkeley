@@ -19,15 +19,15 @@
             throw new Error(msg);
     }
 
-    function cloneSet(s) {
+    function shallowClone(s) {
         var r = {};
         for (var p in s) {
             if (HOP(s, p))
-                r[p] = true;
+                r[p] = s[p];
         }
         return r;
     }
-
+    
     function mergeToLeft(left, right) {
         if (right === true) {
             return true;
@@ -57,7 +57,7 @@
     module.HOP = HOP;
     module.sizeOfMap = sizeOfMap;
     module.assert = assert;
-    module.cloneSet = cloneSet;
+    module.shallowClone = shallowClone;
     module.mergeToLeft = mergeToLeft;
 
 })();
