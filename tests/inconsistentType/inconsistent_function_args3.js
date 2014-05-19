@@ -2,7 +2,6 @@
 
     function foo(x) {
         x;
-        y;
     }
 
     var a = {p: 3};

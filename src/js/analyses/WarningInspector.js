@@ -31,12 +31,7 @@
     function inspect(warningsToInspect, knownWarningsFile) {
         console.log("\n--------------------- WarningInspector -----------------");
         console.log("Warnings given to inspector: " + warningsToInspect.length);
-        var knownWarnings = [];
-				try {
-					knownWarnings = readFile(knownWarningsFile);
-				} catch(e) {
-					console.log("Problem reading knownWarningsFile, carrying on.");
-				}
+        var knownWarnings = readFile(knownWarningsFile);
         console.log("Known warnings: " + knownWarnings.length);
         warningsToInspect.forEach(function(warning) {
             // if all ids of the warnings are known, no need to inspect it again
@@ -66,7 +61,7 @@
             }
         });
     }
-    
+
     exports.inspect = inspect;
     exports.Warning = Warning;
 

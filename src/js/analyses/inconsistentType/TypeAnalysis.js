@@ -2,30 +2,33 @@
 
     var util = importModule("CommonUtil");
     var visualization = importModule("Visualization");
+    var callGraph = importModule("CallGraph");
 
     var maxTypesForTypeDiff = 5;
 
-    function analyzeTypes(typeNameToFieldTypes, typeNames, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
+    function analyzeTypes(engineResults, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
 //        equiv2(typeNameToFieldTypes);  // TODO continue here...
         
-        var tableAndRoots = equiv(typeNameToFieldTypes); // TODO revise equiv(), should use canonical representation of types
-        var typeWarnings = analyze(typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
+        var tableAndRoots = equiv(engineResults.typeNameToFieldTypes); // TODO revise equiv(), should use canonical representation of types
+        var typeWarnings = analyze(engineResults.typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
+        
+        typeWarnings = callGraph.filterWarnings(engineResults.callGraph, typeWarnings);
 
         if (visualizeAllTypes) {
             var allHighlightedIIDs = {};
             addHighlightedIIDs(allHighlightedIIDs, typeWarnings);
-            visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, typeNames, iidToLocation, allHighlightedIIDs, false);
+            visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], engineResults.typeNameToFieldTypes, engineResults.typeNames, iidToLocation, allHighlightedIIDs, false);
         }
 
         typeWarnings.forEach(function(w) {
             if (w.observedTypesAndLocations.length <= maxTypesForTypeDiff) {
-                w.typeDiff = computeTypeDiff(w, typeNameToFieldTypes);
+                w.typeDiff = computeTypeDiff(w, engineResults.typeNameToFieldTypes);
             }
             if (printWarnings) {
                 console.log(w.toString());
             }
             if (visualizeWarningTypes) {
-                visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], typeNameToFieldTypes, typeNames, iidToLocation, w.highlightedIIDs, true, "warning" + w.id + ".dot");
+                visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], engineResults.typeNameToFieldTypes, engineResults.typeNames, iidToLocation, w.highlightedIIDs, true, "warning" + w.id + ".dot");
             }
         });
         return typeWarnings;

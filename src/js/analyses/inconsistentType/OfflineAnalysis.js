@@ -7,8 +7,7 @@
     var util = require('../CommonUtil.js');
     var inspector = require('../WarningInspector.js');
     var benchmarkHelper = require('./BenchmarkHelper.js');
-		var callGraph = require('./CallGraphOffline.js');
-
+		
     // parameters
     var inspectedWarningsFile = "/home/m/research/experiments/inconsistentTypes/inspectedWarnings.json";
     var visualizeAllTypes = false;
@@ -20,14 +19,16 @@
         return JSON.parse(data);
     }
 
-    function TypeData(typeNameToFieldTypes, typeNames) {
+    function TypeData(typeNameToFieldTypes, typeNames, callGraph) {
         this.typeNameToFieldTypes = typeNameToFieldTypes;
         this.typeNames = typeNames;
+        this.callGraph = callGraph;
     }
 
     function mergeTypeData(allTypeData, typeData) {
         util.mergeToLeft(allTypeData.typeNameToFieldTypes, typeData.typeNameToFieldTypes);
         util.mergeToLeft(allTypeData.typeNames, typeData.typeNames);
+        util.mergeToLeft(allTypeData.callGraph, typeData.callGraph);
     }
 
     function WarningStats(typeWarnings, typeWarningsByLoc) {
@@ -45,12 +46,9 @@
 
     function analyze(loggedResults, sourcemapDir) {
         var benchmark2TypeData = {};
-				var callGraphMapping = {};
         loggedResults.forEach(function(loggedResult) {
             var benchmark = benchmarkHelper.urlToBenchmark(loggedResult.url);
-            var typeData = benchmark2TypeData[benchmark] || new TypeData({}, {});
-						typeData.callGraph = typeData.callGraph || {};
-						util.mergeToLeft(typeData.callGraph, loggedResult.value.callGraph);
+            var typeData = benchmark2TypeData[benchmark] || new TypeData({}, {}, {});
             mergeTypeData(typeData, loggedResult.value);
             benchmark2TypeData[benchmark] = typeData;
         });
@@ -64,13 +62,10 @@
                 var triple = iids[iid];
                 return triple ? triple.toString() : "<unknown location>";
             };
-            var typeWarnings = typeAnalysis.analyzeTypes(typeData.typeNameToFieldTypes, typeData.typeNames, iidFct, false, visualizeAllTypes, visualizeWarningTypes);
-						
-						typeWarnings = callGraph.filterWarnings(typeData.callGraph, typeWarnings);
-
+            var typeWarnings = typeAnalysis.analyzeTypes(typeData, iidFct, false, visualizeAllTypes, visualizeWarningTypes);
+            
             // TODO only for experimenting
 //            typeWarnings = filter(typeWarnings);
-
             warningStats(typeWarnings);
             console.log();
             analyzeTypeWarnings(typeWarnings);

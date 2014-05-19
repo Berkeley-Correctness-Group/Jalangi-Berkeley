@@ -187,12 +187,7 @@
             }
         }
 
-        function logResults() {
-            var results = {
-                typeNameToFieldTypes:typeNameToFieldTypes,
-                typeNames:typeNames,
-                callGraph:callGraph.data
-            };
+        function logResults(results) {
             if (sandbox.Constants.isBrowser) {
                 console.log("Sending results to jalangiFF");
                 window.$jalangiFFLogResult(JSON.stringify(results), true);
@@ -238,7 +233,7 @@
         };
 
         this.invokeFunPre = function (iid, f, base, args, isConstructor) {
-            callGraph.perpareBind(smemory, f, getSymbolic(f));
+            callGraph.prepareBind(smemory, f, getSymbolic(f));
         };
 
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {
@@ -261,10 +256,16 @@
         };
 
         this.endExecution = function() {
+            var results = {
+                typeNameToFieldTypes:typeNameToFieldTypes,
+                typeNames:typeNames,
+                callGraph:callGraph.data
+            };
+            
             if (online) {
-                typeAnalysis.analyzeTypes(typeNameToFieldTypes, typeNames, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes);
+                typeAnalysis.analyzeTypes(results, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes);
             } else {
-                logResults();
+                logResults(results);
             }
         };
 
