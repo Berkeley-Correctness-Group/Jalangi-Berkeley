@@ -66,6 +66,7 @@
             
             // TODO only for experimenting
 //            typeWarnings = filter(typeWarnings);
+
             warningStats(typeWarnings);
             console.log();
             analyzeTypeWarnings(typeWarnings);

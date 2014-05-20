@@ -30,7 +30,6 @@
         var printWarnings = true;
         var visualizeAllTypes = false; // only for node.js execution (i.e., not in browser)
         var visualizeWarningTypes = false; // only for node.js execution (i.e., not in browser)
-        
 
         // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
         var typeNameToFieldTypes = {}; // type or function name -> (field or this/return/argx -> type name -> iid -> true)  --  for each type/function, gives the fields, their types, and where this field type has been observed
