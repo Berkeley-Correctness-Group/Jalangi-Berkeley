@@ -12,8 +12,7 @@ https://www.eecs.berkeley.edu/~gongliang13/jalangi_ff/
 
 ### Requirements
 
-We tested Jalangi on Mac OS X 10.8 with the Chromium browser and on Ubuntu 12.04 with both the Chromium and the Firefox browsers.  Jalangi should work on Mac OS
-10.7, Ubuntu 11.0 and higher and Windows 7 or higher. Jalangi will NOT work with IE.
+We tested Jalangi on Mac OS X 10.8 with the Chromium browser and on Ubuntu 12.04 with both the Chromium and the Firefox browsers.  Jalangi should work on Mac OS 10.7, Ubuntu 11.0 and higher and Windows 7 or higher. Jalangi will NOT work with Internet Explorer.
 
   * Latest version of Node.js available at http://nodejs.org/.  We have tested Jalangi with Node v0.8.22 and v0.10.3.
   * Sun's JDK 1.6 or higher.  We have tested Jalangi with Java 1.6.0_43.
@@ -106,3 +105,18 @@ In the Jalangi-Berkeley directory type the following command:
 node src/js/commands/benchmark_exp.js
 ```
 finally after the experiment finished, open the file ```Jalangi-Berkeley/exp_output/result.csv``` using Excel.
+
+### In-browser Instrumentation
+
+As an alternative to instrumenting JavaScript files on the file system, you can instrument JavaScript on the fly in the Firefox browser, using ```instrumentFF```. This setup enables you to easily analyze arbitrary web applications. ```instrumentFF``` will instrument all JavaScript code executed by Firefox, including code given to ```eval()```.
+
+  * Install our custom version of Firefox: [Linux (64 bit)](http://mp.binaervarianz.de/jalangi/firefox-27.0a1.en-US.linux-x86_64.tar.bz2), [Mac OS (64 bit)](http://mp.binaervarianz.de/jalangi/firefox-27.0a1.en-US.mac64.dmg)
+  * Add instrumentFF to your PATH environment variable:
+    ```export PATH="/Your/path/to/Jalangi-Berkeley/scripts/path_unix":$PATH```
+  * Edit ```scripts/instrumentFF.py```:
+    * Modify the variable ```jalangiAnalysisFiles``` to specify the Jalangi analyses that you want to run (an array of file names).
+    * Modify the variable ```included``` to specify the URLs for which to instrument JavaScript files (an array of regular expressions).
+  * Start the custom version of Firefox. Make sure that your current working directory is Jalangi-Berkeley.
+
+Firefox will write the uninstrumented .js files and the instrumented .js files to ```instrumentFF_tmp```, along with the sourcemaps produced by the Jalangi instrumenter. ```instrumentFF``` uses caching to avoid re-instrumenting files. If you modify your analysis, empty the cache by removing all files in ```instrumentFF_tmp``` and by restarting Firefox.
+
