@@ -118,5 +118,5 @@ As an alternative to instrumenting JavaScript files on the file system, you can 
     * Modify the variable ```included``` to specify the URLs for which to instrument JavaScript files (an array of regular expressions).
   * Start the custom version of Firefox. Make sure that your current working directory is Jalangi-Berkeley.
 
-Firefox will write the uninstrumented .js files and the instrumented .js files to ```instrumentFF_tmp```, along with the sourcemaps produced by the Jalangi instrumenter. ```instrumentFF``` uses caching to avoid re-instrumenting files. If you modify your analysis, empty the cache by removing all files in ```instrumentFF_tmp``` and by restarting Firefox.
+Firefox will write the uninstrumented .js files and the instrumented .js files to ```instrumentFF_tmp```, along with the sourcemaps produced by the Jalangi instrumenter. ```instrumentFF``` caches instrumented files to avoid unnecessarily re-instrumenting files. If you modify your analysis, empty the cache by removing all files in ```instrumentFF_tmp``` and by restarting Firefox.
 
