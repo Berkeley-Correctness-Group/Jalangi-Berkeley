@@ -210,8 +210,8 @@
         module = exports;
     } else {
         // export to code running in browser
-        window.$TypeAnalysis = {};
-        module = window.$TypeAnalysis;
+        window.$Visualization = {};
+        module = window.$Visualization;
     }
 
     function importModule(moduleName) {

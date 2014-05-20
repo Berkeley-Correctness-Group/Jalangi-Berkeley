@@ -26,7 +26,7 @@
         var util = importModule("CommonUtil");
         var callGraph = importModule("CallGraph");
         var argPrefix = "__";
-        var online = false;
+        var online = true;
         var printWarnings = true;
         var visualizeAllTypes = false; // only for node.js execution (i.e., not in browser)
         var visualizeWarningTypes = false; // only for node.js execution (i.e., not in browser)

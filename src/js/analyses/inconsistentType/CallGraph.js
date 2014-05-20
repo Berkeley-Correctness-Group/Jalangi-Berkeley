@@ -168,13 +168,13 @@
         });
     }
 
-    exports.addGraph = function(mapping, benchmark, callgraph, mergeLeftfn) {
+    var addGraph = function(mapping, benchmark, callgraph, mergeLeftfn) {
         var graph = mapping[benchmark] || {};
         mergeLeftfn(graph, callgraph);
         mapping[benchmark] = graph;
     };
 
-    exports.filterWarnings = function(callgraph, warnings) {
+    var filterWarnings = function(callgraph, warnings) {
         var frameList = getFrameList(callgraph);
 
         var disjointUnion = findMappableBugs(frameList, callgraph, warnings);
@@ -185,7 +185,7 @@
         return removeDuplicates(disjointUnion, warnings, groups);
     };
 
-    exports.fEnter = function(smemory) {
+    var fEnter = function(smemory) {
         var f = smemory.getCurrentFrame();
         var f_shad = smemory.getShadowObject(f).shadow;
         if (f_name !== undefined) {
@@ -201,13 +201,30 @@
         callstack.push(f_shad);
     };
 
-    exports.fExit = function(smemory) {
+    var fExit = function(smemory) {
         callstack.pop();
     };
 
-    exports.prepareBind = function(smemory, f, f_sym) {
+    var prepareBind = function(smemory, f, f_sym) {
         f_name = f_sym;
     };
 
-    exports.data = data;
+    // boilerplate to use this file both in browser and in node application
+    var module;
+    if (typeof exports !== "undefined") {
+        // export to code running in node application
+        module = exports;
+    } else {
+        // export to code running in browser
+        window.$CallGraph = {};
+        module = window.$CallGraph;
+    }
+
+    module.addGraph = addGraph;
+    module.filterWarnings = filterWarnings;
+    module.fEnter = fEnter;
+    module.fExit = fExit;
+    module.prepareBind = prepareBind;
+    module.data = data;
+    
 })();
