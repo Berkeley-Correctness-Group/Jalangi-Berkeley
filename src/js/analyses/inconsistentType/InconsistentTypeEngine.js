@@ -26,10 +26,10 @@
         var util = importModule("CommonUtil");
         var callGraph = importModule("CallGraph");
         var argPrefix = "__";
-        var online = true;
+        var online = sandbox.Constants.isBrowser ? false : true;
         var printWarnings = true;
         var visualizeAllTypes = false; // only for node.js execution (i.e., not in browser)
-        var visualizeWarningTypes = false; // only for node.js execution (i.e., not in browser)
+        var visualizeWarningTypes = sandbox.Constants.isBrowser ? false : true; // only for node.js execution (i.e., not in browser)
 
         // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
         var typeNameToFieldTypes = {}; // type or function name -> (field or this/return/argx -> type name -> iid -> true)  --  for each type/function, gives the fields, their types, and where this field type has been observed
@@ -249,7 +249,8 @@
         this.getField = function(iid, base, offset, val, isGlobal) {
             if (val !== undefined) {
                 var provider = base; // the object/prototype that provides the field
-                while (provider !== null && typeof provider === "object" && !util.HOP(provider, offset)) {
+                while (provider !== null && provider !== undefined &&
+                      typeof provider === "object" && !util.HOP(provider, offset)) {
                     provider = Object.getPrototypeOf(provider);
                 }
                 updateType(provider, offset, val, iid);

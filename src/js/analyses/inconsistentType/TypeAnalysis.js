@@ -21,7 +21,7 @@
 
         typeWarnings.forEach(function(w) {
             if (w.observedTypesAndLocations.length <= maxTypesForTypeDiff) {
-//                w.typeDiff = computeTypeDiff(w, engineResults.typeNameToFieldTypes);   // TODO infinite loop possible, see warning in box2d
+                w.typeDiff = computeTypeDiff(w, engineResults.typeNameToFieldTypes);   // TODO infinite loop possible, see warning in box2d
             }
             if (printWarnings) {
                 console.log(w.toString());
@@ -425,7 +425,7 @@
     };
 
     function computeTypeDiff(warning, typeNameToFieldTypes) {
-//        console.log("Computing type diff for " + warning.observedTypesAndLocations.length + " types...");
+//        console.log("Computing type diff for " + warning.observedTypesAndLocations.length + " types");
 
         // for each observed type, compute all possible expressions and their types
         var observedTypeToExpressions = {}; // observed type (string) --> expression (string) --> type of expression (string)
