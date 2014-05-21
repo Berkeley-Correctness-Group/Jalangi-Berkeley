@@ -5,19 +5,13 @@
     var callGraph = importModule("CallGraph");
 
     var maxTypesForTypeDiff = 5;
+    var maxNodesInCanonicalRepr = 100;
 
     function analyzeTypes(engineResults, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
-//        equiv2(engineResults.typeNameToFieldTypes);  // TODO continue here...
-//        return []; // TODO RAD
-
-        console.log("Calling equiv");
-        var tableAndRoots = equiv(engineResults.typeNameToFieldTypes); // TODO revise equiv(), should use canonical representation of types
-        console.log("Calling analyze");
+        var tableAndRoots = equiv2(engineResults.typeNameToFieldTypes);
         var typeWarnings = analyze(engineResults.typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
 
-        console.log("Calling filterWarnings");
         typeWarnings = callGraph.filterWarnings(engineResults.callGraph, typeWarnings);
-        console.log("Done w/ filterWarnings");
 
         if (visualizeAllTypes) {
             var allHighlightedIIDs = {};
@@ -25,12 +19,9 @@
             visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], engineResults.typeNameToFieldTypes, engineResults.typeNames, iidToLocation, allHighlightedIIDs, false);
         }
 
-        console.log("Done w/ visualize all");
-
-        console.log("Will visualize " + typeWarnings.length + " warnings");
         typeWarnings.forEach(function(w) {
             if (w.observedTypesAndLocations.length <= maxTypesForTypeDiff) {
-                w.typeDiff = computeTypeDiff(w, engineResults.typeNameToFieldTypes);   // TODO infinite loop possible, see warning in box2d
+//                w.typeDiff = computeTypeDiff(w, engineResults.typeNameToFieldTypes);   // TODO infinite loop possible, see warning in box2d
             }
             if (printWarnings) {
                 console.log(w.toString());
@@ -275,10 +266,10 @@
                     for (var name2 in typeNameToFieldTypes) {
                         if (util.HOP(typeNameToFieldTypes, name2) &&
                               name1 < name2 &&
-                              (root1 = getRoot(table, name1)) !== (root2 = getRoot(table, name2))) {
+                              (root1 = getRoot(table, name1)) !== (root2 = getRoot(table, name2)) &&
+                              quickCompare(name1, name2, typeNameToFieldTypes)) {
                             var canonical2 = canonicalRepresentation(name2, typeNameToFieldTypes);
                             if (canonical1 === canonical2) {
-                                console.log(">>> Merging "+name1+" and "+name2);
                                 // merged name1 and name2
                                 if (root1 < root2) {
                                     table[root2] = root1;
@@ -289,16 +280,47 @@
                                 }
                                 changed = true;
                             } else {
-                                console.log("-- not the same:\n    "+canonical1+" vs\n    "+canonical2+" -- "+typeof canonical2);
+//                                console.log("-- not the same:\n    "+canonical1+" vs\n    "+canonical2+" -- "+typeof canonical2);
                             }
                         }
                     }
                 }
             }
         }
-        console.log("==============");
-        console.log(JSON.stringify([table, roots], 0, 2));
+//        console.log("==============");
+//        console.log(JSON.stringify([table, roots], 0, 2));
         return [table, roots];
+    }
+
+    /**
+     * Several quick comparisons to check whether two types certainly
+     * have different canonical representations.
+     * @param {type} type1
+     * @param {type} type2
+     * @param {type} typeNameToFieldTypes
+     * @returns {Boolean}
+     */
+    function quickCompare(type1, type2, typeNameToFieldTypes) {
+        var fieldTypes1 = typeNameToFieldTypes[type1];
+        var fieldTypes2 = typeNameToFieldTypes[type2];
+        if (fieldTypes1 && !fieldTypes2 || !fieldTypes1 && fieldTypes2)
+            return false;
+        var propNames1 = Object.keys(fieldTypes1);
+        var propNames2 = Object.keys(fieldTypes2);
+        if (propNames1.length !== propNames2.length)
+            return false;
+        var sortedPropNames1 = propNames1.sort();
+        var sortedPropNames2 = propNames2.sort();
+        var propNamesDiffer = false;
+        sortedPropNames1.some(function(t, idx) {
+            if (sortedPropNames2[idx] !== t) {
+                propNamesDiffer = true;
+                return true;
+            }
+        });
+        if (propNamesDiffer)
+            return false;
+        return true;
     }
 
     function equiv(typeName2FieldTypes) {
@@ -403,7 +425,7 @@
     };
 
     function computeTypeDiff(warning, typeNameToFieldTypes) {
-        console.log("Computing type diff for " + warning.observedTypesAndLocations.length + " types...");
+//        console.log("Computing type diff for " + warning.observedTypesAndLocations.length + " types...");
 
         // for each observed type, compute all possible expressions and their types
         var observedTypeToExpressions = {}; // observed type (string) --> expression (string) --> type of expression (string)
@@ -449,7 +471,7 @@
             }
         });
 
-        console.log(" .. done with type diff");
+//        console.log(" .. done with type diff");
         return new TypeDiff(commonExpressions, diffExpressions);
     }
 
@@ -461,7 +483,7 @@
      * @returns {string -> string}
      */
     function allExpressions(type, typeNameToFieldTypes) {
-        console.log("   allExpressions for type " + JSON.stringify(type));
+//        console.log("   allExpressions for type " + JSON.stringify(type));
 
         function WorkItem(prefix, visitedTypes, type) {
             this.prefix = prefix;
@@ -475,7 +497,7 @@
         initiallyVisitedTypes[type] = true;
         worklist.push(new WorkItem("", initiallyVisitedTypes, type));
         while (worklist.length > 0) {
-            console.log("      worklist of length: " + worklist.length);
+//            console.log("      worklist of length: " + worklist.length);
 
             var item = worklist.pop();
             var fieldTypes = typeNameToFieldTypes[item.type];
@@ -496,7 +518,7 @@
                                     // reached not yet visited type; explore further
                                     var newVisitedTypes = util.shallowClone(item.visitedTypes);
                                     newVisitedTypes[propType] = true;
-                                    console.log("      --> pushing worklist item; visited types: " + Object.keys(newVisitedTypes) + " -- prefix: " + item.prefix + "." + prop + " -- next type: " + propType);
+//                                    console.log("      --> pushing worklist item; visited types: " + Object.keys(newVisitedTypes) + " -- prefix: " + item.prefix + "." + prop + " -- next type: " + propType);
                                     worklist.push(new WorkItem(item.prefix + "." + prop, newVisitedTypes, propType));
                                 }
                             }
@@ -512,6 +534,7 @@
         this.canonicalRootNode = canonicalRootNode;
         this.typeNameToId = typeNameToIdOpt || {};
         this.lastId = lastIdOpt || 0;
+        this.nodeCtr = 1;
     }
 
     TypePath.prototype.clone = function() {
@@ -557,6 +580,9 @@
         while (worklist.length > 0) {
             var item = worklist[0];
             worklist = worklist.slice(1);   // FIFO
+            if (item.typePath.nodeCtr > maxNodesInCanonicalRepr) { // cut-off to deal with types that reference many others
+                return "very_complex_canonical_representation_" + Math.random().toString().slice(2);
+            }
             var fieldNameToTypes = typeNameToFieldTypes[item.type];
             if (fieldNameToTypes === undefined || Object.keys(fieldNameToTypes).length === 0) {
                 // primitive type or type without properties; stop exploring
@@ -565,6 +591,9 @@
                     var fieldTypes = fieldNameToTypes[fieldName];
                     util.assert(Object.keys(fieldTypes).length > 0);
                     var fieldTypesCtr = 0;
+                    if (Object.keys(fieldTypes).length > maxNodesInCanonicalRepr) {
+                        return "very_complex_canonical_representation_" + Math.random().toString().slice(2);
+                    }
                     Object.keys(fieldTypes).forEach(function(fieldType) {
                         fieldTypesCtr++;
                         if (item.typePath.typeNameToId[fieldType] !== undefined) {
@@ -576,6 +605,7 @@
                             var newNode = new CanonicalNode(item.typePath.lastId, getKind(fieldType));
                             item.typePath.typeNameToId[fieldType] = item.typePath.lastId;
                             item.canonicalNode.fields.push([fieldName, newNode]);
+                            item.typePath.nodeCtr++;
 
                             var typePath;
                             if (fieldTypesCtr === 1) {
@@ -615,6 +645,8 @@
             return "function";
         else if (type.indexOf("frame(") === 0)
             return "frame";
+        else if (type.indexOf("array(") === 0)
+            return "array";
         util.assert(false, type);
     }
 
