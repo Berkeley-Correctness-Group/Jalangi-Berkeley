@@ -181,7 +181,7 @@
                 setTypeInFunSignature(base, tval, "this", callLocation);
                 var len = args.length;
                 for (var i = 0; i < len; ++i) {
-                    setTypeInFunSignature(args[i], tval, argPrefix+"arg" + (i + 1), callLocation);
+                    setTypeInFunSignature(args[i], tval, argPrefix + "arg" + (i + 1), callLocation);
                 }
             }
         }
@@ -195,7 +195,7 @@
                 var benchmark = process.argv[1];
                 var wrappedResults = [{url:benchmark, value:results}];
                 var outFile = process.cwd() + "/analysisResults.json";
-                console.log("Writing analysis results to "+outFile);
+                console.log("Writing analysis results to " + outFile);
                 fs.writeFileSync(outFile, JSON.stringify(wrappedResults));
             }
         }
@@ -231,7 +231,7 @@
             return val;
         };
 
-        this.invokeFunPre = function (iid, f, base, args, isConstructor) {
+        this.invokeFunPre = function(iid, f, base, args, isConstructor) {
             callGraph.prepareBind(smemory, f, getSymbolic(f));
         };
 
@@ -248,7 +248,11 @@
 
         this.getField = function(iid, base, offset, val, isGlobal) {
             if (val !== undefined) {
-                updateType(base, offset, val, iid);
+                var provider = base; // the object/prototype that provides the field
+                while (provider !== null && typeof provider === "object" && !util.HOP(provider, offset)) {
+                    provider = Object.getPrototypeOf(provider);
+                }
+                updateType(provider, offset, val, iid);
             }
             return val;
         };
@@ -259,7 +263,7 @@
                 typeNames:typeNames,
                 callGraph:callGraph.data
             };
-            
+
             if (online) {
                 typeAnalysis.analyzeTypes(results, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes);
             } else {
