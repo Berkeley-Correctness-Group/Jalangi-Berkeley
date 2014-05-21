@@ -637,7 +637,8 @@
 
     function getKind(type) {
         if (type === "undefined" || type === "null" || type === "object" || type === "function"
-              || type === "string" || type === "number" || type === "boolean" || type.indexOf("global scope") === 0)
+              || type === "string" || type === "number" || type === "boolean"
+              || type.indexOf("global scope") === 0)
             return type;
         else if (type.indexOf("object(") === 0)
             return "object";

@@ -250,7 +250,6 @@
             if (val !== undefined) {
                 updateType(base, offset, val, iid);
             }
-            //getConcrete(base)[getConcrete(offset)] = ret;
             return val;
         };
 

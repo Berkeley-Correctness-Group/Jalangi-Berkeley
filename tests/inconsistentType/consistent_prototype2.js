@@ -16,22 +16,18 @@
 
 // Author: Michael Pradel
 
-function C() {
-}
+(function() {
 
-C.prototype = B.prototype;
+    function Foo() {
 
-function B() {
+    }
 
-}
+    Foo.prototype.x = 23;
+    Foo.prototype.y = 42;
 
-B.prototype.foo = function() {
-};
+    var foo = new Foo();
+    foo.y;
+    foo = new Foo();
+    foo.x;
 
-B.prototype.bar = function() {
-};
-
-var c = new C();
-c.foo();
-c = new C();
-c.bar();
+})();

@@ -19,16 +19,10 @@
 function C() {
 }
 
-C.prototype = B.prototype;
-
-function B() {
-
-}
-
-B.prototype.foo = function() {
+C.prototype.foo = function() {
 };
 
-B.prototype.bar = function() {
+C.prototype.bar = function() {
 };
 
 var c = new C();
