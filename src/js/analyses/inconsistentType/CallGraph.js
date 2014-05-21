@@ -112,7 +112,7 @@
         warnings.forEach(function(warn) {
             Object.keys(warn.highlightedIIDs).forEach(function(iid) {
                 if (callgraph.frame_fn[iid] !== undefined || frameList[iid] !== undefined) {
-                    if (warn.fieldName == "return") {
+                    if (warn.fieldName === "return") {
                         iid = iid + "_ret";
                     }
                     nameToWarn[iid] = nameToWarn[iid] || [];
@@ -136,7 +136,7 @@
 
     function groupWarnings(disjointUnion) {
         var map = disjointUnion.map;
-        groups = {};
+        var groups = {};
         for (var i = 0; i < map.length; i++) {
             if (map[i] >= 0) {
                 // Unfortunately this isn't the best leader. (need to transform into DAG and 
@@ -180,7 +180,7 @@
         var disjointUnion = findMappableBugs(frameList, callgraph, warnings);
         initDisjoint(disjointUnion);
         checkAllEdges(disjointUnion);
-        groups = groupWarnings(disjointUnion);
+        var groups = groupWarnings(disjointUnion);
 
         return removeDuplicates(disjointUnion, warnings, groups);
     };

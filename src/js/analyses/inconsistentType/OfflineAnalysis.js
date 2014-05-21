@@ -12,7 +12,7 @@
     var inspectedWarningsFile = "/home/m/research/experiments/inconsistentTypes/inspectedWarnings.json";
     var visualizeAllTypes = false;
     var visualizeWarningTypes = true;
-    var maxTypes = 3; // ignore warnings with more than maxTypes different types
+    var maxTypes = 2; // ignore warnings with more than maxTypes different types
 
     function readFile(fileName) {
         var data = fs.readFileSync(fileName);
@@ -65,7 +65,7 @@
             var typeWarnings = typeAnalysis.analyzeTypes(typeData, iidFct, false, visualizeAllTypes, visualizeWarningTypes);
             
             // TODO only for experimenting
-//            typeWarnings = filter(typeWarnings);
+            typeWarnings = filter(typeWarnings);
 
             warningStats(typeWarnings);
             console.log();
@@ -111,7 +111,7 @@
         sortedLocs.forEach(function(loc) {
             // focus on non-library warnings
             var component = benchmarkHelper.locationToComponent(loc);
-            if (component !== "jquery") {
+            if (component !== "jquery" && component !== "bootstrap") {
                 var warningIds = {}; // string->true
                 var warningNbs = {}; // number->true
                 var warningText = "";
