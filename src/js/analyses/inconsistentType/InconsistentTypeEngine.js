@@ -174,6 +174,9 @@
         function updateSignature(f, base, args, returnValue, callLocation) {
             var functionName, tval;
             functionName = getSymbolic(f);
+            if (!functionName && f.toString().indexOf("[native code]") !== -1 && f.name) {
+                functionName = "native function"+f.name; // optimistically identify native fcts by their name (may lead to collisions)
+            }
             if (functionName) {
                 addFunctionOrTypeName(functionName, f);
                 tval = getAndInit(typeNameToFieldTypes, functionName);
