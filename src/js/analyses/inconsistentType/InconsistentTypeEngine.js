@@ -26,6 +26,8 @@
         var util = importModule("CommonUtil");
         var callGraph = importModule("CallGraph");
         var argPrefix = "__";
+        var beliefPrefix = "ITA_Belief: ";
+        var beliefInfix = " has type ";
         var online = sandbox.Constants.isBrowser ? false : true;
         var printWarnings = true;
         var visualizeAllTypes = false; // only for node.js execution (i.e., not in browser)
@@ -34,6 +36,7 @@
         // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
         var typeNameToFieldTypes = {}; // type or function name -> (field or this/return/argx -> type name -> iid -> true)  --  for each type/function, gives the fields, their types, and where this field type has been observed
         var typeNames = {};
+        var frameToBeliefs = {}; // function name -> var name -> type -> true
 
         annotateGlobalFrame();
 
@@ -174,8 +177,8 @@
         function updateSignature(f, base, args, returnValue, callLocation) {
             var functionName, tval;
             functionName = getSymbolic(f);
-            if (!functionName && f.toString().indexOf("[native code]") !== -1 && f.name) {
-                functionName = "native function"+f.name; // optimistically identify native fcts by their name (may lead to collisions)
+            if (!functionName && Function.prototype.toString.call(f).indexOf("[native code]") !== -1 && f.name) {
+                functionName = "native function " + f.name; // optimistically identify native fcts by their name (may lead to collisions)
             }
             if (functionName) {
                 addFunctionOrTypeName(functionName, f);
@@ -186,6 +189,15 @@
                 for (var i = 0; i < len; ++i) {
                     setTypeInFunSignature(args[i], tval, argPrefix + "arg" + (i + 1), callLocation);
                 }
+            }
+        }
+        
+        function updateBeliefs(frame, varName, type) {
+            var sframe = smemory.getShadowObject(frame);
+            if (sframe && sframe.shadow) {
+                var varToTypes = getAndInit(frameToBeliefs, sframe.shadow);
+                var types = getAndInit(varToTypes, varName);
+                types[type] = true;
             }
         }
 
@@ -226,7 +238,12 @@
         };
 
         this.literal = function(iid, val) {
-            return annotateObject(iid, val);
+            if (typeof val === "string" && val.indexOf(beliefPrefix) === 0) { // belief "annotation" produced by preprocessor
+               var nameAndType = val.slice(beliefPrefix.length).split(beliefInfix);
+               updateBeliefs(smemory.getCurrentFrame(), nameAndType[0], nameAndType[1]);
+            } else {
+                return annotateObject(iid, val);
+            }
         };
 
         this.putFieldPre = function(iid, base, offset, val) {
@@ -265,7 +282,8 @@
             var results = {
                 typeNameToFieldTypes:typeNameToFieldTypes,
                 typeNames:typeNames,
-                callGraph:callGraph.data
+                callGraph:callGraph.data,
+                frameToBeliefs:frameToBeliefs
             };
 
             if (online) {

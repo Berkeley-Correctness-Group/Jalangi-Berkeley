@@ -1,4 +1,6 @@
 (function() {
+    var util = importModule("CommonUtil");
+
     var data = {calls:{}, frame_fn:{}};
     var callstack = [];
     var calls = data.calls;
@@ -181,9 +183,24 @@
         initDisjoint(disjointUnion);
         checkAllEdges(disjointUnion);
         var groups = groupWarnings(disjointUnion);
-
+        propagateBeliefs(groups, warnings);
         return removeDuplicates(disjointUnion, warnings, groups);
     };
+
+    function propagateBeliefs(groups, warnings) {
+        for (var leaderIdx in groups) {
+            if (util.HOP(groups, leaderIdx)) {
+                var leaderWarning = warnings[leaderIdx];
+                var otherIdxs = groups[leaderIdx];
+                otherIdxs.forEach(function(otherIdx) {
+                    var otherWarning = warnings[otherIdx];
+                    if (otherWarning.removeByBelief) {
+                        leaderWarning.removeByBelief = true;
+                    }
+                });
+            }
+        }
+    }
 
     var fEnter = function(smemory) {
         var f = smemory.getCurrentFrame();
@@ -220,11 +237,19 @@
         module = window.$CallGraph;
     }
 
+    function importModule(moduleName) {
+        if (typeof exports !== "undefined") {
+            return require('./' + moduleName + ".js");
+        } else {
+            return window['$' + moduleName];
+        }
+    }
+
     module.addGraph = addGraph;
     module.filterWarnings = filterWarnings;
     module.fEnter = fEnter;
     module.fExit = fExit;
     module.prepareBind = prepareBind;
     module.data = data;
-    
+
 })();

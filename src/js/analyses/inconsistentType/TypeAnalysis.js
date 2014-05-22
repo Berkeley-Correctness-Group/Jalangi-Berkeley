@@ -11,7 +11,9 @@
         var tableAndRoots = equiv2(engineResults.typeNameToFieldTypes);
         var typeWarnings = analyze(engineResults.typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
 
+        analyzeBeliefs(typeWarnings, engineResults.frameToBeliefs);
         typeWarnings = callGraph.filterWarnings(engineResults.callGraph, typeWarnings);
+        typeWarnings = filterByBelief(typeWarnings);
 
         if (visualizeAllTypes) {
             var allHighlightedIIDs = {};
@@ -48,6 +50,7 @@
         this.highlightedIIDs = highlightedIIDs;
         warningCtr++;
         this.id = warningCtr;
+        this.removeByBelief = false;
     }
 
     InconsistentTypeWarning.prototype.toString = function() {
@@ -660,6 +663,8 @@
             } else {
                 return new TypeDescription(type1, iidToLocation(iid), type);
             }
+        } else if (type.indexOf("native function") === 0) {
+            return new TypeDescription("function", type, type);
         } else {
             return new TypeDescription(type, "", type);
         }
@@ -695,6 +700,40 @@
             }
         }
         return str;
+    }
+
+    /**
+     * Marks warnings that can be removed due to "beliefs".
+     * @param {type} typeWarnings
+     * @param {type} frameToBeliefs
+     * @returns {undefined}
+     */
+    function analyzeBeliefs(typeWarnings, frameToBeliefs) {
+        typeWarnings.forEach(function(w) {
+            var varNameToTypes = frameToBeliefs[w.typeDescription.typeName];
+            if (varNameToTypes) {
+                var beliefTypes = varNameToTypes[w.fieldName];
+                if (beliefTypes) {
+                    var observedTypes = {};
+                    w.observedTypesAndLocations.forEach(function(tl) {
+                        observedTypes[tl[0].typeName] = true;
+                    });
+                    // remove types that the programmer believes to be OK
+                    Object.keys(beliefTypes).forEach(function(beliefType) {
+                        delete observedTypes[beliefType];
+                    });
+                    if (Object.keys(observedTypes).length <= 1) {
+                        w.removeByBelief = true;
+                    }
+                }
+            }
+        });
+    }
+    
+    function filterByBelief(typeWarnings) {
+        return typeWarnings.filter(function(w) {
+            return w.removeByBelief === false;
+        });
     }
 
     // boilerplate to use this file both in browser and in node application
