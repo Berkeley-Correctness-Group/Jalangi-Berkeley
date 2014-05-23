@@ -16,7 +16,7 @@
 
 // Author: Liang Gong
 
-((function () {
+((function (sandbox) {
     var util = {
         ISNAN:isNaN,
         PARSEINT: parseInt,
@@ -36,6 +36,6 @@
         }
     };
 
-    module.exports = util;
+    sandbox.Utils = util;
 
-})());
+})(J$));

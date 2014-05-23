@@ -41,9 +41,9 @@ included = [ r'127.0.0.1' ]
 excluded = [ ] # [ r'jquery', r'iscroll', r'peg-0.6.2', r'String.js', r'jsviews' ]
 
 ## Jalangi analyses to apply
-#jalangiAnalysisFiles = [
-#    jalangiBerkeleyBaseDir+"src/js/analyses/executionCounters/ExecutionCountersEngine.js"
-#]
+jalangiAnalysisFiles = [
+    jalangiBaseDir+"src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB.js"
+]
 #jalangiAnalysisFiles = [
 #    jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine2.js"
 #]
