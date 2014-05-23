@@ -16,7 +16,6 @@
 
 // Author: Liang Gong
 
-J$.analysis = {};
 
 ((function (sandbox) {
     function NonContiguousArray() {
@@ -90,4 +89,4 @@ J$.analysis = {};
 
     sandbox.analysis = new NonContiguousArray();
 
-})(typeof J$ === 'undefined' ? (J$ = {}) : J$));
+})(J$);

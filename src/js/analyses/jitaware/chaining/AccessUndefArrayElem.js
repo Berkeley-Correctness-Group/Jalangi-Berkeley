@@ -16,7 +16,6 @@
 
 // Author: Liang Gong
 
-J$.analysis = {};
 
 ((function (sandbox) {
     function AccessUndefArrayElem() {
@@ -89,5 +88,5 @@ J$.analysis = {};
 
     sandbox.analysis = new AccessUndefArrayElem();
 
-})(typeof J$ === 'undefined' ? (J$ = {}) : J$));
+})(J$);
 

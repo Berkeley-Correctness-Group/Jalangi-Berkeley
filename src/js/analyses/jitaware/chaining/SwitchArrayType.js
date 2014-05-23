@@ -16,7 +16,6 @@
 
 // Author: Liang Gong
 
-J$.analysis = {};
 
 ((function (sandbox) {
     function SwitchArrayType() {
@@ -128,5 +127,5 @@ J$.analysis = {};
 
     sandbox.analysis = new SwitchArrayType();
 
-})(typeof J$ === 'undefined' ? (J$ = {}) : J$));
+})(J$);
 
