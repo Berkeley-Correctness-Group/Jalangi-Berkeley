@@ -66,9 +66,9 @@ python <Jalangi root path>/jalangi/scripts/jalangi.py direct -a <analysis code f
 ```
 All files paths should be relative path to the root directory of this repository.
 
-For example, to run the jit-compiler inefficient code pattern experiment:
+For example, to find JIT-unfriendly code using JITProf:
 ```
-python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/jitaware/JITAware tests/jitaware/JITAwareTest
+python ../jalangi/scripts/jalangi.py direct --analysis ../jalangi/src/js/analyses/ChainedAnalyses.js --analysis src/js/analyses/jitaware/chaining/TrackHiddenClass --analysis src/js/analyses/jitaware/chaining/AccessUndefArrayElem --analysis src/js/analyses/jitaware/chaining/SwitchArrayType --analysis src/js/analyses/jitaware/chaining/NonContiguousArray --analysis src/js/analyses/jitaware/chaining/InitFieldOutsideConstructor --analysis src/js/analyses/jitaware/chaining/BinaryOpOnUndef --analysis src/js/analyses/jitaware/chaining/PolymorphicFunCall --analysis src/js/analyses/jitaware/chaining/ArgumentsLeak tests/jitaware/JITAwareTest
 ```
 
 To run an analysis to find inconsistent types:
@@ -79,6 +79,11 @@ python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/inconsistentType/
 To run an analysis to find arrays that can be cast to typed arrays:
 ```
 python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/jitaware/fixArray tests/jitaware/arrayTypeTest
+```
+
+To run single file version of JITProf (outdated):
+```
+python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/jitaware/JITAware tests/jitaware/JITAwareTest
 ```
 
 ### Run Browser Experiments
