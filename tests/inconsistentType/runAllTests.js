@@ -52,7 +52,8 @@
             return;
         }
         testRunning = true;
-        var cmd = "python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/inconsistentType/InconsistentTypeEngine.js " + testDir + file.replace(/.js$/, "");
+//        var cmd = "python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/inconsistentType/InconsistentTypeEngine.js " + testDir + file.replace(/.js$/, "");
+        var cmd = "./scripts/inconsistent_type_analysis.sh " + testDir + file;
         child_process.exec(cmd,
               function(error, stdout, stderr) {
                   if (!error) {

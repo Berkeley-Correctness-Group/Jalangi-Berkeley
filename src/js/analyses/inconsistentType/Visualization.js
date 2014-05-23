@@ -22,8 +22,7 @@
     var util = importModule("CommonUtil");
     var typeAnalysis = importModule("TypeAnalysis");
 
-    function generateDOT(table, roots, typeNameToFieldTypes, functionToSignature, typeNames, functionNames,
-          iidToLocation, highlightedIIDs, onlyHighlighted, fileNameOpt) {
+    function generateDOT(table, roots, typeNameToFieldTypes, typeNames, iidToLocation, highlightedIIDs, onlyHighlighted, fileNameOpt) {
         var nodes = [];
         var badNodes = [];
         var locationNodes = [];
@@ -54,8 +53,7 @@
 
                     var tmp = escapeNode(node);
                     var edges = {};
-                    var nodeStr = "    " + tmp + " [label = \"<" + tmp + ">" + node.substring(0, node.indexOf("(")) + "\\ " + getName(node, typeNames, functionNames);
-                    nodeStr = visitFieldsForDOT(table, functionToSignature, node, nodeStr, edges, reachablesToCompleteOpt);
+                    var nodeStr = "    " + tmp + " [label = \"<" + tmp + ">" + node.substring(0, node.indexOf("(")) + "\\ " + getName(node, typeNames);
                     nodeStr = visitFieldsForDOT(table, typeNameToFieldTypes, node, nodeStr, edges, reachablesToCompleteOpt);
                     nodeStr = nodeStr + "\"]";
                     nodeToNodeStr[node] = nodeStr;
@@ -111,14 +109,8 @@
         return node.replace(/([\(\)\$])/g, "_").replace(/[Ee]dge/g, "Eedge").replace(/[Nn]ode/g, "Nnode");
     }
 
-    function getName(key, typeNames, functionNames) {
-        if (util.HOP(functionNames, key)) {
-            return functionNames[key];
-        } else if (util.HOP(typeNames, key)) {
-            return typeNames[key];
-        } else {
-            return "";
-        }
+    function getName(key, typeNames) {
+        return typeNames[key] || "";
     }
 
     function createLocationNodes(table, edges, locationNodes, iidToLocation, iidsToConsiderOpt) {
@@ -218,8 +210,8 @@
         module = exports;
     } else {
         // export to code running in browser
-        window.$TypeAnalysis = {};
-        module = window.$TypeAnalysis;
+        window.$Visualization = {};
+        module = window.$Visualization;
     }
 
     function importModule(moduleName) {

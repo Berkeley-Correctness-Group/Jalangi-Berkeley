@@ -19,6 +19,29 @@
             throw new Error(msg);
     }
 
+    function shallowClone(s) {
+        var r = {};
+        for (var p in s) {
+            if (HOP(s, p))
+                r[p] = s[p];
+        }
+        return r;
+    }
+    
+    function mergeToLeft(left, right) {
+        if (right === true) {
+            return true;
+        }
+        Object.keys(right).forEach(function(rKey) {
+            if (HOP(left, rKey)) {
+                left[rKey] = mergeToLeft(left[rKey], right[rKey]);
+            } else {
+                left[rKey] = right[rKey];
+            }
+        });
+        return left;
+    }
+
     // boilerplate to use this file both in browser and in node application
     var module;
     if (typeof exports !== "undefined") {
@@ -34,5 +57,7 @@
     module.HOP = HOP;
     module.sizeOfMap = sizeOfMap;
     module.assert = assert;
+    module.shallowClone = shallowClone;
+    module.mergeToLeft = mergeToLeft;
 
 })();

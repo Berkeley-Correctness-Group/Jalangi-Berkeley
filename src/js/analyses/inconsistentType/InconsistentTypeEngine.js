@@ -24,22 +24,21 @@
         var iidToLocation = sandbox.iidToLocation;
         var typeAnalysis = importModule("TypeAnalysis");
         var util = importModule("CommonUtil");
-        var online = false;
+        var callGraph = importModule("CallGraph");
+        var argPrefix = "__";
+        var beliefPrefix = "ITA_Belief: ";
+        var beliefInfix = " has type ";
+        var online = sandbox.Constants.isBrowser ? false : true;
         var printWarnings = true;
-        var visualizeAllTypes = true; // only for node.js execution (i.e., not in browser)
-        var visualizeWarningTypes = true; // only for node.js execution (i.e., not in browser)
+        var visualizeAllTypes = false; // only for node.js execution (i.e., not in browser)
+        var visualizeWarningTypes = sandbox.Constants.isBrowser ? false : true; // only for node.js execution (i.e., not in browser)
 
         // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
-        var typeNameToFieldTypes = {}; // type name -> (field -> type name -> iid -> true)  --  for each type, gives the fields, their types, and where this field type has been observed
-        var functionToSignature = {};  // function name -> ({"this", "return", "arg1", ...} -> type name -> iid -> true)  --  for each function, gives the receiver, argument, and return types, and where these types have been observed
+        var typeNameToFieldTypes = {}; // type or function name -> (field or this/return/argx -> type name -> iid -> true)  --  for each type/function, gives the fields, their types, and where this field type has been observed
         var typeNames = {};
-        var functionNames = {};
+        var frameToBeliefs = {}; // function name -> var name -> type -> true
 
         annotateGlobalFrame();
-
-        function isArr(val) {
-            return Object.prototype.toString.call(val) === '[object Array]';
-        }
 
         var getSymbolic = this.getSymbolic = function(obj) {
             var sobj = smemory.getShadowObject(obj);
@@ -68,7 +67,7 @@
          */
         function addFunctionOrTypeName(name, obj) {
             if (name.indexOf("function") === 0) {
-                functionNames[name] = obj.name ? obj.name : "";
+                typeNames[name] = obj.name ? obj.name : "";
             } else {
                 typeNames[name] = obj.constructor ? obj.constructor.name : "";
             }
@@ -178,25 +177,31 @@
         function updateSignature(f, base, args, returnValue, callLocation) {
             var functionName, tval;
             functionName = getSymbolic(f);
+            if (!functionName && Function.prototype.toString.call(f).indexOf("[native code]") !== -1 && f.name) {
+                functionName = "native function " + f.name; // optimistically identify native fcts by their name (may lead to collisions)
+            }
             if (functionName) {
                 addFunctionOrTypeName(functionName, f);
-                tval = getAndInit(functionToSignature, functionName);
+                tval = getAndInit(typeNameToFieldTypes, functionName);
                 setTypeInFunSignature(returnValue, tval, "return", callLocation);
                 setTypeInFunSignature(base, tval, "this", callLocation);
                 var len = args.length;
                 for (var i = 0; i < len; ++i) {
-                    setTypeInFunSignature(args[i], tval, "arg" + (i + 1), callLocation);
+                    setTypeInFunSignature(args[i], tval, argPrefix + "arg" + (i + 1), callLocation);
                 }
             }
         }
+        
+        function updateBeliefs(frame, varName, type) {
+            var sframe = smemory.getShadowObject(frame);
+            if (sframe && sframe.shadow) {
+                var varToTypes = getAndInit(frameToBeliefs, sframe.shadow);
+                var types = getAndInit(varToTypes, varName);
+                types[type] = true;
+            }
+        }
 
-        function logResults() {
-            var results = {
-                typeNameToFieldTypes:typeNameToFieldTypes,
-                functionToSignature:functionToSignature,
-                typeNames:typeNames,
-                functionNames:functionNames
-            };
+        function logResults(results) {
             if (sandbox.Constants.isBrowser) {
                 console.log("Sending results to jalangiFF");
                 window.$jalangiFFLogResult(JSON.stringify(results), true);
@@ -205,14 +210,20 @@
                 var benchmark = process.argv[1];
                 var wrappedResults = [{url:benchmark, value:results}];
                 var outFile = process.cwd() + "/analysisResults.json";
-                console.log("Writing analysis results to "+outFile);
+                console.log("Writing analysis results to " + outFile);
                 fs.writeFileSync(outFile, JSON.stringify(wrappedResults));
             }
         }
 
         this.functionEnter = function(iid, fun, dis /* this */) {
             annotateObject(iid, smemory.getCurrentFrame(), "frame");
+            callGraph.fEnter(smemory);
         };
+
+        this.functionExit = function(iid, fun, dis /* this */) {
+            callGraph.fExit(smemory);
+        };
+
 
         this.readPre = function(iid, name, val, isGlobal) {
             if (name !== "this") {
@@ -227,12 +238,21 @@
         };
 
         this.literal = function(iid, val) {
-            return annotateObject(iid, val);
+            if (typeof val === "string" && val.indexOf(beliefPrefix) === 0) { // belief "annotation" produced by preprocessor
+               var nameAndType = val.slice(beliefPrefix.length).split(beliefInfix);
+               updateBeliefs(smemory.getCurrentFrame(), nameAndType[0], nameAndType[1]);
+            } else {
+                return annotateObject(iid, val);
+            }
         };
 
         this.putFieldPre = function(iid, base, offset, val) {
             updateType(base, offset, val, iid);
             return val;
+        };
+
+        this.invokeFunPre = function(iid, f, base, args, isConstructor) {
+            callGraph.prepareBind(smemory, f, getSymbolic(f));
         };
 
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {
@@ -248,17 +268,28 @@
 
         this.getField = function(iid, base, offset, val, isGlobal) {
             if (val !== undefined) {
-                updateType(base, offset, val, iid);
+                var provider = base; // the object/prototype that provides the field
+                while (provider !== null && provider !== undefined &&
+                      typeof provider === "object" && !util.HOP(provider, offset)) {
+                    provider = Object.getPrototypeOf(provider);
+                }
+                updateType(provider, offset, val, iid);
             }
-            //getConcrete(base)[getConcrete(offset)] = ret;
             return val;
         };
 
         this.endExecution = function() {
+            var results = {
+                typeNameToFieldTypes:typeNameToFieldTypes,
+                typeNames:typeNames,
+                callGraph:callGraph.data,
+                frameToBeliefs:frameToBeliefs
+            };
+
             if (online) {
-                typeAnalysis.analyzeTypes(typeNameToFieldTypes, functionToSignature, typeNames, functionNames, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes);
+                typeAnalysis.analyzeTypes(results, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes);
             } else {
-                logResults();
+                logResults(results);
             }
         };
 

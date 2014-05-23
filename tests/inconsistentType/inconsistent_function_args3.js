@@ -1,7 +1,7 @@
 (function() {
 
     function foo(x) {
-        
+        x;
     }
 
     var a = {p: 3};
