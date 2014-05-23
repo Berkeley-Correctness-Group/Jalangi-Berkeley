@@ -43,7 +43,6 @@
         // ---- JIT library functions end ----
 
         this.endExecution = function () {
-            console.log('\n\n');
             this.printResult();
         }
 

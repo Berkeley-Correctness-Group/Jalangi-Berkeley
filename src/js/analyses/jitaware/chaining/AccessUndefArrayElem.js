@@ -53,7 +53,6 @@
 
 
         this.endExecution = function () {
-            console.log('\n\n');
             this.printResult();
         }
 
@@ -79,6 +78,7 @@
                     console.log(' * [location: ' + iidToLocation(jitUninitArr[i].iid) + '] <- No. usages: ' + jitUninitArr[i].count);
                 }
                 console.log('...');
+                console.log('Number of loading undeclared or deleted array elements spotted: ' + num);
             } catch (e) {
                 console.log("error!!");
                 console.log(e);

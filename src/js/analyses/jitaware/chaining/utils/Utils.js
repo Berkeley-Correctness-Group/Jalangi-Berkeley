@@ -29,7 +29,7 @@
         isNormalNumber: function(num) {
             if (typeof num === 'number' && !this.ISNAN(num)) {
                 return true;
-            } else if (typeof num === 'string' && (PARSEINT(num) + "" === num)) {
+            } else if (typeof num === 'string' && (this.PARSEINT(num) + "" === num)) {
                 return true;
             }
             return false;

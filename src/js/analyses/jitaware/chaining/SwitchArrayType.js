@@ -89,14 +89,12 @@
         }
 
         this.endExecution = function () {
-            console.log('\n\n');
             this.printResult();
         }
 
 
         this.printResult = function () {
             try {
-
                 console.log("---------------------------");
                 console.log('Report of switching array type');
                 var switchArrTypeArr = [];

@@ -231,7 +231,8 @@
         };
 
         this.endExecution = function () {
-            console.log();
+            console.log('\n\n');
+            console.log("---------------------------");
             console.log("Created "+count+" hidden classes.");
             console.log();
             var tmp = [];

@@ -16,8 +16,6 @@
 
 // Author: Liang Gong
 
-J$.analysis = {};
-
 ((function (sandbox) {
     function PolymorphicFunCall() {
         var Constants = sandbox.Constants;
@@ -136,7 +134,6 @@ J$.analysis = {};
         }
 
         this.endExecution = function () {
-            console.log('\n\n');
             this.printResult();
         }
 
@@ -157,4 +154,4 @@ J$.analysis = {};
 
     sandbox.analysis = new PolymorphicFunCall();
 
-})(typeof J$ === 'undefined' ? (J$ = {}) : J$));
+})(J$));
