@@ -3,7 +3,8 @@
 rm -rf instrumentFF_tmp
 rm -rf octane
 mkdir octane
-for bm in `ls -1 tests/octane2/index_*.html | grep -e "box2d\|code-load\|deltablue\|earley-boyer" | xargs`
+#for bm in `ls -1 tests/octane2/index_*.html | grep -e "box2d\|code-load\|deltablue\|earley-boyer" | xargs`
+for bm in `ls -1 tests/octane2/index_*.html | grep -e "deltablue" | xargs`
 do
   echo "####################################"
   echo ${bm}

@@ -17,36 +17,18 @@
 // Author: Michael Pradel
 
 (function() {
-    
-    var x = 23;
-    var y;
-    if (x === undefined) { // binop
-        
+
+    var x;
+
+    function foo() {
+        if (x === null) {  // "belief" for variable defined in closure
+
+        }
     }
-    if (a) {
-        
-    } 
-    if (x == null) {  // binop
-        if (y === 23) {
-            
-        } else if (y === null) {
-            
-        }        
-    }
-    if (typeof b === 'undefined') {  // unop+binop
-        
-    }  
-    if (typeof c == 'object') {  // unop+binop
-        
-    }
-    
-    
+
+    x = 23;
+    x = null;
+
+    foo();
+
 })();
-
-if (z==null) {
-}
-
-var bms = typeof bms === 'undefined' ? [] : bms;
-
-if (!doWarmup && data == null) {
-}

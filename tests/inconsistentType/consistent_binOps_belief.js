@@ -18,35 +18,13 @@
 
 (function() {
     
-    var x = 23;
-    var y;
-    if (x === undefined) { // binop
-        
+    function foo(x) {
+        x = x || [];
     }
-    if (a) {
-        
-    } 
-    if (x == null) {  // binop
-        if (y === 23) {
-            
-        } else if (y === null) {
-            
-        }        
-    }
-    if (typeof b === 'undefined') {  // unop+binop
-        
-    }  
-    if (typeof c == 'object') {  // unop+binop
-        
+    
+    function bar(a) {
+        a = a || {};
     }
     
     
 })();
-
-if (z==null) {
-}
-
-var bms = typeof bms === 'undefined' ? [] : bms;
-
-if (!doWarmup && data == null) {
-}

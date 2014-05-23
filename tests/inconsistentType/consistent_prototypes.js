@@ -17,36 +17,40 @@
 // Author: Michael Pradel
 
 (function() {
-    
-    var x = 23;
-    var y;
-    if (x === undefined) { // binop
-        
+
+    // simplified version of false positive in octane's deltablue
+
+    Object.defineProperty(Object.prototype, 'inheritsFrom', {
+        value:function(shuper) {
+            function Inheriter() {
+            }
+            Inheriter.prototype = shuper.prototype;
+            this.prototype = new Inheriter();
+            this.superConstructor = shuper;
+        }
+    });
+
+
+    function A() {
+        this.x = 23;
     }
-    if (a) {
-        
-    } 
-    if (x == null) {  // binop
-        if (y === 23) {
-            
-        } else if (y === null) {
-            
-        }        
+    A.prototype.f = function() {
+    };
+
+    function B() {
+        this.y = 42;
     }
-    if (typeof b === 'undefined') {  // unop+binop
-        
-    }  
-    if (typeof c == 'object') {  // unop+binop
-        
-    }
-    
-    
+    B.prototype.g = function() {
+    };
+
+    B.inheritsFrom(A);
+
+    var x;
+    x = new A();
+    x.f();
+    x = new B();
+    x.f();
+    x.g();
+
+
 })();
-
-if (z==null) {
-}
-
-var bms = typeof bms === 'undefined' ? [] : bms;
-
-if (!doWarmup && data == null) {
-}

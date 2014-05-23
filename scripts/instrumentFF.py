@@ -55,6 +55,10 @@ jalangiAnalysisFiles = [
 ]
 #jalangiAnalysis = jalangiBaseDir+"src/js/analyses/logundefinedread/logUndefinedRead.js"
 
+# whether to preprocess code before giving it to the Jalangi instrumenter
+# (disable unless you're running the inconsistentType analysis)
+preprocess = True
+
 ## constants
 jalangiSuffix = "_jalangi_.js"
 valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
@@ -155,7 +159,12 @@ def instrument():
     subprocess.call(cmd)
   except OSError as e:
     print "To beautify source code before instrumentation, install js-beautify."
-  
+ 
+  # run pre-processor (e.g., to add annotations to be used by a runtime analysis)
+  if preprocess:
+    cmd = [ "node", "src/js/analyses/inconsistentType/Preprocessor.js", tmpOrig, tmpOrig ]
+    subprocess.call(cmd)
+
   uniqueFileName = makeUniqueFileName(realFileName, workingDir)
   orig = os.path.join(workingDir, uniqueFileName)
   

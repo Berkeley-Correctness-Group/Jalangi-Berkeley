@@ -121,6 +121,7 @@ As an alternative to instrumenting JavaScript files on the file system, you can 
   * Edit ```scripts/instrumentFF.py```:
     * Modify the variable ```jalangiAnalysisFiles``` to specify the Jalangi analyses that you want to run (an array of file names).
     * Modify the variable ```included``` to specify the URLs for which to instrument JavaScript files (an array of regular expressions).
+    * Set the variable '''preprocess''' to '''False''' (unless you're running the inconsistentTypes analysis).
   * Start the custom version of Firefox. Make sure that your current working directory is Jalangi-Berkeley.
 
 Firefox will write the uninstrumented .js files and the instrumented .js files to ```instrumentFF_tmp```, along with the sourcemaps produced by the Jalangi instrumenter. ```instrumentFF``` caches instrumented files to avoid unnecessarily re-instrumenting files. If you modify your analysis, empty the cache by removing all files in ```instrumentFF_tmp``` and by restarting Firefox.
