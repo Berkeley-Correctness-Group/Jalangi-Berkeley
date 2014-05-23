@@ -255,11 +255,22 @@
                             console.log("  accessed property \""+meta.lastKey.substring(meta.lastKey.indexOf(":")+1)+"\" of object created at "+iidToLocation(loc)+" "+meta.objectLocs[loc]+" time(s) ")
                         }
                     }
+                    var mergeDB = {};
                     for (var hiddenKey in meta.keysToCount) {
                         if (HOP(meta.keysToCount, hiddenKey)) {
                             var hiddenIdx = parseInt(hiddenKey.substring(0, hiddenKey.indexOf(":")));
                             var hidden = idToHiddenClass[hiddenIdx];
-                            console.log("  layout [" + getLayout(hidden) + "] observed " + meta.keysToCount[hiddenKey] + " time(s)");
+                            var layout = getLayout(hidden);
+                            var fieldName = hiddenKey.substring(hiddenKey.indexOf(":") + 1, hiddenKey.length);
+                            if(!mergeDB[layout]) {
+                                mergeDB[layout] = "  layout [" + getLayout(hidden) + "]:";
+                            }
+                            mergeDB[layout] += '\n' + '\tput field: ' + fieldName + ' observed ' + meta.keysToCount[hiddenKey] + " time(s)";
+                        }
+                    }
+                    for(var layout in mergeDB) {
+                        if (HOP(mergeDB, layout)) {
+                            console.log(mergeDB[layout]);
                         }
                     }
                 }
