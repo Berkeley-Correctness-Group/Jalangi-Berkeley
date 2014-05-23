@@ -16,13 +16,12 @@
 
 // Author: Liang Gong
 
-J$.analysis = {};
 
 ((function (sandbox) {
     function JITAware() {
-        var Constants = (typeof sandbox.Constants === 'undefined' ? require('./Constants.js') : sandbox.Constants);
-        var smemory = sandbox.Globals.smemory || sandbox.smemory;
-        var iidToLocation = Constants.load("iidToLocation");
+        var Constants = sandbox.Constants;
+        var smemory = sandbox.smemory;
+        var iidToLocation = sandbox.iidToLocation;
         var ISNAN = isNaN;
         var PARSEINT = parseInt;
         var HOP = Constants.HOP;
@@ -900,22 +899,6 @@ J$.analysis = {};
         }
     }
 
-    if (sandbox.Constants.isBrowser) {
-        sandbox.analysis = new JITAware();
-        window.addEventListener('keydown', function (e) {
-            // keyboard shortcut is Alt-Shift-T for now
-            if (e.altKey && e.shiftKey && e.keyCode === 84) {
-                sandbox.analysis.endExecution();
-            }
-        });
-    } else {
-        module.exports = JITAware;
-    }
+    sandbox.analysis = new JITAware();
 
-})(typeof J$ === 'undefined' ? (J$ = {}) : J$));
-
-//@todo: check polymorphism for each iid location
-//@todo: make the checker efficient (append property on signature during put field)
-//@todo: for each signature property, remember where the property was appended(iid)
-//@todo: delete a.b  (transform into) -->> a = J$.De(‘a’, a, ‘b’, b)
-//@todo: check duplicating huge hidden class
+})(J$));
