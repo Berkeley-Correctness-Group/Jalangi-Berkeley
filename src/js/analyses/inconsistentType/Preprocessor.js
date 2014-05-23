@@ -142,7 +142,6 @@
 
     function visitLogicalExpression(exprNode) {
         if (exprNode.operator === "||") {    // e.g., "x || {}" and "x || []"
-            console.log("XX");
             if (exprNode.right.type === "Identifier" &&
                   ((exprNode.left.type === "ArrayExpression" && exprNode.left.elements.length === 0) ||
                         (exprNode.left.type === "ObjectExpression" && exprNode.left.properties.length === 0))) {

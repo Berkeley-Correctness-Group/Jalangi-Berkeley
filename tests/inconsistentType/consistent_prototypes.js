@@ -31,26 +31,26 @@
     });
 
 
-    function A() {
-        this.x = 23;
+    function A(x) {
+        this.x = x;
     }
-    A.prototype.f = function() {
-    };
 
-    function B() {
-        this.y = 42;
+    function B(x,y) {
+        B.superConstructor.call(this, x);
+        this.y = y;
     }
-    B.prototype.g = function() {
-    };
-
     B.inheritsFrom(A);
+    
+    function B2(x,z) {
+        B2.superConstructor.call(this, x);
+        this.z = z;
+    }
+    B2.inheritsFrom(A);
 
-    var x;
-    x = new A();
-    x.f();
-    x = new B();
-    x.f();
-    x.g();
-
-
+    var o;
+    o = new A(23);
+    o = new B(23, 42);
+    o = new B2(23, 5);
+    
+    
 })();
