@@ -73,8 +73,8 @@
         // ---- DB library functions end ----
     }
 
-    module.exports = RuntimeDB;
+    sandbox.RuntimeDB = RuntimeDB;
 
-})(typeof J$ === 'undefined' ? (J$ = {}) : J$));
+})(J$));
 
 

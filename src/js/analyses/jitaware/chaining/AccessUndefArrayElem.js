@@ -24,9 +24,9 @@
         var iidToLocation = sandbox.iidToLocation;
         var sort = Array.prototype.sort;
 
-        var RuntimeDB = require(__dirname + '/utils/RuntimeDB.js');
+        var RuntimeDB = sandbox.RuntimeDB;
         var db = new RuntimeDB();
-        var Utils = require(__dirname + '/utils/Utils.js');
+        var Utils = sandbox.Utils;
 
         var warning_limit = 30;
 
