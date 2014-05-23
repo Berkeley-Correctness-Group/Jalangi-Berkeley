@@ -116,7 +116,6 @@
                 }
                 console.log('...');
                 console.log('Number of switching array type spotted: ' + num);
-                console.log("---------------------------");
 
             } catch (e) {
                 console.log("error!!");
@@ -127,5 +126,5 @@
 
     sandbox.analysis = new SwitchArrayType();
 
-})(J$);
+})(J$));
 

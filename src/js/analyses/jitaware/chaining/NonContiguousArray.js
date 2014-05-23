@@ -34,7 +34,7 @@
         // ---- JIT library functions start ----
         function checkIfWritingOutsideArrayBound(base, offset, iid) {
             if (base.length < offset) {
-                db.addCountByIndexArr(['JIT-checker', 'incont-array', iid]);
+                db.addCountByIndexArr(['JIT-checker', 'non-cont-array', iid]);
             }
         }
 
@@ -57,9 +57,9 @@
         this.printResult = function () {
             try {
                 console.log("---------------------------");
-                console.log('Report of making incontiguous array:')
+                console.log('Report of making non-contiguous array:')
                 var incontArrDBArr = [];
-                var incontArrDB = db.getByIndexArr(['JIT-checker', 'incont-array']);
+                var incontArrDB = db.getByIndexArr(['JIT-checker', 'non-cont-array']);
                 var num = 0;
                 for (var prop in incontArrDB) {
                     if (HOP(incontArrDB, prop)) {
@@ -74,7 +74,7 @@
                     console.log(' * [location: ' + iidToLocation(incontArrDBArr[i].iid) + '] <- No. usages: ' + incontArrDBArr[i].count);
                 }
                 console.log('...');
-                console.log('Number of putting incontiguous array statements: ' + num);
+                console.log('Number of putting non-contiguous array statements: ' + num);
                 console.log('Why: In order to handle large and sparse arrays, there are two types of array storage internally:\n' +
                     '\t * Fast Elements: linear storage for compact key sets\n' +
                     '\t * Dictionary Elements: hash table storage otherwise\n' +
@@ -89,4 +89,4 @@
 
     sandbox.analysis = new NonContiguousArray();
 
-})(J$);
+})(J$));

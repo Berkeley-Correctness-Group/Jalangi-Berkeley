@@ -265,9 +265,7 @@
             }
         };
 
+    }
     sandbox.analysis = new TrackHiddenClass();
-}(J$));
+})(J$);
 
-
-//todo: debug pdf.js
-//todo: print less warnings

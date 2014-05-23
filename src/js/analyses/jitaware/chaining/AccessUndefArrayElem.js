@@ -88,5 +88,4 @@
 
     sandbox.analysis = new AccessUndefArrayElem();
 
-})(J$);
-
+})(J$));
