@@ -18,6 +18,7 @@
 
 (function (sandbox) {
     function TrackHiddenClass() {
+        var MIN_CACHE_HITS = 20;
         var iidToLocation = sandbox.iidToLocation;
         var smemory = sandbox.smemory;
         var Constants = sandbox.Constants;
@@ -25,25 +26,46 @@
         var HOP = Constants.HOP;
         var hasGetterSetter = Constants.hasGetterSetter;
         var sort = Array.prototype.sort;
-        var Utils = require(__dirname + '/utils/Utils.js');
-        var warning_limit = 10;
 
         var info = {};
 
         var root = {};
         var idToHiddenClass = [];
+        var warning_limit = 10;
+
+        function annotateObjectWithCreationLocation(obj, iid) {
+            var sobj = smemory.getShadowObject(obj);
+            if (sobj && !sobj.loc) {
+                sobj.loc = iid;
+            }
+        }
+
+        function getCreationLocation(obj) {
+            var sobj = smemory.getShadowObject(obj);
+            if (sobj && sobj.loc) {
+                return sobj.loc;
+            }
+            return -1;
+        }
+
+        function isArray (obj) {
+            return Array.isArray(obj) || (obj && obj.constructor && (obj instanceof Uint8Array || obj instanceof Uint16Array ||
+                obj instanceof Uint32Array || obj instanceof Uint8ClampedArray ||
+                obj instanceof ArrayBuffer || obj instanceof Int8Array || obj instanceof Int16Array ||
+                obj instanceof Int32Array || obj instanceof Float32Array || obj instanceof Float64Array));
+        }
 
         function getMetaInfo(iid) {
             var ret;
             if (!HOP(info, iid)) {
-                ret = info[iid] = {hit:0, miss:0, lastKey:null, keysToCount:{}};
+                ret = info[iid] = {hit:0, miss:0, lastKey:null, keysToCount:{}, objectLocs:{}};
             } else {
                 ret = info[iid];
             }
             return ret;
         }
 
-        function updateMetaInfo(meta, key) {
+        function updateMetaInfo(meta, key, loc) {
             if (meta.lastKey === key) {
                 meta.hit++;
             } else {
@@ -51,6 +73,7 @@
                 meta.lastKey = key;
             }
             meta.keysToCount[key] = (meta.keysToCount[key] | 0) + 1;
+            meta.objectLocs[loc] = (meta.objectLocs[loc] | 0) + 1;
         }
 
         function getHiddenClassId(hidden) {
@@ -90,10 +113,13 @@
 
         }
 
+        var count = 0;
+
         function getNextNode(node, key) {
             if (HOP(node, key)) {
                 return node[key];
             } else {
+                count++;
                 return node[key] = {"parent":node, "field":key};
             }
         }
@@ -123,9 +149,6 @@
                     node = getNextNode(node, key);
                     for (fld in obj) {
                         if (HOP(obj, fld) && !hasGetterSetter(obj, fld)) {
-                            //if (Utils.isNormalNumber(fld)) {
-                            //    continue;
-                            //}
                             key = getKey(obj, fld);
                             node = getNextNode(node, key);
                         }
@@ -156,10 +179,6 @@
         }
 
         function updateHiddenClass(obj, fld, val) {
-            //if (Utils.isNormalNumber(fld)) {
-            //    return ;
-            //}
-
             if (!hasGetterSetter(obj, fld)) {
                 var hiddenClass = getHiddenClass(obj);
 
@@ -181,26 +200,40 @@
             }
         }
 
+        this.literal = function (iid, val) {
+            annotateObjectWithCreationLocation(val, iid);
+            return val;
+        };
+
+        this.invokeFun = function (iid, f, base, args, val, isConstructor) {
+            if (isConstructor) {
+                annotateObjectWithCreationLocation(val, iid);
+            }
+            return val;
+        };
 
         this.getFieldPre = function (iid, base, offset) {
-            if(!Utils.isArr(base)) {
+            if (!isArray(base)) {
                 var hidden = getHiddenClass(base);
                 if (hidden) {
                     var meta = getMetaInfo(iid);
                     var id = getHiddenClassId(hidden);
                     var key = id + ":" + offset;
-                    updateMetaInfo(meta, key);
+                    updateMetaInfo(meta, key, getCreationLocation(base));
                 }
             }
         };
 
         this.putFieldPre = function (iid, base, offset, val) {
-            if(!Utils.isArr(base))
+            if (!isArray(base))
                 updateHiddenClass(base, offset, val);
             return val;
         };
 
         this.endExecution = function () {
+            console.log();
+            console.log("Created "+count+" hidden classes.");
+            console.log();
             var tmp = [];
             for (var iid in info) {
                 if (HOP(info, iid)) {
@@ -213,9 +246,14 @@
             var len = tmp.length;
             for (var i=0; i<len && i<warning_limit; i++) {
                 var x = tmp[i];
-                if (x.count > 50) {
+                if (x.count > MIN_CACHE_HITS) {
                     var meta = x.meta;
-                    console.log("Property access at " + iidToLocation(x.iid) + " has missed cache " + x.count + " time(s).");
+                    console.log("property access at " + iidToLocation(x.iid) + " has missed cache " + x.count + " time(s).");
+                    for (var loc in meta.objectLocs) {
+                        if (HOP(meta.objectLocs, loc)) {
+                            console.log("  accessed property \""+meta.lastKey.substring(meta.lastKey.indexOf(":")+1)+"\" of object created at "+iidToLocation(loc)+" "+meta.objectLocs[loc]+" time(s) ")
+                        }
+                    }
                     for (var hiddenKey in meta.keysToCount) {
                         if (HOP(meta.keysToCount, hiddenKey)) {
                             var hiddenIdx = parseInt(hiddenKey.substring(0, hiddenKey.indexOf(":")));
@@ -227,9 +265,9 @@
             }
         };
 
-    }
     sandbox.analysis = new TrackHiddenClass();
 }(J$));
+
 
 //todo: debug pdf.js
 //todo: print less warnings
