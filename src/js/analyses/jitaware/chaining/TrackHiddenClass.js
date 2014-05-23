@@ -25,6 +25,8 @@
         var HOP = Constants.HOP;
         var hasGetterSetter = Constants.hasGetterSetter;
         var sort = Array.prototype.sort;
+        var Utils = require(__dirname + '/utils/Utils.js');
+        var warning_limit = 10;
 
         var info = {};
 
@@ -121,6 +123,9 @@
                     node = getNextNode(node, key);
                     for (fld in obj) {
                         if (HOP(obj, fld) && !hasGetterSetter(obj, fld)) {
+                            //if (Utils.isNormalNumber(fld)) {
+                            //    continue;
+                            //}
                             key = getKey(obj, fld);
                             node = getNextNode(node, key);
                         }
@@ -151,6 +156,10 @@
         }
 
         function updateHiddenClass(obj, fld, val) {
+            //if (Utils.isNormalNumber(fld)) {
+            //    return ;
+            //}
+
             if (!hasGetterSetter(obj, fld)) {
                 var hiddenClass = getHiddenClass(obj);
 
@@ -174,7 +183,7 @@
 
 
         this.getFieldPre = function (iid, base, offset) {
-            if (!Array.isArray(base)) {
+            if(!Utils.isArr(base)) {
                 var hidden = getHiddenClass(base);
                 if (hidden) {
                     var meta = getMetaInfo(iid);
@@ -186,7 +195,7 @@
         };
 
         this.putFieldPre = function (iid, base, offset, val) {
-            if (!Array.isArray(base))
+            if(!Utils.isArr(base))
                 updateHiddenClass(base, offset, val);
             return val;
         };
@@ -202,7 +211,7 @@
                 return b.count - a.count;
             });
             var len = tmp.length;
-            for (var i=0; i<len; i++) {
+            for (var i=0; i<len && i<warning_limit; i++) {
                 var x = tmp[i];
                 if (x.count > 50) {
                     var meta = x.meta;
@@ -221,7 +230,6 @@
     }
     sandbox.analysis = new TrackHiddenClass();
 }(J$));
-
 
 //todo: debug pdf.js
 //todo: print less warnings
