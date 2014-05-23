@@ -23,6 +23,7 @@
         var Constants = sandbox.Constants;
         var id = 0;
         var HOP = Constants.HOP;
+        var hasGetterSetter = Constants.hasGetterSetter;
         var sort = Array.prototype.sort;
 
         var info = {};
@@ -119,7 +120,7 @@
                     key = getKey(obj, "__proto__");
                     node = getNextNode(node, key);
                     for (fld in obj) {
-                        if (HOP(obj, fld)) {
+                        if (HOP(obj, fld) && !hasGetterSetter(obj, fld)) {
                             key = getKey(obj, fld);
                             node = getNextNode(node, key);
                         }
@@ -150,24 +151,27 @@
         }
 
         function updateHiddenClass(obj, fld, val) {
-            var hiddenClass = getHiddenClass(obj);
+            if (!hasGetterSetter(obj, fld)) {
+                var hiddenClass = getHiddenClass(obj);
 
-            fld = ""+fld;
-            if (hiddenClass) {
-                if (HOP(obj,fld)) {
-                    if (typeof val === 'function') {
+                fld = "" + fld;
+                if (hiddenClass) {
+                    if (HOP(obj, fld)) {
+                        if (typeof val === 'function') {
+                            possibleHiddenClassReset(obj, fld, val);
+                        } else if (typeof obj[fld] === 'function') {
+                            possibleHiddenClassReset(obj, fld, val);
+                        }
+                    } else if (fld === '_proto__') {
                         possibleHiddenClassReset(obj, fld, val);
-                    } else if (typeof obj[fld] === 'function') {
-                        possibleHiddenClassReset(obj, fld, val);
+                    } else {
+                        hiddenClass = getNextNode(hiddenClass, getKey(obj, fld));
+                        setHiddenClass(obj, hiddenClass);
                     }
-                } else if (fld === '_proto__') {
-                    possibleHiddenClassReset(obj, fld, val);
-                } else {
-                    hiddenClass = getNextNode(hiddenClass, getKey(obj, fld));
-                    setHiddenClass(obj, hiddenClass);
                 }
             }
         }
+
 
         this.getFieldPre = function (iid, base, offset) {
             if (!Array.isArray(base)) {
@@ -200,22 +204,24 @@
             var len = tmp.length;
             for (var i=0; i<len; i++) {
                 var x = tmp[i];
-                var meta = x.meta;
-                console.log("Property access at "+iidToLocation(x.iid)+" has missed cache "+ x.count+" time(s).");
-                for (var hiddenKey in meta.keysToCount) {
-                    if (HOP(meta.keysToCount, hiddenKey)) {
-                        var hiddenIdx = parseInt(hiddenKey.substring(0, hiddenKey.indexOf(":")));
-                        var hidden = idToHiddenClass[hiddenIdx];
-                        console.log("  layout [" + getLayout(hidden) + "] observed " + meta.keysToCount[hiddenKey] + " time(s)");
+                if (x.count > 50) {
+                    var meta = x.meta;
+                    console.log("Property access at " + iidToLocation(x.iid) + " has missed cache " + x.count + " time(s).");
+                    for (var hiddenKey in meta.keysToCount) {
+                        if (HOP(meta.keysToCount, hiddenKey)) {
+                            var hiddenIdx = parseInt(hiddenKey.substring(0, hiddenKey.indexOf(":")));
+                            var hidden = idToHiddenClass[hiddenIdx];
+                            console.log("  layout [" + getLayout(hidden) + "] observed " + meta.keysToCount[hiddenKey] + " time(s)");
+                        }
                     }
                 }
             }
         };
 
     }
-
     sandbox.analysis = new TrackHiddenClass();
 }(J$));
 
-//todo: test on octane benchmarks and fix bugs
+
+//todo: debug pdf.js
 //todo: print less warnings
