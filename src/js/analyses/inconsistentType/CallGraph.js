@@ -112,16 +112,15 @@
         var fnwarns = [];
         var nameToWarn = {};
         warnings.forEach(function(warn) {
-            Object.keys(warn.highlightedIIDs).forEach(function(iid) {
-                if (callgraph.frame_fn[iid] !== undefined || frameList[iid] !== undefined) {
-                    if (warn.fieldName === "return") {
-                        iid = iid + "_ret";
-                    }
-                    nameToWarn[iid] = nameToWarn[iid] || [];
-                    nameToWarn[iid].push(fnwarns.length);
-                    fnwarns.push(warn);
+            var typeName = warn.typeDescription.typeName;
+            if (callgraph.frame_fn[typeName] !== undefined || frameList[typeName] !== undefined) {
+                if (warn.fieldName === "return") {
+                    typeName = typeName + "_ret";
                 }
-            });
+                nameToWarn[typeName] = nameToWarn[typeName] || [];
+                nameToWarn[typeName].push(fnwarns.length);
+                fnwarns.push(warn);
+            }
         });
         return {fnwarns:fnwarns, nameToWarn:nameToWarn,
             frameList:frameList, callgraph:callgraph,
@@ -158,14 +157,13 @@
         var map = disjointUnion.map;
         return warnings.filter(function(warn) {
             var keep = true;
-            Object.keys(warn.highlightedIIDs).forEach(function(iid) {
-                if (callgraph.frame_fn[iid] !== undefined || frameList[iid] !== undefined) {
-                    if (map[i] >= 0) {
-                        keep = false;
-                    }
-                    i++;
+            var typeName = warn.typeDescription.typeName;
+            if (callgraph.frame_fn[typeName] !== undefined || frameList[typeName] !== undefined) {
+                if (map[i] >= 0) {
+                    keep = false;
                 }
-            });
+                i++;
+            }
             return keep;
         });
     }

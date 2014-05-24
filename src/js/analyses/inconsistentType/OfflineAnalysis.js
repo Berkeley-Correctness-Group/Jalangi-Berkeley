@@ -19,16 +19,18 @@
         return JSON.parse(data);
     }
 
-    function TypeData(typeNameToFieldTypes, typeNames, callGraph) {
+    function TypeData(typeNameToFieldTypes, typeNames, callGraph, frameToBeliefs) {
         this.typeNameToFieldTypes = typeNameToFieldTypes;
         this.typeNames = typeNames;
         this.callGraph = callGraph;
+        this.frameToBeliefs = frameToBeliefs;
     }
 
     function mergeTypeData(allTypeData, typeData) {
         util.mergeToLeft(allTypeData.typeNameToFieldTypes, typeData.typeNameToFieldTypes);
         util.mergeToLeft(allTypeData.typeNames, typeData.typeNames);
         util.mergeToLeft(allTypeData.callGraph, typeData.callGraph);
+        util.mergeToLeft(allTypeData.frameToBeliefs, typeData.frameToBeliefs);
     }
 
     function WarningStats(typeWarnings, typeWarningsByLoc) {
@@ -48,7 +50,7 @@
         var benchmark2TypeData = {};
         loggedResults.forEach(function(loggedResult) {
             var benchmark = benchmarkHelper.urlToBenchmark(loggedResult.url);
-            var typeData = benchmark2TypeData[benchmark] || new TypeData({}, {}, {});
+            var typeData = benchmark2TypeData[benchmark] || new TypeData({}, {}, {}, {});
             mergeTypeData(typeData, loggedResult.value);
             benchmark2TypeData[benchmark] = typeData;
         });

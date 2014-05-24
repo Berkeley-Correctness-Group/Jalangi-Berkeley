@@ -16,37 +16,22 @@
 
 // Author: Michael Pradel
 
-(function() {
-    
-    var x = 23;
-    var y;
-    if (x === undefined) { // binop
-        
-    }
-    if (a) {
-        
-    } 
-    if (x == null) {  // binop
-        if (y === 23) {
-            
-        } else if (y === null) {
-            
-        }        
-    }
-    if (typeof b === 'undefined') {  // unop+binop
-        
-    }  
-    if (typeof c == 'object') {  // unop+binop
-        
-    }
-    
-    
-})();
-
-if (z==null) {
+function Foobar() {
+    this.abc = 1;
+    this.test = function(n) {
+        this.abc = n;
+    };
 }
 
-var bms = typeof bms === 'undefined' ? [] : bms;
+Foobar.prototype.runTest = function(N) {
+    for (var i = 0; i < N; i++) {
+        this.test(i);
+    }
+};
 
-if (!doWarmup && data == null) {
-}
+var N = 2;
+var foobar;
+foobar = new Foobar();
+foobar.runTest(N);
+foobar = new Foobar();
+foobar.runTest(N);

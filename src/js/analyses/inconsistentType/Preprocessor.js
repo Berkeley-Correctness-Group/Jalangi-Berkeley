@@ -64,73 +64,95 @@
         postVisitor.call(null, object);
     }
 
-    var currentFct;
+    var functionStack = [];
     var insertionsToMake = [];
 
     function preVisitor(node) {
         if (node.type === "FunctionDeclaration" ||
               node.type === "FunctionExpression") {
-            currentFct = node;
+            functionStack.push(node);
         } else if (node.type === "IfStatement" ||
               node.type === "WhileStatement" ||
-              node.type === "DoWhileStatement") {
+              node.type === "DoWhileStatement" ||
+              node.type === "ConditionalExpression") {
             visitConditionalStatement(node);
         } else if (node.type === "VariableDeclaration") {
             visitVariableDeclaration(node);
         } else if (node.type === "AssignmentExpression") {
             visitAssignmentExpression(node);
+        } else if (node.type === "LogicalExpression") {
+            visitLogicalExpression(node);
+        } else if (node.type === "BinaryExpression") {
+            visitBinaryExpression(node)
         }
     }
 
     function postVisitor(node) {
         if (node.type === "FunctionDeclaration" ||
               node.type === "FunctionExpression") {
-            currentFct = undefined;
+            functionStack.pop();
+        }
+    }
+
+    function visitBinaryExpression(binExpr) {
+        if ((binExpr.left.type === "Identifier" && binExpr.right.type === "Literal")) {   // e.g., "if (x===null) .." and "typeof x === 'undefined' ? [] : x"
+            createConditionalBeliefIdentifierAndLiteral(binExpr.left, binExpr.right.value, binExpr.operator);
+        } else if (binExpr.left.type === "Identifier" && binExpr.right.type === "Identifier" && binExpr.right.name === "undefined") {
+            createConditionalBeliefIdentifierAndLiteral(binExpr.left, "undefined", binExpr.operator);
+        } else if (binExpr.left.type === "Literal" && binExpr.right.type === "Identifier") {
+            createConditionalBeliefIdentifierAndLiteral(binExpr.right, binExpr.left.value, binExpr.operator);
+        } else if (binExpr.left.type === "Identifier" && binExpr.left.name === "undefined" && binExpr.right.type === "Identifier") {
+            createConditionalBeliefIdentifierAndLiteral(binExpr.right, "undefined", binExpr.operator);
+        } else if (binExpr.left.type === "Literal" && isTypeNameLiteral(binExpr.left) &&
+              binExpr.right.type === "UnaryExpression" && binExpr.right.operator === "typeof" && binExpr.right.argument.type === "Identifier") {
+            createConditionalBeliefTypeOf(binExpr.right.argument.name, binExpr.left.value);
+        } else if (binExpr.right.type === "Literal" && isTypeNameLiteral(binExpr.right) &&
+              binExpr.left.type === "UnaryExpression" && binExpr.left.operator === "typeof" && binExpr.left.argument.type === "Identifier") {
+            createConditionalBeliefTypeOf(binExpr.left.argument.name, binExpr.right.value);
         }
     }
 
     function visitConditionalStatement(node) {
-        if (node.test.type === "BinaryExpression") {
-            var binExpr = node.test;
-            if ((binExpr.left.type === "Identifier" && binExpr.right.type === "Literal")) {
-                createConditionalBeliefIdentifierAndLiteral(binExpr.left, binExpr.right.value, binExpr.operator);
-            } else if (binExpr.left.type === "Identifier" && binExpr.right.type === "Identifier" && binExpr.right.name === "undefined") {
-                createConditionalBeliefIdentifierAndLiteral(binExpr.left, "undefined", binExpr.operator);
-            } else if (binExpr.left.type === "Literal" && binExpr.right.type === "Identifier") {
-                createConditionalBeliefIdentifierAndLiteral(binExpr.right, binExpr.left.value, binExpr.operator);
-            } else if (binExpr.left.type === "Identifier" && binExpr.left.name === "undefined" && binExpr.right.type === "Identifier") {
-                createConditionalBeliefIdentifierAndLiteral(binExpr.right, "undefined", binExpr.operator);
-            } else if (binExpr.left.type === "Literal" && isTypeNameLiteral(binExpr.left) &&
-                  binExpr.right.type === "UnaryExpression" && binExpr.right.operator === "typeof" && binExpr.right.argument.type === "Identifier") {
-                createConditionalBeliefTypeOf(binExpr.right.argument.name, binExpr.left.value);
-            } else if (binExpr.right.type === "Literal" && isTypeNameLiteral(binExpr.right) &&
-                  binExpr.left.type === "UnaryExpression" && binExpr.left.operator === "typeof" && binExpr.left.argument.type === "Identifier") {
-                createConditionalBeliefTypeOf(binExpr.left.argument.name, binExpr.right.value);
-            }
-        } else if (node.test.type === "Identifier") {
+        if (node.test.type === "Identifier") {
             createConditionalBeliefIdentifier(node.test);
         }
     }
 
     function visitVariableDeclaration(declarationNode) {
-        declarationNode.declarations.forEach(function (declaration) {
+        declarationNode.declarations.forEach(function(declaration) {
             if (declaration.id.type === "Identifier" && declaration.init) {
                 createAssignmentBelief(declaration.id.name, declaration.init);
             }
         });
     }
-    
+
     function visitAssignmentExpression(assignmentNode) {
         if (assignmentNode.left.type === "Identifier" && assignmentNode.left.name !== "undefined") {
             createAssignmentBelief(assignmentNode.left.name, assignmentNode.right);
         }
     }
-    
+
     function createAssignmentBelief(varName, rhs) {
-        if (rhs.type === "Literal" && rhs.value === null) {
-            insertionsToMake.push({fct:currentFct, stmt:freshBeliefStmt(varName, "null")});
+        if (rhs.type === "Literal" && rhs.value === null) {   // e.g., "x = null" and "x = undefined"
+            insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(varName, "null")});
         } else if (rhs.type === "Identifier" && rhs.name === "undefined") {
-            insertionsToMake.push({fct:currentFct, stmt:freshBeliefStmt(varName, "undefined")});
+            insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(varName, "undefined")});
+        }
+    }
+
+    function visitLogicalExpression(exprNode) {
+        if (exprNode.operator === "||") {    // e.g., "x || {}" and "x || []"
+            if (exprNode.right.type === "Identifier" &&
+                  ((exprNode.left.type === "ArrayExpression" && exprNode.left.elements.length === 0) ||
+                        (exprNode.left.type === "ObjectExpression" && exprNode.left.properties.length === 0))) {
+                insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(exprNode.right.name, "undefined")});
+                insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(exprNode.right.name, "null")});
+            } else if (exprNode.left.type === "Identifier" &&
+                  ((exprNode.right.type === "ArrayExpression" && exprNode.right.elements.length === 0) ||
+                        (exprNode.right.type === "ObjectExpression" && exprNode.right.properties.length === 0))) {
+                insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(exprNode.left.name, "undefined")});
+                insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(exprNode.left.name, "null")});
+            }
         }
     }
 
@@ -140,30 +162,30 @@
         if (literal === undefined)
             literal = "undefined";
         if ((operator === "===" || operator === "!==") && (literal === "undefined" || literal === "null")) {
-            insertionsToMake.push({fct:currentFct, stmt:freshBeliefStmt(identifierNode.name, literal)});
+            insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(identifierNode.name, literal)});
         }
         if ((operator === "==" || operator === "!=") && (literal === "undefined" || literal === "null")) {
-            insertionsToMake.push({fct:currentFct, stmt:freshBeliefStmt(identifierNode.name, "null")});
-            insertionsToMake.push({fct:currentFct, stmt:freshBeliefStmt(identifierNode.name, "undefined")});
+            insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(identifierNode.name, "null")});
+            insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(identifierNode.name, "undefined")});
         }
     }
 
     function createConditionalBeliefIdentifier(identifierNode) {
         if (identifierNode.name !== "null" && identifierNode !== "undefined") {
-            insertionsToMake.push({fct:currentFct, stmt:freshBeliefStmt(identifierNode.name, "null")});
-            insertionsToMake.push({fct:currentFct, stmt:freshBeliefStmt(identifierNode.name, "undefined")});
+            insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(identifierNode.name, "null")});
+            insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(identifierNode.name, "undefined")});
         }
     }
-    
+
     function createConditionalBeliefTypeOf(varName, typeName) {
-        insertionsToMake.push({fct:currentFct, stmt:freshBeliefStmt(varName, typeName)});
+        insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(varName, typeName)});
     }
-    
+
     function isTypeNameLiteral(literal) {
         var v = literal.value;
         return v === "object" || v === "string" || v === "number" || v === "boolean" || v === "function" || v === "undefined";
     }
-    
+
     function freshBeliefStmt(varName, type) {
         var str = beliefPrefix + varName + beliefInfix + type;
         return esprima.parse("\"" + str + "\"").body[0];

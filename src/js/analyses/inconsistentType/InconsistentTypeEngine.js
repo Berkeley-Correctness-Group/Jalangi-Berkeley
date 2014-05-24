@@ -32,6 +32,7 @@
         var printWarnings = true;
         var visualizeAllTypes = false; // only for node.js execution (i.e., not in browser)
         var visualizeWarningTypes = sandbox.Constants.isBrowser ? false : true; // only for node.js execution (i.e., not in browser)
+        var considerNativeFunctions = false;
 
         // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
         var typeNameToFieldTypes = {}; // type or function name -> (field or this/return/argx -> type name -> iid -> true)  --  for each type/function, gives the fields, their types, and where this field type has been observed
@@ -177,7 +178,7 @@
         function updateSignature(f, base, args, returnValue, callLocation) {
             var functionName, tval;
             functionName = getSymbolic(f);
-            if (!functionName && Function.prototype.toString.call(f).indexOf("[native code]") !== -1 && f.name) {
+            if (considerNativeFunctions && !functionName && Function.prototype.toString.call(f).indexOf("[native code]") !== -1 && f.name) {
                 functionName = "native function " + f.name; // optimistically identify native fcts by their name (may lead to collisions)
             }
             if (functionName) {

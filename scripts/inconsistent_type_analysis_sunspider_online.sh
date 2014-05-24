@@ -7,12 +7,13 @@ do
   echo "####################################"
   echo ${bm}
   bm_short=`basename ${bm}`
-  bm_no_ext=`echo ${bm} | sed 's/.js$//'`
-  python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/inconsistentType/InconsistentTypeEngine.js ${bm_no_ext}
+  ./scripts/inconsistent_type_analysis.sh  ${bm}
   mkdir sunspider/${bm_short}
   mv jalangi_tmp/analysisResults.json sunspider/${bm_short}/analysisResults.json
   mkdir sunspider/${bm_short}/sourcemaps
   mv jalangi_tmp/jalangi_sourcemap.json sunspider/${bm_short}/sourcemaps/sourcemap.json
+  mkdir sunspider/${bm_short}/src
+  mv ${bm}_beliefs_.js sunspider/${bm_short}/src/
 done
 
 
