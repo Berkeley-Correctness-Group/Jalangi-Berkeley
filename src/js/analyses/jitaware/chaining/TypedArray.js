@@ -16,6 +16,34 @@
 
 // Author: Liang Gong
 
+
+/**
+ * Check Rule: Typed array is faster than normal array
+ *
+ * Type array (e.g., Int8Array etc.) can be an order of magnitude faster than
+ * normal generic array ([] or new Array()).
+ *
+ * This analysis monitors each array instance in the program,
+ * detects if they can be replaced with typed array.
+ * and recommend all possible typed array that can be cast to
+ *
+ * But this requires multiple checks:
+ * 1) what the maximal index used
+ *    so the array creation can be replace with var arr = new Int8Array(maxIndx+1);
+ *
+ * 2) is the array assigned an element type cannot be stored into typed array?
+ *    for example, array[1] = 0.1 excludes Uint8Array, Uint8ClampedArray, Uint16Array, Int8Array, Int16Array and Int32Array.
+ *                 array[1] = {} excludes all typed arrays
+ * 3) does the program apply typeof operator on the array?
+ *    for exmaple, if(typeof arr) { ... } else { ... }
+ *
+ * 4) does the program use function of the array
+ *    for example, array.slice. typed array does not have those functions
+ *
+ * 5) does the program use the array as an object?
+ *    for example, array.name = 'value' means the array cannot be replace with a typed array.
+ */
+
 ((function (sandbox){
     var Constants = sandbox.Constants;
     var iidToLocation = sandbox.iidToLocation;
@@ -30,7 +58,7 @@
 
     var uint8arr = new Uint8Array(1);
     var uint8clamparr = new Uint8ClampedArray(1);
-    var uint16arr = new Uint8Array(1);
+    var uint16arr = new Uint16Array(1);
     var uint32arr = new Uint32Array(1);
     var int8arr = new Int8Array(1);
     var int16arr = new Int16Array(1);

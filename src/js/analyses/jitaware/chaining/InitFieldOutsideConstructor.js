@@ -16,6 +16,15 @@
 
 // Author: Liang Gong
 
+/**
+ * Check Rule: Do not initialize fields of an object outside its constructor
+ *
+ * It makes V8 hard to predicate the object's type and thus prevents optimization.
+ * This analysis simulates the stack track and detect field initializations
+ * outside a constructor
+ *
+ */
+
 ((function (sandbox) {
     function InitFieldOutsideConstructor() {
         var Constants = sandbox.Constants;

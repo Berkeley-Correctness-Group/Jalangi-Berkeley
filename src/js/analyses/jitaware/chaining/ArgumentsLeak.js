@@ -16,6 +16,22 @@
 
 // Author: Liang Gong
 
+/**
+ * Check Rule: Do not leak arguments object of an function
+ *
+ * There are numerous ways to use arguments in a way that causes
+ * the function to be unoptimizable. One must be extremely careful when using arguments.
+ *
+ * leaking arguments prevents JIT-compiler optimization, for example:
+ * function f() {
+ *     return arguments;
+ * }
+ *
+ * This analysis checks if an arguments object is used as return value
+ * or get assigned to a global variable
+ *
+ */
+
 ((function (sandbox) {
     function ArgumentsLeak() {
         var Constants = sandbox.Constants;

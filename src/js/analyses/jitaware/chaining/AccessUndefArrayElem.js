@@ -16,6 +16,22 @@
 
 // Author: Liang Gong
 
+/**
+ * Check Rule: Do not load undefined array elements from an array
+ *
+ * Loading an undefined element from an array can be 40X slower than loading
+ * a defined array element on V8 engine.
+ *
+ * for example:
+ * var arr = [];
+ * while(arr[i]) { // this is very inefficient
+ *     // do something
+ *     i++;
+ * }
+ *
+ * This analysis monitors detect source locations that gets undefined elements
+ * from array.
+ */
 
 ((function (sandbox) {
     function AccessUndefArrayElem() {

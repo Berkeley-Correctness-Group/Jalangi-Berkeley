@@ -16,6 +16,31 @@
 
 // Author: Liang Gong
 
+/**
+ * Check Rule: Try not to use polymorphic call
+ * This checker detects polymorphic function call
+ *
+ * For example:
+ *
+ * function f(a, b) {
+ *     return a + b;
+ * }
+ *
+ * f(1, 2);
+ * f('a', 'b'); // polymorphic use of function
+ *
+ * It makes the JIT-compiler hard to do optimization as the function
+ * has to consider more cases and thus insert more runtime checks
+ *
+ * This analysis monitors each function call and associate with each
+ * function its parameter type combinations.
+ * for example here after first call
+ * f <- {(int, int)}
+ * after second call:
+ * f <- {(int, int), (string, string)}
+ *
+ */
+
 ((function (sandbox) {
     function PolymorphicFunCall() {
         var Constants = sandbox.Constants;

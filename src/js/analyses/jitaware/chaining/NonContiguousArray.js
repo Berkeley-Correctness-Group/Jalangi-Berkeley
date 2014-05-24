@@ -16,6 +16,18 @@
 
 // Author: Liang Gong
 
+/**
+ * Check Rule: Do not use non-contiguous arrays
+ *
+ * Non-contiguous array is not as efficient as contiguous array,
+ * try not to use it.
+ *
+ * This analysis detects operations that writes to array index larger than array length.
+ * for example:
+ * var arr = [1,2];
+ * arr[6] = 1; // creates non-contiguous array;
+ *
+ */
 
 ((function (sandbox) {
     function NonContiguousArray() {

@@ -16,6 +16,17 @@
 
 // more accurate simulation of hidden class structure in V8
 
+/**
+ * Check Rule: Monomorphic use of operations is perferred over polymorphic operations
+ * This checker detect polymorphic get field operation
+ *
+ * A polymorphic get field operation retrieve property values from objects with
+ * different layouts. Which makes it hard for JIT-compiler to do inline caching.
+ *
+ * This analysis simulates hidden classes and detects if a source location tries to
+ * retrieve properties from objects that can have different hidden classes.
+ */
+
 (function (sandbox) {
     function TrackHiddenClass() {
         var MIN_CACHE_HITS = 20;

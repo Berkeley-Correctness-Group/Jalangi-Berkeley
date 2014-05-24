@@ -16,6 +16,13 @@
 
 // Author: Liang Gong
 
+/**
+ * Check Rule: Do not do binary operation on undefined values
+ *
+ * binary operation (e.g., +, -, * , /, % etc.) on undefined values
+ * can be very slow as the JIT-compiler has to insert runtime checks.
+ */
+
 ((function (sandbox) {
     function BinaryOpOnUndef() {
         var Constants = sandbox.Constants;

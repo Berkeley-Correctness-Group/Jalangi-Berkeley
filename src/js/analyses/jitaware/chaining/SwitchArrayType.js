@@ -16,6 +16,17 @@
 
 // Author: Liang Gong
 
+/**
+ * Check Rule: Try not to put non-numeric values into numeric arrays
+ * This checker detects assigning non-numeric values into numeric arrays
+ *
+ * Assigning non-numeric values into numeric arrays leads to array's inner data
+ * structure transition to accommodate the new element type.
+ * The transition is very expansive.
+ *
+ * This analysis monitors put field operation to detect this inefficient operation.
+ *
+ */
 
 ((function (sandbox) {
     function SwitchArrayType() {
