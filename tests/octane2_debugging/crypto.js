@@ -1696,3 +1696,8 @@ function decrypt() {
     throw new Error("Crypto operation failed");
   }
 }
+
+
+// added by MP:
+var res = pkcs1pad2("dasdasdas", 23);
+console.log(res);

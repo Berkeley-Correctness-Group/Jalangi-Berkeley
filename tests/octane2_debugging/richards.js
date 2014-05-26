@@ -192,7 +192,9 @@ Scheduler.prototype.schedule = function () {
       this.currentTcb = this.currentTcb.link;
     } else {
       this.currentId = this.currentTcb.id;
-      this.currentTcb = this.currentTcb.run();
+      var runReturn = this.currentTcb.run();
+      console.log("run returns "+runReturn);
+      this.currentTcb = runReturn;
     }
   }
 };

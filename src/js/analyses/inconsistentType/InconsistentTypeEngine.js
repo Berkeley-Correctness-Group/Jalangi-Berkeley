@@ -241,7 +241,7 @@
         this.literal = function(iid, val) {
             if (typeof val === "string" && val.indexOf(beliefPrefix) === 0) { // belief "annotation" produced by preprocessor
                var nameAndType = val.slice(beliefPrefix.length).split(beliefInfix);
-               updateBeliefs(smemory.getCurrentFrame(), nameAndType[0], nameAndType[1]);
+               updateBeliefs(smemory.getFrame(nameAndType[0]), nameAndType[0], nameAndType[1]);
             } else {
                 return annotateObject(iid, val);
             }

@@ -23,7 +23,7 @@
 
         typeWarnings.forEach(function(w) {
             if (w.observedTypesAndLocations.length <= maxTypesForTypeDiff) {
-                w.typeDiff = computeTypeDiff(w, engineResults.typeNameToFieldTypes);   // TODO infinite loop possible, see warning in box2d
+//                w.typeDiff = computeTypeDiff(w, engineResults.typeNameToFieldTypes);   // TODO infinite loop possible, see warning in box2d
             }
             if (printWarnings) {
                 console.log(w.toString());

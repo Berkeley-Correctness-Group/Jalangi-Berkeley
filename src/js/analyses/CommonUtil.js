@@ -29,8 +29,9 @@
     }
     
     function mergeToLeft(left, right) {
-        if (right === true) {
-            return true;
+        var rt = typeof right;
+        if (rt === 'boolean' || rt === 'string' || rt === 'number') {
+            return right;
         }
         Object.keys(right).forEach(function(rKey) {
             if (HOP(left, rKey)) {
