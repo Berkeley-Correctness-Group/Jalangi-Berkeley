@@ -309,12 +309,6 @@
             console.log("beforeunload --> logging results");
             sandbox.analysis.endExecution();
         }, false);
-        window.addEventListener('keydown', function(e) {
-            // keyboard shortcut is Alt-Shift-D
-            if (e.altKey && e.shiftKey && e.keyCode === 68) {
-                sandbox.analysis.endExecution();
-            }
-        });
     }
 
 }(typeof J$ === 'undefined' ? (J$ = {}) : J$));
