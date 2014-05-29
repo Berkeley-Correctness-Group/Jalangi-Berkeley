@@ -6,9 +6,10 @@
 
     var maxTypesForTypeDiff = 5;
     var maxNodesInCanonicalRepr = 100;
+    var maxWorkListForCanonical = 100;
 
     function analyzeTypes(engineResults, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
-        var tableAndRoots = equiv2(engineResults.typeNameToFieldTypes);
+        var tableAndRoots = equiv3(engineResults.typeNameToFieldTypes);
         var typeWarnings = analyze(engineResults.typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
 
         analyzeBeliefs(typeWarnings, engineResults.frameToBeliefs);
@@ -326,78 +327,6 @@
         return true;
     }
 
-    function equiv(typeName2FieldTypes) {
-        var table = {};
-        var roots = {};
-        for (var name in typeName2FieldTypes) {
-            if (util.HOP(typeName2FieldTypes, name)) {
-                table[name] = name;
-                roots[name] = true;
-            }
-        }
-        table['number'] = 'number';
-        table['boolean'] = 'boolean';
-        table['string'] = 'string';
-        table['undefined'] = 'undefined';
-        table['object(null)'] = 'object(null)';
-
-        var changed = true, root1, root2;
-        while (changed) {
-            changed = false;
-            for (var name1 in roots) {
-                if (util.HOP(roots, name1)) {
-                    loop2: for (var name2 in roots) {
-                        if (util.HOP(roots, name2) &&
-                              name1 < name2 &&
-                              (root1 = getRoot(table, name1)) !== (root2 = getRoot(table, name2))) {
-                            var fieldMap1 = typeName2FieldTypes[name1];
-                            var fieldMap2 = typeName2FieldTypes[name2];
-                            if (util.sizeOfMap(fieldMap1) !== util.sizeOfMap(fieldMap2)) {
-                                continue loop2;
-                            }
-                            for (var field1 in fieldMap1) {
-                                if (util.HOP(fieldMap1, field1) && !util.HOP(fieldMap2, field1)) {
-                                    continue loop2;
-                                }
-                                var typeMap1 = fieldMap1[field1];
-                                var typeMap2 = fieldMap2[field1];
-                                if (util.sizeOfMap(typeMap1) !== util.sizeOfMap(typeMap2)) {
-                                    continue loop2;
-                                }
-                                for (var type1 in typeMap1) {
-                                    if (util.HOP(typeMap1, type1)) {
-                                        var found = false;
-                                        for (var type2 in typeMap2) {
-                                            if (util.HOP(typeMap2, type2)) {
-                                                if (type1 === type2) {
-                                                    found = true;
-                                                } else if (getRoot(table, type1) === getRoot(table, type2)) {
-                                                    found = true;
-                                                }
-                                            }
-                                        }
-                                        if (!found) {
-                                            continue loop2;
-                                        }
-                                    }
-                                }
-                            }
-                            if (root1 < root2) {
-                                table[root2] = root1;
-                                delete roots[root2];
-                            } else {
-                                table[root1] = root2;
-                                delete roots[root1];
-                            }
-                            changed = true;
-                        }
-                    }
-                }
-            }
-        }
-        return [table, roots];
-    }
-
     function addHighlightedIIDs(iids, warnings) {
         warnings.forEach(function(w) {
             Object.keys(w.highlightedIIDs).forEach(function(iid) {
@@ -581,47 +510,58 @@
         var worklist = [];
         worklist.push(new WorkItem(typePath, startNode, type));
         while (worklist.length > 0) {
+            // cut-off to deal with very large type graphs
+            if (worklist.length > maxWorkListForCanonical) {
+//                console.log("    canon done 1");
+                return "very_complex_canonical_representation_" + Math.random().toString().slice(2);
+            }
             var item = worklist[0];
             worklist = worklist.slice(1);   // FIFO
             if (item.typePath.nodeCtr > maxNodesInCanonicalRepr) { // cut-off to deal with types that reference many others
+//                console.log("    canon done 2");
                 return "very_complex_canonical_representation_" + Math.random().toString().slice(2);
             }
             var fieldNameToTypes = typeNameToFieldTypes[item.type];
             if (fieldNameToTypes === undefined || Object.keys(fieldNameToTypes).length === 0) {
                 // primitive type or type without properties; stop exploring
             } else {
-                Object.keys(fieldNameToTypes).sort().forEach(function(fieldName) {
+                var sortedFieldNames = Object.keys(fieldNameToTypes).sort();
+                for (var fieldNameIdx = 0; fieldNameIdx < sortedFieldNames.length; fieldNameIdx++) {
+                    var fieldName = sortedFieldNames[fieldNameIdx];
                     var fieldTypes = fieldNameToTypes[fieldName];
                     util.assert(Object.keys(fieldTypes).length > 0);
                     var fieldTypesCtr = 0;
                     if (Object.keys(fieldTypes).length > maxNodesInCanonicalRepr) {
+//                        console.log("    canon done 3");
                         return "very_complex_canonical_representation_" + Math.random().toString().slice(2);
                     }
-                    Object.keys(fieldTypes).forEach(function(fieldType) {
-                        fieldTypesCtr++;
-                        if (item.typePath.typeNameToId[fieldType] !== undefined) {
-                            // already seen this type; don't recurse
-                            item.canonicalNode.fields.push([fieldName, item.typePath.typeNameToId[fieldType]]);
-                        } else {
-                            // a not yet explored type; continue to explore
-                            item.typePath.lastId++;
-                            var newNode = new CanonicalNode(item.typePath.lastId, getKind(fieldType));
-                            item.typePath.typeNameToId[fieldType] = item.typePath.lastId;
-                            item.canonicalNode.fields.push([fieldName, newNode]);
-                            item.typePath.nodeCtr++;
-
-                            var typePath;
-                            if (fieldTypesCtr === 1) {
-                                typePath = item.typePath;
+                    for (var fieldType in fieldTypes) {
+                        if (util.HOP(fieldTypes, fieldType)) {
+                            fieldTypesCtr++;
+                            if (item.typePath.typeNameToId[fieldType] !== undefined) {
+                                // already seen this type; don't recurse
+                                item.canonicalNode.fields.push([fieldName, item.typePath.typeNameToId[fieldType]]);
                             } else {
-                                typePath = item.typePath.clone();
-                                canonicalPaths.push(typePath);
+                                // a not yet explored type; continue to explore
+                                item.typePath.lastId++;
+                                var newNode = new CanonicalNode(item.typePath.lastId, getKind(fieldType));
+                                item.typePath.typeNameToId[fieldType] = item.typePath.lastId;
+                                item.canonicalNode.fields.push([fieldName, newNode]);
+                                item.typePath.nodeCtr++;
+
+                                var typePath;
+                                if (fieldTypesCtr === 1) {
+                                    typePath = item.typePath;
+                                } else {
+                                    typePath = item.typePath.clone();
+                                    canonicalPaths.push(typePath);
+                                }
+                                var newItem = new WorkItem(typePath, newNode, fieldType);
+                                worklist.push(newItem);
                             }
-                            var newItem = new WorkItem(typePath, newNode, fieldType);
-                            worklist.push(newItem);
                         }
-                    });
-                });
+                    }
+                }
             }
         }
 
@@ -635,8 +575,150 @@
                 result += " -- ";
             result += s;
         });
+//        console.log("    canon done 4");
         return result;
     }
+
+
+    //# start new equiv ###############################################################
+    function equiv3(typeNameToFieldTypes) {
+        var fieldNamesToTypes = createFieldNamesToTypes(typeNameToFieldTypes);
+        var typeToRoot = initialTypeToRoot(fieldNamesToTypes);
+        var changed = true;
+        var type;
+        while (changed) {
+            console.log("Merging types, now have "+util.nbOfValues(typeToRoot)+" roots");
+            changed = false;
+            typeLoop: for (type in typeToRoot) {
+                if (util.HOP(typeToRoot, type)) {
+                    if (!areSameTypes(type, typeToRoot[type], typeNameToFieldTypes, {})) {
+                        assignOtherRoot(type, typeToRoot, fieldNamesToTypes, typeNameToFieldTypes);
+                        changed = true;
+                        break typeLoop;
+                    }
+                }
+            }
+
+        }
+        var tableAndRoots = toTableAndRoots(typeToRoot);
+        typeToRoot['number'] = 'number';
+        typeToRoot['boolean'] = 'boolean';
+        typeToRoot['string'] = 'string';
+        typeToRoot['undefined'] = 'undefined';
+        typeToRoot['object(null)'] = 'object(null)';
+        return tableAndRoots;
+    }
+
+    function initialTypeToRoot(fieldNamesToTypes) {
+        var typeToRoot = {};
+        for (var fieldNames in fieldNamesToTypes) {
+            if (util.HOP(fieldNamesToTypes, fieldNames)) {
+                var types = Object.keys(fieldNamesToTypes[fieldNames]);
+                types.forEach(function (t) {
+                    typeToRoot[t] = types[0];
+                });
+            }
+        }
+        return typeToRoot;
+    }
+
+    function getFieldNames(type, typeNameToFieldTypes) {
+        var fieldToFieldTypes = typeNameToFieldTypes[type];
+        var fieldNames = Object.keys(fieldToFieldTypes).sort().toString();
+        return fieldNames;
+    }
+
+    function createFieldNamesToTypes(typeNameToFieldTypes) {
+        var fieldNamesToTypes = {};
+        for (var type in typeNameToFieldTypes) {
+            if (util.HOP(typeNameToFieldTypes, type)) {
+                var fieldNames = getFieldNames(type, typeNameToFieldTypes);
+                var typesWithFieldNames = fieldNamesToTypes[fieldNames] || {};
+                typesWithFieldNames[type] = true;
+                fieldNamesToTypes[fieldNames] = typesWithFieldNames;
+            }
+        }
+        return fieldNamesToTypes;
+    }
+
+    // structural comparison of two types
+    function areSameTypes(t1, t2, typeNameToFieldTypes, visitedTypes) {
+        if (t1 === t2)
+            return true;
+        if (visitedTypes[t1] === t2)
+            return true;
+        if (visitedTypes[t1] !== undefined)
+            return false;
+        var fieldToTypes1 = typeNameToFieldTypes[t1];
+        var fieldToTypes2 = typeNameToFieldTypes[t2];
+        if (fieldToTypes1 === undefined || fieldToTypes2 === undefined)
+            return false;
+        var fields1 = Object.keys(fieldToTypes1);
+        var fields2 = Object.keys(fieldToTypes2);
+        if (fields1.length !== fields2.length)
+            return false;
+        if (fields1.sort().toString() !== fields2.sort().toString())
+            return false;
+
+        visitedTypes[t1] = t2;
+        for (var field1 in fieldToTypes1) {
+            if (util.HOP(fieldToTypes1, field1)) {
+                var types1 = fieldToTypes1[field1];
+                var types2 = fieldToTypes2[field1];
+                if (Object.keys(types1).length !== Object.keys(types2).length)
+                    return false;
+                for (var targetType1 in types1) {
+                    if (util.HOP(types1, targetType1)) {
+                        var hasEquivInType2 = false;
+                        for (var targetType2 in types2) {
+                            if (util.HOP(types2, targetType2)) {
+                                if (areSameTypes(targetType1, targetType2, typeNameToFieldTypes, visitedTypes)) {
+                                    hasEquivInType2 = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!hasEquivInType2)
+                            return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    function assignOtherRoot(type, typeToRoot, fieldNamesToTypes, typeNameToFieldTypes) {
+        var oldRoot = typeToRoot[type];
+        var candidateTypes = fieldNamesToTypes[getFieldNames(type, typeNameToFieldTypes)];
+        delete candidateTypes[oldRoot];
+        if (Object.keys(candidateTypes).length === 0) {
+            typeToRoot[type] = type;
+            return;
+        } else {
+            for (var candidateType in candidateTypes) {
+                if (util.HOP(candidateTypes, candidateType)) {
+                    if (areSameTypes(type, candidateType, typeNameToFieldTypes, {})) {
+                        typeToRoot[type] = candidateType;
+                        return;
+                    }
+                }
+            }
+        }
+        typeToRoot[type] = type;
+    }
+
+    function toTableAndRoots(typeToRoot) {
+        var roots = {};
+        for (var t in typeToRoot) {
+            if (util.HOP(typeToRoot, t)) {
+                var r = typeToRoot[t];
+                roots[r] = true;
+            }
+        }
+        return [ typeToRoot, roots ];
+    }
+
+    //# end new equiv ###############################################################
 
     function getKind(type) {
         if (type === "undefined" || type === "null" || type === "object" || type === "function"
@@ -729,7 +811,7 @@
             }
         });
     }
-    
+
     function filterByBelief(typeWarnings) {
         return typeWarnings.filter(function(w) {
             return w.removeByBelief === false;

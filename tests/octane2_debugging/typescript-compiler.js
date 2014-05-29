@@ -16423,6 +16423,9 @@ var TypeScript;
         ContextualTypingContextStack.prototype.popContextualType = function () {
             var tc = this.contextStack.pop();
             this.checker.errorReporter.pushToErrorSink = this.isProvisional();
+            if (typeof this.hadProvisionalErrors === "number") {
+                var xxxx = "DEBUG_HERE";
+            }
             this.hadProvisionalErrors = this.hadProvisionalErrors || (tc.provisional && (this.checker.errorReporter.getCapturedErrors().length));
             this.checker.errorReporter.freeCapturedErrors();
             return tc;

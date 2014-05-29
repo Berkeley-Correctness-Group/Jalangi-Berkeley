@@ -42,6 +42,16 @@
         });
         return left;
     }
+    
+    function nbOfValues(map) {
+        var values = {};
+        for (var k in map) {
+            if (HOP(map, k)) {
+                values[map[k]] = true;
+            }
+        }
+        return Object.keys(values).length;
+    }
 
     // boilerplate to use this file both in browser and in node application
     var module;
@@ -60,5 +70,6 @@
     module.assert = assert;
     module.shallowClone = shallowClone;
     module.mergeToLeft = mergeToLeft;
+    module.nbOfValues = nbOfValues;
 
 })();
