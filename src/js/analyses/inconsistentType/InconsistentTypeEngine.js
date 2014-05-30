@@ -34,7 +34,7 @@
         var visualizeWarningTypes = sandbox.Constants.isBrowser ? false : true; // only for node.js execution (i.e., not in browser)
         var considerNativeFunctions = false;
 
-        // type/function name could be object(iid) | array(iid) | function(iid) | object(null) | object | function | number | string | undefined | boolean
+        // type/function name could be object(iid) | array(iid) | function(iid) | null | object | function | number | string | undefined | boolean
         var typeNameToFieldTypes = {}; // type or function name -> (field or this/return/argx -> type name -> iid -> true)  --  for each type/function, gives the fields, their types, and where this field type has been observed
         var typeNames = {};
         var frameToBeliefs = {}; // function name -> var name -> type -> true
@@ -96,7 +96,7 @@
                 if (s) {
                     type = s;
                 } else if (value === null) {
-                    type = "object(null)";
+                    type = "null";
                 }
                 if (typeName.indexOf("array") === 0) {
                     if (offset > 10) {
@@ -161,7 +161,7 @@
             if (typeName) {
                 type = typeName;
             } else if (value === null) {
-                type = "object(null)";
+                type = "null";
             }
             var tmap = getAndInit(tval, offset);
             var locations = getAndInit(tmap, type);

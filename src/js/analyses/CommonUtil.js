@@ -27,7 +27,7 @@
         }
         return r;
     }
-    
+
     function mergeToLeft(left, right) {
         var rt = typeof right;
         if (rt === 'boolean' || rt === 'string' || rt === 'number') {
@@ -42,7 +42,7 @@
         });
         return left;
     }
-    
+
     function nbOfValues(map) {
         var values = {};
         for (var k in map) {
@@ -51,6 +51,18 @@
             }
         }
         return Object.keys(values).length;
+    }
+
+    function valueArray(map) {
+        var values = [];
+        for (var k in map) {
+            if (HOP(map, k)) {
+                var v = map[k];
+                if (values.indexOf(v) === -1) 
+                    values.push(v);
+            }
+        }
+        return values;
     }
 
     // boilerplate to use this file both in browser and in node application
@@ -71,5 +83,6 @@
     module.shallowClone = shallowClone;
     module.mergeToLeft = mergeToLeft;
     module.nbOfValues = nbOfValues;
+    module.valueArray = valueArray;
 
 })();
