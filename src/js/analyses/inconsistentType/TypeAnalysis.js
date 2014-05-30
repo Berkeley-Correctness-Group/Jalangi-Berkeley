@@ -4,8 +4,6 @@
     var visualization = importModule("Visualization");
     var callGraph = importModule("CallGraph");
 
-    var maxTypesForTypeDiff = 5;
-
     function analyzeTypes(engineResults, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
         var tableAndRoots = equiv3(engineResults.typeNameToFieldTypes);
 
@@ -16,6 +14,7 @@
         analyzeBeliefs(typeWarnings, engineResults.frameToBeliefs);
         typeWarnings = callGraph.filterWarnings(engineResults.callGraph, typeWarnings);
         typeWarnings = filterByBelief(typeWarnings);
+        typeWarnings = filterNullRelated(typeWarnings, typeGraph, tableAndRoots[0]);
 
         if (visualizeAllTypes) {
             var allHighlightedIIDs = {};
@@ -24,19 +23,6 @@
         }
 
         typeWarnings.forEach(function(w) {
-            if (w.observedTypesAndLocations.length <= maxTypesForTypeDiff) {
-                var observedTypes = w.observedTypesAndLocations.map(function(tl) {
-                    return tl[0].typeName;
-                });
-                var typeNodes = observedTypes.map(function(typeName) {
-                    var rootName = tableAndRoots[0][typeName];
-                    return typeGraph[rootName];
-                });
-                var diff = {};
-                typeDiff2(typeNodes, {}, w.fieldName, diff);
-
-                w.typeDiff = Object.keys(diff).toString();
-            }
             if (printWarnings) {
                 console.log(w.toString());
             }
@@ -465,17 +451,26 @@
         return nodes;
     }
 
+    function TypeDiffEntry(expr, kinds) {
+        this.expr = expr;
+        this.kinds = kinds;
+    }
+    
+    TypeDiffEntry.prototype.toString = function() {
+        return this.expr+" can be "+this.kinds.toString();
+    };
+
     /**
      * @param {array of TypeNode} rawNodes
      * @param {string --> true} visited
      * @param {string} prefix
-     * @param {string --> true} result
-     * @returns {undefined}
+     * @param {string --> TypeDiffEntry} result
      */
     function typeDiff2(rawNodes, visited, prefix, result) {
         var kindsOfNodes = kinds(rawNodes);
         if (Object.keys(kindsOfNodes).length > 1) {
-            result[prefix + " can be " + Object.keys(kindsOfNodes).toString()] = true;
+            var diffEntry = new TypeDiffEntry(prefix, Object.keys(kindsOfNodes));
+            result[diffEntry.toString()] = diffEntry;
             return;
         }
 
@@ -495,9 +490,10 @@
                 if (targetsOfField.length > 1) {
                     var kindsOfField = kinds(targetsOfField);
                     if (Object.keys(kindsOfField).length > 1) {
-                        result[newPrefix + " can be " + Object.keys(kindsOfField).toString()] = true;
+                        var diffEntry = new TypeDiffEntry(newPrefix, Object.keys(kindsOfField));
+                        result[diffEntry.toString()] = diffEntry;
                     } else {
-                        typeDiff2(nodes, visited, newPrefix, result);
+                        typeDiff2(targetsOfField, visited, newPrefix, result);
                     }
                 }
             }
@@ -582,6 +578,31 @@
             }
         }
         return result;
+    }
+
+    function filterNullRelated(warnings, typeGraph, typeToRoot) {
+        return warnings.filter(function(w) {
+            var observedTypes = w.observedTypesAndLocations.map(function(tl) {
+                return tl[0].typeName;
+            });
+            var typeNodes = observedTypes.map(function(typeName) {
+                var rootName = typeToRoot[typeName];
+                return typeGraph[rootName];
+            });
+            var diffs = {};
+            typeDiff2(typeNodes, {}, w.fieldName, diffs);
+
+            var hasNonNullRelated = Object.keys(diffs).some(function(diffKey) {
+                var diff = diffs[diffKey];
+                return diff.kinds.indexOf("null") === -1;
+            });
+            if (hasNonNullRelated) {
+                w.typeDiff = Object.keys(diffs).toString();
+                return true;
+            } else {
+                return false;
+            }
+        });
     }
 
     /**
