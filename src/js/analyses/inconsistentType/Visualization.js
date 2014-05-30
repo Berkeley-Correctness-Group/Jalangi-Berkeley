@@ -31,7 +31,7 @@
         nodes.push("    boolean [label = \"<boolean>boolean\"]");
         nodes.push("    string [label = \"<string>string\"]");
         nodes.push("    undefined [label = \"<undefined>undefined\"]");
-        nodes.push("    " + escapeNode("object(null)") + " [label = \"<" + escapeNode("object(null)") + ">null\"]");
+        nodes.push("    " + escapeNode("null") + " [label = \"<" + escapeNode("null") + ">null\"]");
 
         var nodeToNodeStr = {};
         var nodeToEdges = {}; // string -> string -> true
@@ -117,7 +117,7 @@
         var locs = {};
 
         for (var node in table) {
-            if (util.HOP(table, node) && node.indexOf("(") > 0 && node !== "object(null)") {
+            if (util.HOP(table, node) && node.indexOf("(") > 0 && node !== "null") {
                 if (!iidsToConsiderOpt || iidsToConsiderOpt[node]) {
                     var loc, root = table[node];
                     loc = locs[root];

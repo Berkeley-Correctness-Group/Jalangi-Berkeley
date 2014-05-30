@@ -5,13 +5,14 @@
     var callGraph = importModule("CallGraph");
 
     var maxTypesForTypeDiff = 5;
-    var maxNodesInCanonicalRepr = 100;
-    var maxWorkListForCanonical = 100;
 
     function analyzeTypes(engineResults, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
         var tableAndRoots = equiv3(engineResults.typeNameToFieldTypes);
-        var typeWarnings = analyze(engineResults.typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
 
+        var typeGraph = createTypeGraph(tableAndRoots[1], tableAndRoots[0], engineResults.typeNameToFieldTypes);
+
+        // TODO analyze() and visualization should use typeGraph
+        var typeWarnings = analyze(engineResults.typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
         analyzeBeliefs(typeWarnings, engineResults.frameToBeliefs);
         typeWarnings = callGraph.filterWarnings(engineResults.callGraph, typeWarnings);
         typeWarnings = filterByBelief(typeWarnings);
@@ -24,7 +25,17 @@
 
         typeWarnings.forEach(function(w) {
             if (w.observedTypesAndLocations.length <= maxTypesForTypeDiff) {
-//                w.typeDiff = computeTypeDiff(w, engineResults.typeNameToFieldTypes);   // TODO infinite loop possible, see warning in box2d
+                var observedTypes = w.observedTypesAndLocations.map(function(tl) {
+                    return tl[0].typeName;
+                });
+                var typeNodes = observedTypes.map(function(typeName) {
+                    var rootName = tableAndRoots[0][typeName];
+                    return typeGraph[rootName];
+                });
+                var diff = {};
+                typeDiff2(typeNodes, {}, w.fieldName, diff);
+
+                w.typeDiff = Object.keys(diff).toString();
             }
             if (printWarnings) {
                 console.log(w.toString());
@@ -169,7 +180,7 @@
      * Returns true if both types are functions and if we don't know the
      * signature of at least one of them (i.e., they may have compatible 
      * signatures).
-     * @param {} getFieldTypes
+     * @param {} typeNameToFieldTypes
      * @param {string} type1
      * @param {string} type2
      * @returns {Boolean}
@@ -189,7 +200,7 @@
      * of one type are exactly the same as the corresponding field types of the
      * other type.
      * @param {map: string->string} table
-     * @param {} getFieldTypes
+     * @param {} typeNameToFieldTypes
      * @param {string} type1
      * @param {string} type2
      * @returns {Boolean}
@@ -246,87 +257,6 @@
         return ret;
     }
 
-    function equiv2(typeNameToFieldTypes) {
-        var table = {};
-        var roots = {};
-        for (var name in typeNameToFieldTypes) {
-            if (util.HOP(typeNameToFieldTypes, name)) {
-                table[name] = name;
-                roots[name] = true;
-            }
-        }
-        table['number'] = 'number';
-        table['boolean'] = 'boolean';
-        table['string'] = 'string';
-        table['undefined'] = 'undefined';
-        table['object(null)'] = 'object(null)';
-
-        var changed = true, root1, root2;
-        while (changed) {
-            changed = false;
-            for (var name1 in typeNameToFieldTypes) {
-                if (util.HOP(typeNameToFieldTypes, name1)) {
-                    var canonical1 = canonicalRepresentation(name1, typeNameToFieldTypes);
-                    for (var name2 in typeNameToFieldTypes) {
-                        if (util.HOP(typeNameToFieldTypes, name2) &&
-                              name1 < name2 &&
-                              (root1 = getRoot(table, name1)) !== (root2 = getRoot(table, name2)) &&
-                              quickCompare(name1, name2, typeNameToFieldTypes)) {
-                            var canonical2 = canonicalRepresentation(name2, typeNameToFieldTypes);
-                            if (canonical1 === canonical2) {
-                                // merged name1 and name2
-                                if (root1 < root2) {
-                                    table[root2] = root1;
-                                    delete roots[root2];
-                                } else {
-                                    table[root1] = root2;
-                                    delete roots[root1];
-                                }
-                                changed = true;
-                            } else {
-//                                console.log("-- not the same:\n    "+canonical1+" vs\n    "+canonical2+" -- "+typeof canonical2);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-//        console.log("==============");
-//        console.log(JSON.stringify([table, roots], 0, 2));
-        return [table, roots];
-    }
-
-    /**
-     * Several quick comparisons to check whether two types certainly
-     * have different canonical representations.
-     * @param {type} type1
-     * @param {type} type2
-     * @param {type} typeNameToFieldTypes
-     * @returns {Boolean}
-     */
-    function quickCompare(type1, type2, typeNameToFieldTypes) {
-        var fieldTypes1 = typeNameToFieldTypes[type1];
-        var fieldTypes2 = typeNameToFieldTypes[type2];
-        if (fieldTypes1 && !fieldTypes2 || !fieldTypes1 && fieldTypes2)
-            return false;
-        var propNames1 = Object.keys(fieldTypes1);
-        var propNames2 = Object.keys(fieldTypes2);
-        if (propNames1.length !== propNames2.length)
-            return false;
-        var sortedPropNames1 = propNames1.sort();
-        var sortedPropNames2 = propNames2.sort();
-        var propNamesDiffer = false;
-        sortedPropNames1.some(function(t, idx) {
-            if (sortedPropNames2[idx] !== t) {
-                propNamesDiffer = true;
-                return true;
-            }
-        });
-        if (propNamesDiffer)
-            return false;
-        return true;
-    }
-
     function addHighlightedIIDs(iids, warnings) {
         warnings.forEach(function(w) {
             Object.keys(w.highlightedIIDs).forEach(function(iid) {
@@ -335,259 +265,12 @@
         });
     }
 
-    function TypeDiff(commonExpressions, diffExpressions) {
-        this.commonExpressions = commonExpressions;
-        this.diffExpressions = diffExpressions;
-    }
-
-    TypeDiff.prototype.toString = function() {
-        var s = "";
-        var ctr = 0;
-        for (var expr in this.diffExpressions) {
-            if (util.HOP(this.diffExpressions, expr)) {
-                ctr++;
-                if (ctr < 5) {  // report only a few examples
-                    s += "        " + expr + " has types " + Object.keys(this.diffExpressions[expr]).toString() + "\n";
-                }
-            }
-        }
-        if (s[s.length - 1] === '\n')
-            s = s.slice(0, s.length - 1);
-        return s;
-    };
-
-    function computeTypeDiff(warning, typeNameToFieldTypes) {
-//        console.log("Computing type diff for " + warning.observedTypesAndLocations.length + " types");
-
-        // for each observed type, compute all possible expressions and their types
-        var observedTypeToExpressions = {}; // observed type (string) --> expression (string) --> type of expression (string)
-        warning.observedTypesAndLocations.forEach(function(tl) {
-            var observedType = tl[0].typeName;
-            var expressions = allExpressions(observedType, typeNameToFieldTypes);
-            observedTypeToExpressions[observedType] = expressions;
-        });
-
-        var commonExpressions = {}; // expression (string) --> type of expression (string)
-        var diffExpressions = {};   // expression (string) --> set of type of expression (string -> true)
-        var allObservedTypes = Object.keys(observedTypeToExpressions);
-        util.assert(allObservedTypes.length > 1);
-        // find expressions that are common to all observed types
-        var someType = allObservedTypes[0];
-        var expressionToType = observedTypeToExpressions[someType];
-        Object.keys(expressionToType).forEach(function(expression) {
-            // check if expression exists and has the same type for all other observed types
-            var common = true;
-            allObservedTypes.slice(1).some(function(otherType) {
-                var otherExpressionToType = observedTypeToExpressions[otherType];
-                if (!util.HOP(otherExpressionToType, expression) ||
-                      otherExpressionToType[expression] !== expressionToType[expression]) {
-                    common = false;
-                    return true; // stop search
-                }
-            });
-            if (common) {
-                commonExpressions[expression] = expressionToType[expression];
-            }
-        });
-        // find expressions that are not common to all observed types
-        allObservedTypes.forEach(function(observedType) {
-            var expressionToType = observedTypeToExpressions[observedType];
-            for (var expression in expressionToType) {
-                if (util.HOP(expressionToType, expression)) {
-                    if (!util.HOP(commonExpressions, expression)) {
-                        var allTypesOfExpression = diffExpressions[expression] || {};
-                        allTypesOfExpression[expressionToType[expression]] = true;
-                        diffExpressions[expression] = allTypesOfExpression;
-                    }
-                }
-            }
-        });
-
-//        console.log(" .. done with type diff");
-        return new TypeDiff(commonExpressions, diffExpressions);
-    }
-
-    /**
-     * Compute the smallest set of all unique type expressions that start with "type.",
-     * and the type they have.  
-     * @param {string} type
-     * @param {} typeNameToFieldTypes
-     * @returns {string -> string}
-     */
-    function allExpressions(type, typeNameToFieldTypes) {
-//        console.log("   allExpressions for type " + JSON.stringify(type));
-
-        function WorkItem(prefix, visitedTypes, type) {
-            this.prefix = prefix;
-            this.visitedTypes = visitedTypes;
-            this.type = type;
-        }
-
-        var result = {}; // expression (string) --> type (string)
-        var worklist = []; // workitems
-        var initiallyVisitedTypes = {};
-        initiallyVisitedTypes[type] = true;
-        worklist.push(new WorkItem("", initiallyVisitedTypes, type));
-        while (worklist.length > 0) {
-//            console.log("      worklist of length: " + worklist.length);
-
-            var item = worklist.pop();
-            var fieldTypes = typeNameToFieldTypes[item.type];
-            if (fieldTypes === undefined || Object.keys(fieldTypes).length === 0) {
-                // reached primitive type, or type without properties; stop exploring
-                result[item.prefix] = item.type;
-            } else {
-                for (var prop in fieldTypes) {
-                    if (util.HOP(fieldTypes, prop)) {
-                        var newPrefix = item.prefix + "." + prop;
-                        var propTypes = fieldTypes[prop];
-                        for (var propType in propTypes) {
-                            if (util.HOP(propTypes, propType)) {
-                                if (util.HOP(item.visitedTypes, propType)) {
-                                    // reached already visited type; stop exploring
-                                    result[newPrefix] = propType;
-                                } else {
-                                    // reached not yet visited type; explore further
-                                    var newVisitedTypes = util.shallowClone(item.visitedTypes);
-                                    newVisitedTypes[propType] = true;
-//                                    console.log("      --> pushing worklist item; visited types: " + Object.keys(newVisitedTypes) + " -- prefix: " + item.prefix + "." + prop + " -- next type: " + propType);
-                                    worklist.push(new WorkItem(item.prefix + "." + prop, newVisitedTypes, propType));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return result;
-    }
-
-    function TypePath(canonicalRootNode, typeNameToIdOpt, lastIdOpt) {
-        this.canonicalRootNode = canonicalRootNode;
-        this.typeNameToId = typeNameToIdOpt || {};
-        this.lastId = lastIdOpt || 0;
-        this.nodeCtr = 1;
-    }
-
-    TypePath.prototype.clone = function() {
-        var clonedRootNode = this.canonicalRootNode.clone();
-        return new TypePath(clonedRootNode, util.shallowClone(this.typeNameToId), this.lastId);
-    };
-
-    TypePath.prototype.toCanonicalString = function() {
-        return JSON.stringify(this.canonicalRootNode);
-    };
-
-    function CanonicalNode(id, kind, fieldsOpt) {
-        this.id = id;
-        this.kind = kind;
-        this.fields = fieldsOpt || []; // array of pairs [string, x], where x is either CaninocalNode or a number (=node id)
-    }
-
-    CanonicalNode.prototype.clone = function() {
-        var result = new CanonicalNode(this.id, this.kind, []);
-        this.fields.forEach(function(pair) {
-            if (typeof pair[1] === "number") {
-                result.fields.push([pair[0], pair[1]]);
-            } else {
-                util.assert(typeof pair[1] === "object");
-                result.fields.push([pair[0], pair[1].clone()]);
-            }
-        });
-        return result;
-    };
-
-    function canonicalRepresentation(type, typeNameToFieldTypes) {
-        function WorkItem(typePath, canonicalNode, type) {
-            this.typePath = typePath;
-            this.canonicalNode = canonicalNode;
-            this.type = type;
-        }
-        var startNode = new CanonicalNode(0, getKind(type));
-        var typePath = new TypePath(startNode);
-        typePath.typeNameToId[type] = 0;
-        var canonicalPaths = [typePath];
-        var worklist = [];
-        worklist.push(new WorkItem(typePath, startNode, type));
-        while (worklist.length > 0) {
-            // cut-off to deal with very large type graphs
-            if (worklist.length > maxWorkListForCanonical) {
-//                console.log("    canon done 1");
-                return "very_complex_canonical_representation_" + Math.random().toString().slice(2);
-            }
-            var item = worklist[0];
-            worklist = worklist.slice(1);   // FIFO
-            if (item.typePath.nodeCtr > maxNodesInCanonicalRepr) { // cut-off to deal with types that reference many others
-//                console.log("    canon done 2");
-                return "very_complex_canonical_representation_" + Math.random().toString().slice(2);
-            }
-            var fieldNameToTypes = typeNameToFieldTypes[item.type];
-            if (fieldNameToTypes === undefined || Object.keys(fieldNameToTypes).length === 0) {
-                // primitive type or type without properties; stop exploring
-            } else {
-                var sortedFieldNames = Object.keys(fieldNameToTypes).sort();
-                for (var fieldNameIdx = 0; fieldNameIdx < sortedFieldNames.length; fieldNameIdx++) {
-                    var fieldName = sortedFieldNames[fieldNameIdx];
-                    var fieldTypes = fieldNameToTypes[fieldName];
-                    util.assert(Object.keys(fieldTypes).length > 0);
-                    var fieldTypesCtr = 0;
-                    if (Object.keys(fieldTypes).length > maxNodesInCanonicalRepr) {
-//                        console.log("    canon done 3");
-                        return "very_complex_canonical_representation_" + Math.random().toString().slice(2);
-                    }
-                    for (var fieldType in fieldTypes) {
-                        if (util.HOP(fieldTypes, fieldType)) {
-                            fieldTypesCtr++;
-                            if (item.typePath.typeNameToId[fieldType] !== undefined) {
-                                // already seen this type; don't recurse
-                                item.canonicalNode.fields.push([fieldName, item.typePath.typeNameToId[fieldType]]);
-                            } else {
-                                // a not yet explored type; continue to explore
-                                item.typePath.lastId++;
-                                var newNode = new CanonicalNode(item.typePath.lastId, getKind(fieldType));
-                                item.typePath.typeNameToId[fieldType] = item.typePath.lastId;
-                                item.canonicalNode.fields.push([fieldName, newNode]);
-                                item.typePath.nodeCtr++;
-
-                                var typePath;
-                                if (fieldTypesCtr === 1) {
-                                    typePath = item.typePath;
-                                } else {
-                                    typePath = item.typePath.clone();
-                                    canonicalPaths.push(typePath);
-                                }
-                                var newItem = new WorkItem(typePath, newNode, fieldType);
-                                worklist.push(newItem);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // merge all canonical paths and return a single string
-        var canonicalStrings = canonicalPaths.map(function(p) {
-            return p.toCanonicalString();
-        }).sort();
-        var result = "";
-        canonicalStrings.forEach(function(s) {
-            if (result)
-                result += " -- ";
-            result += s;
-        });
-//        console.log("    canon done 4");
-        return result;
-    }
-
-
-    //# start new equiv ###############################################################
     function equiv3(typeNameToFieldTypes) {
         var fieldNamesToTypes = createFieldNamesToTypes(typeNameToFieldTypes);
         var typeToRoot = initialTypeToRoot(fieldNamesToTypes);
         var changed = true;
         var type;
         while (changed) {
-            console.log("Merging types, now have "+util.nbOfValues(typeToRoot)+" roots");
             changed = false;
             typeLoop: for (type in typeToRoot) {
                 if (util.HOP(typeToRoot, type)) {
@@ -605,7 +288,7 @@
         typeToRoot['boolean'] = 'boolean';
         typeToRoot['string'] = 'string';
         typeToRoot['undefined'] = 'undefined';
-        typeToRoot['object(null)'] = 'object(null)';
+        typeToRoot['null'] = 'null';
         return tableAndRoots;
     }
 
@@ -614,7 +297,7 @@
         for (var fieldNames in fieldNamesToTypes) {
             if (util.HOP(fieldNamesToTypes, fieldNames)) {
                 var types = Object.keys(fieldNamesToTypes[fieldNames]);
-                types.forEach(function (t) {
+                types.forEach(function(t) {
                     typeToRoot[t] = types[0];
                 });
             }
@@ -715,10 +398,148 @@
                 roots[r] = true;
             }
         }
-        return [ typeToRoot, roots ];
+        return [typeToRoot, roots];
     }
 
-    //# end new equiv ###############################################################
+    function TypeNode(name) {
+        this.name = name;
+        this.fieldToTypeNodes = {}; // string --> array of TypeNode
+    }
+
+    TypeNode.prototype.addField = function(fieldName, targetTypeNode) {
+        var types = [];
+        if (util.HOP(this.fieldToTypeNodes, fieldName))
+            types = this.fieldToTypeNodes[fieldName];
+        var entryExists = types.some(function(t) {
+            return t === targetTypeNode;
+        });
+        if (!entryExists) {
+            types.push(targetTypeNode);
+            this.fieldToTypeNodes[fieldName] = types;
+        }
+    };
+
+    var PrimitiveTypeNodes = {
+        UNDEFINED:new TypeNode("undefined"),
+        NULL:new TypeNode("null"),
+        NUMBER:new TypeNode("number"),
+        BOOLEAN:new TypeNode("boolean"),
+        STRING:new TypeNode("string")
+    };
+
+    function createTypeGraph(roots, typeToRoot, typeNameToFieldTypes) {
+        var nodes = {};
+        function getOrCreateNode(name) {
+            var node = nodes[name];
+            if (node)
+                return node;
+            node = new TypeNode(name);
+            nodes[name] = node;
+            return node;
+        }
+
+        for (var root in roots) {
+            if (util.HOP(roots, root)) {
+                var node = getOrCreateNode(root);
+                var fieldTypes = typeNameToFieldTypes[root];
+                for (var field in fieldTypes) {
+                    if (util.HOP(fieldTypes, field)) {
+                        var targetTypes = fieldTypes[field];
+                        Object.keys(targetTypes).forEach(function(targetType) {
+                            var targetRoot = typeToRoot[targetType];
+                            if (targetRoot) { // e..g, objects created in native code don't have roots
+                                var targetNode = getOrCreateNode(targetRoot);
+                                node.addField(field, targetNode);
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        for (var primKey in PrimitiveTypeNodes) {
+            if (util.HOP(PrimitiveTypeNodes, primKey)) {
+                var primNode = PrimitiveTypeNodes[primKey];
+                nodes[primNode.name] = primNode;
+            }
+        }
+        return nodes;
+    }
+
+    /**
+     * @param {array of TypeNode} rawNodes
+     * @param {string --> true} visited
+     * @param {string} prefix
+     * @param {string --> true} result
+     * @returns {undefined}
+     */
+    function typeDiff2(rawNodes, visited, prefix, result) {
+        var kindsOfNodes = kinds(rawNodes);
+        if (Object.keys(kindsOfNodes).length > 1) {
+            result[prefix + " can be " + Object.keys(kindsOfNodes).toString()] = true;
+            return;
+        }
+
+        // filter already visited nodes
+        var nodes = rawNodes.filter(function(node) {
+            return visited[node.name] === undefined;
+        });
+        // mark nodes as visited
+        nodes.forEach(function(node) {
+            visited[node.name] = true;
+        });
+        var fieldNames = allFields(nodes);
+        for (var fieldName in fieldNames) {
+            if (util.HOP(fieldNames, fieldName)) {
+                var newPrefix = prefix + "." + fieldName;
+                var targetsOfField = targets(nodes, fieldName);
+                if (targetsOfField.length > 1) {
+                    var kindsOfField = kinds(targetsOfField);
+                    if (Object.keys(kindsOfField).length > 1) {
+                        result[newPrefix + " can be " + Object.keys(kindsOfField).toString()] = true;
+                    } else {
+                        typeDiff2(nodes, visited, newPrefix, result);
+                    }
+                }
+            }
+        }
+    }
+
+    function allFields(nodes) {
+        var result = {};
+        nodes.forEach(function(node) {
+            for (var fieldName in node.fieldToTypeNodes) {
+                if (util.HOP(node.fieldToTypeNodes, fieldName)) {
+                    result[fieldName] = true;
+                }
+            }
+        });
+        return result;
+    }
+
+    function targets(nodes, fieldName) {
+        var nameToNode = {};
+        nodes.forEach(function(node) {
+            var typeNodes = node.fieldToTypeNodes[fieldName];
+            if (typeNodes === undefined) {
+                nameToNode[PrimitiveTypeNodes.UNDEFINED.name] = PrimitiveTypeNodes.UNDEFINED;
+            } else {
+                typeNodes.forEach(function(typeNode) {
+                    nameToNode[typeNode.name] = typeNode;
+                });
+            }
+        });
+
+        return util.valueArray(nameToNode);
+    }
+
+    function kinds(nodes) {
+        var result = {};
+        nodes.forEach(function(node) {
+            var kind = getKind(node.name);
+            result[kind] = true;
+        });
+        return result;
+    }
 
     function getKind(type) {
         if (type === "undefined" || type === "null" || type === "object" || type === "function"
@@ -761,27 +582,6 @@
             }
         }
         return result;
-    }
-
-    // TODO replace by toLocations
-    function getLocationsInfo(map, iidToLocation) {
-        var str = "";
-        for (var loc in map) {
-            if (util.HOP(map, loc)) {
-                str += "        found at " + iidToLocation(loc) + ",\n";
-            }
-        }
-        return str;
-    }
-
-    function getTypeInfo(typeMap, iidToLocation) {
-        var str = "";
-        for (var type1 in typeMap) {
-            if (util.HOP(typeMap, type1)) {
-                str += getLocationsInfo(typeMap[type1], iidToLocation);
-            }
-        }
-        return str;
     }
 
     /**
