@@ -90,7 +90,8 @@ config['browser_arg']['octane-chrome'] = ['-url', octane_homepage, '-console'];
 config['browser_arg']['octane2-chrome'] = ['-url', octane2_homepage, '-console'];
 
 
-
+//convert_result_to_table('./exp_output/results_db.js');
+//return ;
 
 // obtain the label for the next experiment
 function getNextLabel(){
@@ -113,9 +114,9 @@ function getNextLabel(){
 }
 
 // check if the parent directory has a sub-directory called jalangi_home
-if (fs.existsSync('./exp_output')) {
+if (fs.existsSync('./tests/jitaware/experiments/exp_output')) {
     console.log('clear exp_output dir');
-    child_process.exec('rm -r ./exp_output/*', function (error, stdout, stderr) {
+    child_process.exec('rm -r ./tests/jitaware/experiments/exp_output/*', function (error, stdout, stderr) {
         if (error !== null) {
             console.log('clear directory exp_output error: ' + error);
         }
@@ -123,7 +124,7 @@ if (fs.existsSync('./exp_output')) {
     });
     return ;
 } else {
-    fs.mkdirSync('./exp_output');
+    fs.mkdirSync('./tests/jitaware/experiments/exp_output');
     start_experiment();
 }
 
@@ -131,8 +132,8 @@ function start_experiment(){
     getNextLabel();
     if(!current_label) { // undefined label indicates all experiments are done
         console.log('experiment complete, converting results into csv file...');
-        convert_result_to_table('./exp_output/results_db.js');
-        console.log('csv table saved into: ' + process.cwd() + '/exp_output/result.csv');
+        convert_result_to_table('./tests/jitaware/experiments/exp_output/results_db.js');
+        console.log('csv table saved into: ' + process.cwd() + 'tests/jitaware/experiments/exp_output/result.csv');
         console.log('Please use excel to view the result.');
         return ;
     }
@@ -165,9 +166,9 @@ function test_on_firefox() {
         }
         setTimeout(function () {
             browser_process = child_process.spawn(config['browser_cmd'][current_label], config['browser_arg'][current_label]);
-            fs.writeFileSync(process.cwd() + '/exp_output/console.txt', '');
+            fs.writeFileSync(process.cwd() + '/tests/jitaware/experiments/exp_output/console.txt', '');
             browser_process.stdout.on('data', function (data) {
-                fs.appendFileSync(process.cwd() + '/exp_output/console.txt', data);
+                fs.appendFileSync(process.cwd() + '/tests/jitaware/experiments/exp_output/console.txt', data);
             });
 
             browser_process.stderr.on('data', function (data) {
@@ -175,7 +176,7 @@ function test_on_firefox() {
             });
         }, 1000);
     }catch(e) {
-        console.log(e);
+        console.log('!!!!!!!!!!!' + e);
     }
 }
 
@@ -262,7 +263,7 @@ function check_console_output() {
     var stop = false;
     console.log('checking console.txt ...');
     try{
-        var content = fs.readFileSync(process.cwd() + '/exp_output/console.txt', 'utf8');
+        var content = fs.readFileSync(process.cwd() + '/tests/jitaware/experiments/exp_output/console.txt', 'utf8');
         if(typeof content === 'string' && content.length>0){
             if(content.indexOf('===experiment done===') >=0 ){
                 // first close the browser
@@ -274,7 +275,7 @@ function check_console_output() {
                     console.log('process is undefined');
                 }
                 process_record_console_output(content);
-                fs.unlink(process.cwd() + '/exp_output/console.txt');
+                fs.unlink(process.cwd() + '/tests/jitaware/experiments/exp_output/console.txt');
 
                 stop = true
                 setTimeout(function () {
@@ -318,7 +319,7 @@ function process_record_console_output(content) {
 function add_result_to_csv(result){
     var all_results = {};
     try{
-        var content = fs.readFileSync(process.cwd() + '/exp_output/results_db.js');
+        var content = fs.readFileSync(process.cwd() + '/tests/jitaware/experiments/exp_output/results_db.js');
         all_results = JSON.parse(content);
     } catch(e) {
         // do nothing
@@ -340,7 +341,7 @@ function add_result_to_csv(result){
             all_results[current_label][prop].push(result[prop]);
         }
     }
-    fs.writeFileSync(process.cwd() + '/exp_output/results_db.js', JSON.stringify(all_results));
+    fs.writeFileSync(process.cwd() + '/tests/jitaware/experiments/exp_output/results_db.js', JSON.stringify(all_results));
 }
 
 // convert result_db into csv file
@@ -363,5 +364,5 @@ function convert_result_to_table(db_path){
             }
         }
     }
-    fs.writeFileSync(process.cwd() + '/exp_output/result.csv', output.join('\n'));
+    fs.writeFileSync(process.cwd() + '/tests/jitaware/experiments/exp_output/result.csv', output.join('\n'));
 }
