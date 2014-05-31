@@ -4283,6 +4283,9 @@ var const_earley;
                                                                 {
                                                                     (prev_trees = (deriv_trees(prev, i, k, sc_enders_92, sc_steps_93, sc_names_94, sc_toks_95, sc_states_96, BgL_sc_nbzd2nts_97zd2)));
                                                                     (ender_trees = (deriv_trees(ender, k, j, sc_enders_92, sc_steps_93, sc_names_94, sc_toks_95, sc_states_96, BgL_sc_nbzd2nts_97zd2)));
+                                                                    if (ender_trees === undefined) {
+                                                                      var XXXX = "DEBUG HERE";
+                                                                    }
                                                                     loop3 = function(l3, l2) {
                                                                         var l4;
                                                                         var sc_l2_100;
@@ -4303,6 +4306,9 @@ var const_earley;
                                                                         else
                                                                             return (loop2((ender_set[(k+(5))]), l2));
                                                                     };
+                                                                    if (ender_trees === undefined) {
+                                                                      var XXXX = "DEBUG HERE";
+                                                                    }
                                                                     return (loop3(ender_trees, l2));
                                                                 }
                                                             else
