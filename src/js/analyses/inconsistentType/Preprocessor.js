@@ -134,9 +134,9 @@
 
     function createAssignmentBelief(varName, rhs) {
         if (rhs.type === "Literal" && rhs.value === null) {   // e.g., "x = null" and "x = undefined"
-            insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(varName, "null")});
+            insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(varName, "null")});
         } else if (rhs.type === "Identifier" && rhs.name === "undefined") {
-            insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(varName, "undefined")});
+            insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(varName, "undefined")});
         }
     }
 
@@ -145,13 +145,22 @@
             if (exprNode.right.type === "Identifier" &&
                   ((exprNode.left.type === "ArrayExpression" && exprNode.left.elements.length === 0) ||
                         (exprNode.left.type === "ObjectExpression" && exprNode.left.properties.length === 0))) {
-                insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(exprNode.right.name, "undefined")});
-                insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(exprNode.right.name, "null")});
+                insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(exprNode.right.name, "undefined")});
+                insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(exprNode.right.name, "null")});
             } else if (exprNode.left.type === "Identifier" &&
                   ((exprNode.right.type === "ArrayExpression" && exprNode.right.elements.length === 0) ||
                         (exprNode.right.type === "ObjectExpression" && exprNode.right.properties.length === 0))) {
-                insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(exprNode.left.name, "undefined")});
-                insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(exprNode.left.name, "null")});
+                insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(exprNode.left.name, "undefined")});
+                insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(exprNode.left.name, "null")});
+            }
+        } else if (exprNode.operator === "&&") { // e.g., "x && x.foo ===23"
+            if (exprNode.left.type === "Identifier") {
+                insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(exprNode.left.name, "undefined")});
+                insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(exprNode.left.name, "null")});
+            }
+            if (exprNode.right.type === "Identifier") {
+                insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(exprNode.right.name, "undefined")});
+                insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(exprNode.right.name, "null")});
             }
         }
     }
@@ -162,23 +171,23 @@
         if (literal === undefined)
             literal = "undefined";
         if ((operator === "===" || operator === "!==") && (literal === "undefined" || literal === "null")) {
-            insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(identifierNode.name, literal)});
+            insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(identifierNode.name, literal)});
         }
         if ((operator === "==" || operator === "!=") && (literal === "undefined" || literal === "null")) {
-            insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(identifierNode.name, "null")});
-            insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(identifierNode.name, "undefined")});
+            insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(identifierNode.name, "null")});
+            insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(identifierNode.name, "undefined")});
         }
     }
 
     function createConditionalBeliefIdentifier(identifierNode) {
         if (identifierNode.name !== "null" && identifierNode !== "undefined") {
-            insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(identifierNode.name, "null")});
-            insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(identifierNode.name, "undefined")});
+            insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(identifierNode.name, "null")});
+            insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(identifierNode.name, "undefined")});
         }
     }
 
     function createConditionalBeliefTypeOf(varName, typeName) {
-        insertionsToMake.push({fct:functionStack[functionStack.length-1], stmt:freshBeliefStmt(varName, typeName)});
+        insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(varName, typeName)});
     }
 
     function isTypeNameLiteral(literal) {

@@ -1830,7 +1830,8 @@ jQuery.extend({
 
 	// For internal use only.
 	_data: function( elem, name, data ) {
-		return jQuery.data( elem, name, data, true );
+    var ret = jQuery.data( elem, name, data, true );
+		return ret;
 	},
 
 	// A method for determining if a DOM node can handle the data expando
