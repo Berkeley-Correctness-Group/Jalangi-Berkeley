@@ -58,11 +58,32 @@
         for (var k in map) {
             if (HOP(map, k)) {
                 var v = map[k];
-                if (values.indexOf(v) === -1) 
+                if (values.indexOf(v) === -1)
                     values.push(v);
             }
         }
         return values;
+    }
+
+    function commonSuffix(a1, a2) {
+        var result = [];
+        var i1 = a1.length - 1;
+        var i2 = a2.length - 1;
+        for (; i1 >= 0 && i2 >= 0; i1--, i2--) {
+            if (a1[i1] === a2[i2])
+                result.push(a1[i1]);
+        }
+        return result.reverse();
+    }
+
+    function sameProps(o1, o2) {
+        if (Object.keys(o1).length !== Object.keys(o2).length)
+            return false;
+        for (var p1 in o1) {
+            if (HOP(o1, p1) && !HOP(o2, p1)) 
+                return false;
+        }
+        return true;
     }
 
     // boilerplate to use this file both in browser and in node application
@@ -84,5 +105,8 @@
     module.mergeToLeft = mergeToLeft;
     module.nbOfValues = nbOfValues;
     module.valueArray = valueArray;
+    module.commonSuffix = commonSuffix;
+    module.sameProps = sameProps;
 
 })();
+

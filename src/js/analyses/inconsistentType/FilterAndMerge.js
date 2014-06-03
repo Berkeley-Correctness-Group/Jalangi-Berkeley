@@ -33,6 +33,7 @@
         filterByNbTypes(warnings);
         mergeUsingCallGraph(warnings, engineResults.callGraph);
         mergeByLocation(warnings);
+        mergeByTypeDiff(warnings);
 
         return produceFinalWarnings(warnings);
     }
@@ -111,13 +112,56 @@
     function mergeByLocation(warnings) {
         var locToWarnings = {};
         warnings.forEach(function(w) {
-            var warningsAtLoc = locToWarnings[w.typeDescription.location] || [];
-            warningsAtLoc.forEach(function(otherWarning) {
-                w.addMergeWith(otherWarning);
-                otherWarning.addMergeWith(w);
+            var loc = w.typeDescription.location;
+            if (loc && loc !== "undefined") {
+                var warningsAtLoc = locToWarnings[loc] || [];
+                warningsAtLoc.forEach(function(otherWarning) {
+                    w.addMergeWith(otherWarning);
+                    otherWarning.addMergeWith(w);
+                });
+                warningsAtLoc.push(w);
+                locToWarnings[loc] = warningsAtLoc;
+            }
+        });
+    }
+
+    function mergeByTypeDiff(warnings) {
+        warnings.forEach(function(w1) {
+            var diffEntries1 = util.valueArray(w1.typeDiff);
+            warnings.forEach(function(w2) {
+                if (w1 !== w2) {
+                    var diffEntries2 = util.valueArray(w2.typeDiff);
+                    if (diffEntries1.length === diffEntries2.length) {
+                        // try to find a bijective mapping between the diff entries,
+                        // so that e1 and e2 have a common suffix and point to the same types
+                        var match = true;
+                        for (var i1 = 0; i1 < diffEntries1.length; i1++) {
+                            var entry1 = diffEntries1[i1];
+                            var entry2;
+                            diffEntries2.some(function(entry) {
+                                var exprParts1 = entry1.expr.split(".").slice(1);
+                                var exprParts2 = entry.expr.split(".").slice(1);
+                                var commonSuffix = exprParts1.length > 0 && exprParts2.length > 0 &&
+                                      util.commonSuffix(exprParts1, exprParts2).length > 0;
+                                if (commonSuffix && util.sameProps(entry1.kinds, entry.kinds)) {
+                                    entry2 = entry;
+                                    return true;
+                                }
+                            });
+                            if (entry2 === undefined) {
+                                match = false;
+                                break;
+                            }
+                        }
+                        // the above algorithm may not find a bijective mapping between diff entries, even though one exists
+                        // (but does so in practice; will improve it if we find a case where it matters)
+                        if (match) {
+                            w1.addMergeWith(w2);
+                            w2.addMergeWith(w1);
+                        }
+                    }
+                }
             });
-            warningsAtLoc.push(w);
-            locToWarnings[w.typeDescription.location] = warningsAtLoc;
         });
     }
 
