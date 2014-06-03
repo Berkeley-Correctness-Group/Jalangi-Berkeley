@@ -3,7 +3,7 @@
 rm -rf instrumentFF_tmp
 rm -rf octane_execution_counters
 mkdir octane_execution_counters
-for bm in `ls -1 tests/octane2/index_*.html | grep -v -e "typescript\|zlib" | xargs`
+for bm in `ls -1 tests/octane2/index_*.html | grep -v -e "typescript\|zlib\|earley-boyer" | xargs`
 do
   echo "####################################"
   echo ${bm}

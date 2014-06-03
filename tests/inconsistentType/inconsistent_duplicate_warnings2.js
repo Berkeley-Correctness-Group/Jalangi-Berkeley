@@ -16,16 +16,10 @@
 
 // Author: Michael Pradel
 
-(function() {
+function foo(x,y) {
+    x;
+    y;
+}
 
-    var x;
-    x = {a:true, b:{x:23, y:"aa"}, c:{r:"bb", s:23}};
-    x = {a:true, b:{x:x, y:"aa"}, c:{r:"bb", s:23}};
-    var y = {a:x.c, b:{x:23, y:"aa"}, c:{r:"bb", s:23}};
-    
-    function foo(arg) {}
-    foo(foo);
-    foo(y);
-
-
-})();
+foo(23, 42);
+foo("a", "b");

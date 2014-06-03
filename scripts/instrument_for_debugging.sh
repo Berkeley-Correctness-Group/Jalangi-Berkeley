@@ -8,7 +8,7 @@ node src/js/analyses/inconsistentType/Preprocessor.js instrument_for_debugging_t
 
 cp scripts/debugging_template.html instrument_for_debugging_tmp/index.html
 
-node ../jalangi/src/js/commands/instrument.js --direct_in_output --copy_runtime --smemory --inbrowser --analysis src/js/analyses/CommonUtil.js --analysis src/js/analyses/inconsistentType/CallGraph.js --analysis src/js/analyses/inconsistentType/TypeAnalysis.js --analysis src/js/analyses/inconsistentType/InconsistentTypeEngine.js --outputDir instrumented/ instrument_for_debugging_tmp
+node ../jalangi/src/js/commands/instrument.js --direct_in_output --copy_runtime --smemory --inbrowser --analysis src/js/analyses/CommonUtil.js --analysis src/js/analyses/inconsistentType/CallGraph.js --analysis src/js/analyses/inconsistentType/FilterAndMerge.js --analysis src/js/analyses/inconsistentType/TypeAnalysis.js --analysis src/js/analyses/inconsistentType/InconsistentTypeEngine.js --outputDir instrumented/ instrument_for_debugging_tmp
 
 rm -rf instrument_for_debugging_tmp
 

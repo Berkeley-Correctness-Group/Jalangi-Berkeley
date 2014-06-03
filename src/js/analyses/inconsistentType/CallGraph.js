@@ -174,27 +174,26 @@
         mapping[benchmark] = graph;
     };
 
-    var filterWarnings = function(callgraph, warnings) {
+    var markWarningsForMerging = function(callgraph, warnings) {
         var frameList = getFrameList(callgraph);
 
         var disjointUnion = findMappableBugs(frameList, callgraph, warnings);
         initDisjoint(disjointUnion);
         checkAllEdges(disjointUnion);
         var groups = groupWarnings(disjointUnion);
-        propagateBeliefs(groups, warnings);
-        return removeDuplicates(disjointUnion, warnings, groups);
+        markForMerging(groups, warnings);
+//        return removeDuplicates(disjointUnion, warnings, groups);  // now moved to FilterAndMerge
     };
 
-    function propagateBeliefs(groups, warnings) {
+    function markForMerging(groups, warnings) {
         for (var leaderIdx in groups) {
             if (util.HOP(groups, leaderIdx)) {
                 var leaderWarning = warnings[leaderIdx];
                 var otherIdxs = groups[leaderIdx];
                 otherIdxs.forEach(function(otherIdx) {
                     var otherWarning = warnings[otherIdx];
-                    if (otherWarning.removeByBelief) {
-                        leaderWarning.removeByBelief = true;
-                    }
+                    otherWarning.addMergeWith(leaderWarning);
+                    leaderWarning.addMergeWith(otherWarning);
                 });
             }
         }
@@ -244,7 +243,7 @@
     }
 
     module.addGraph = addGraph;
-    module.filterWarnings = filterWarnings;
+    module.markWarningsForMerging = markWarningsForMerging;
     module.fEnter = fEnter;
     module.fExit = fExit;
     module.prepareBind = prepareBind;

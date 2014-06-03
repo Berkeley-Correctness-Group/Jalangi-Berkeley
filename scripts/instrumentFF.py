@@ -53,6 +53,7 @@ excluded = [ ] # [ r'jquery', r'iscroll', r'peg-0.6.2', r'String.js', r'jsviews'
 jalangiAnalysisFiles = [ 
    jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
    jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/CallGraph.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/FilterAndMerge.js",
    jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/TypeAnalysis.js",
    jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/InconsistentTypeEngine.js"
 ]

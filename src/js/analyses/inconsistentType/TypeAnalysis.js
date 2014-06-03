@@ -2,7 +2,7 @@
 
     var util = importModule("CommonUtil");
     var visualization = importModule("Visualization");
-    var callGraph = importModule("CallGraph");
+    var filterAndMerge = importModule("FilterAndMerge");
 
     function analyzeTypes(engineResults, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
         var tableAndRoots = equiv3(engineResults.typeNameToFieldTypes);
@@ -10,19 +10,16 @@
         var typeGraph = createTypeGraph(tableAndRoots[1], tableAndRoots[0], engineResults.typeNameToFieldTypes);
 
         // TODO analyze() and visualization should use typeGraph
-        var typeWarnings = analyze(engineResults.typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
-        analyzeBeliefs(typeWarnings, engineResults.frameToBeliefs);
-        typeWarnings = callGraph.filterWarnings(engineResults.callGraph, typeWarnings);
-        typeWarnings = filterByBelief(typeWarnings);
-        typeWarnings = filterNullRelated(typeWarnings, typeGraph, tableAndRoots[0]);
+        var warnings = analyze(engineResults.typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
+        warnings = filterAndMerge.filterAndMerge(warnings, engineResults, typeGraph, tableAndRoots, PrimitiveTypeNodes);
 
         if (visualizeAllTypes) {
             var allHighlightedIIDs = {};
-            addHighlightedIIDs(allHighlightedIIDs, typeWarnings);
+            addHighlightedIIDs(allHighlightedIIDs, warnings);
             visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], engineResults.typeNameToFieldTypes, engineResults.typeNames, iidToLocation, allHighlightedIIDs, false);
         }
 
-        typeWarnings.forEach(function(w) {
+        warnings.forEach(function(w) {
             if (printWarnings) {
                 console.log(w.toString());
             }
@@ -30,7 +27,7 @@
                 visualization.generateDOT(tableAndRoots[0], tableAndRoots[1], engineResults.typeNameToFieldTypes, engineResults.typeNames, iidToLocation, w.highlightedIIDs, true, "warning" + w.id + ".dot");
             }
         });
-        return typeWarnings;
+        return warnings;
     }
 
     var warningCtr = 0;
@@ -48,7 +45,8 @@
         this.highlightedIIDs = highlightedIIDs;
         warningCtr++;
         this.id = warningCtr;
-        this.removeByBelief = false;
+        this.filterBecause = {}; // string --> true
+        this.mergeWith = []; // InconsistentTypeWarning
     }
 
     InconsistentTypeWarning.prototype.toString = function() {
@@ -60,9 +58,14 @@
             });
         });
         if (this.typeDiff) {
-            s += "\n    Type diff:\n" + this.typeDiff.toString() + "\n";
+            s += "\n    Type diff:\n" + Object.keys(this.typeDiff).toString() + "\n";
         }
         return s;
+    };
+
+    InconsistentTypeWarning.prototype.addMergeWith = function(otherWarning) {
+        if (this.mergeWith.indexOf(otherWarning) === -1)
+            this.mergeWith.push(otherWarning);
     };
 
     function UndefinedFieldWarning(typeDescription, locations, highlightedIIDs) {
@@ -302,7 +305,10 @@
         for (var type in typeNameToFieldTypes) {
             if (util.HOP(typeNameToFieldTypes, type)) {
                 var fieldNames = getFieldNames(type, typeNameToFieldTypes);
-                var typesWithFieldNames = fieldNamesToTypes[fieldNames] || {};
+                var typesWithFieldNames = {};
+                if (util.HOP(fieldNamesToTypes, fieldNames)) {
+                    typesWithFieldNames = fieldNamesToTypes[fieldNames];
+                }
                 typesWithFieldNames[type] = true;
                 fieldNamesToTypes[fieldNames] = typesWithFieldNames;
             }
@@ -451,108 +457,6 @@
         return nodes;
     }
 
-    function TypeDiffEntry(expr, kinds) {
-        this.expr = expr;
-        this.kinds = kinds;
-    }
-    
-    TypeDiffEntry.prototype.toString = function() {
-        return this.expr+" can be "+this.kinds.toString();
-    };
-
-    /**
-     * @param {array of TypeNode} rawNodes
-     * @param {string --> true} visited
-     * @param {string} prefix
-     * @param {string --> TypeDiffEntry} result
-     */
-    function typeDiff2(rawNodes, visited, prefix, result) {
-        var kindsOfNodes = kinds(rawNodes);
-        if (Object.keys(kindsOfNodes).length > 1) {
-            var diffEntry = new TypeDiffEntry(prefix, Object.keys(kindsOfNodes));
-            result[diffEntry.toString()] = diffEntry;
-            return;
-        }
-
-        // filter already visited nodes
-        var nodes = rawNodes.filter(function(node) {
-            return visited[node.name] === undefined;
-        });
-        // mark nodes as visited
-        nodes.forEach(function(node) {
-            visited[node.name] = true;
-        });
-        var fieldNames = allFields(nodes);
-        for (var fieldName in fieldNames) {
-            if (util.HOP(fieldNames, fieldName)) {
-                var newPrefix = prefix + "." + fieldName;
-                var targetsOfField = targets(nodes, fieldName);
-                if (targetsOfField.length > 1) {
-                    var kindsOfField = kinds(targetsOfField);
-                    if (Object.keys(kindsOfField).length > 1) {
-                        var diffEntry = new TypeDiffEntry(newPrefix, Object.keys(kindsOfField));
-                        result[diffEntry.toString()] = diffEntry;
-                    } else {
-                        typeDiff2(targetsOfField, visited, newPrefix, result);
-                    }
-                }
-            }
-        }
-    }
-
-    function allFields(nodes) {
-        var result = {};
-        nodes.forEach(function(node) {
-            for (var fieldName in node.fieldToTypeNodes) {
-                if (util.HOP(node.fieldToTypeNodes, fieldName)) {
-                    result[fieldName] = true;
-                }
-            }
-        });
-        return result;
-    }
-
-    function targets(nodes, fieldName) {
-        var nameToNode = {};
-        nodes.forEach(function(node) {
-            var typeNodes = node.fieldToTypeNodes[fieldName];
-            if (typeNodes === undefined) {
-                nameToNode[PrimitiveTypeNodes.UNDEFINED.name] = PrimitiveTypeNodes.UNDEFINED;
-            } else {
-                typeNodes.forEach(function(typeNode) {
-                    nameToNode[typeNode.name] = typeNode;
-                });
-            }
-        });
-
-        return util.valueArray(nameToNode);
-    }
-
-    function kinds(nodes) {
-        var result = {};
-        nodes.forEach(function(node) {
-            var kind = getKind(node.name);
-            result[kind] = true;
-        });
-        return result;
-    }
-
-    function getKind(type) {
-        if (type === "undefined" || type === "null" || type === "object" || type === "function"
-              || type === "string" || type === "number" || type === "boolean"
-              || type.indexOf("global scope") === 0 || type.indexOf("native function") === 0)
-            return type;
-        else if (type.indexOf("object(") === 0)
-            return "object";
-        else if (type.indexOf("function(") === 0)
-            return "function";
-        else if (type.indexOf("frame(") === 0)
-            return "frame";
-        else if (type.indexOf("array(") === 0)
-            return "array";
-        util.assert(false, type);
-    }
-
     function toTypeDescription(type, iidToLocation) {
         if (type.indexOf("(") > 0) {
             var type1 = type.substring(0, type.indexOf("("));
@@ -578,65 +482,6 @@
             }
         }
         return result;
-    }
-
-    function filterNullRelated(warnings, typeGraph, typeToRoot) {
-        return warnings.filter(function(w) {
-            var observedTypes = w.observedTypesAndLocations.map(function(tl) {
-                return tl[0].typeName;
-            });
-            var typeNodes = observedTypes.map(function(typeName) {
-                var rootName = typeToRoot[typeName];
-                return typeGraph[rootName];
-            });
-            var diffs = {};
-            typeDiff2(typeNodes, {}, w.fieldName, diffs);
-
-            var hasNonNullRelated = Object.keys(diffs).some(function(diffKey) {
-                var diff = diffs[diffKey];
-                return diff.kinds.indexOf("null") === -1;
-            });
-            if (hasNonNullRelated) {
-                w.typeDiff = Object.keys(diffs).toString();
-                return true;
-            } else {
-                return false;
-            }
-        });
-    }
-
-    /**
-     * Marks warnings that can be removed due to "beliefs".
-     * @param {type} typeWarnings
-     * @param {type} frameToBeliefs
-     * @returns {undefined}
-     */
-    function analyzeBeliefs(typeWarnings, frameToBeliefs) {
-        typeWarnings.forEach(function(w) {
-            var varNameToTypes = frameToBeliefs[w.typeDescription.typeName];
-            if (varNameToTypes) {
-                var beliefTypes = varNameToTypes[w.fieldName];
-                if (beliefTypes) {
-                    var observedTypes = {};
-                    w.observedTypesAndLocations.forEach(function(tl) {
-                        observedTypes[tl[0].typeName] = true;
-                    });
-                    // remove types that the programmer believes to be OK
-                    Object.keys(beliefTypes).forEach(function(beliefType) {
-                        delete observedTypes[beliefType];
-                    });
-                    if (Object.keys(observedTypes).length <= 1) {
-                        w.removeByBelief = true;
-                    }
-                }
-            }
-        });
-    }
-
-    function filterByBelief(typeWarnings) {
-        return typeWarnings.filter(function(w) {
-            return w.removeByBelief === false;
-        });
     }
 
     // boilerplate to use this file both in browser and in node application
