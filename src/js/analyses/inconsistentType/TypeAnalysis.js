@@ -47,7 +47,7 @@
         warningCtr++;
         this.id = warningCtr;
         this.filterBecause = {}; // string --> true
-        this.mergeWith = []; // InconsistentTypeWarning
+        this.mergeWith = []; // array of InconsistentTypeWarning
     }
 
     InconsistentTypeWarning.prototype.toString = function() {
@@ -68,7 +68,7 @@
         if (this.mergeWith.indexOf(otherWarning) === -1)
             this.mergeWith.push(otherWarning);
     };
-
+    
     function UndefinedFieldWarning(typeDescription, locations, highlightedIIDs) {
         this.typeDescription = typeDescription;
         this.locations = locations;

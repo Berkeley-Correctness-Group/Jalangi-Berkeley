@@ -33,10 +33,14 @@
         filterNullRelated(warnings);
         filterByNbTypes(warnings);
         mergeUsingCallGraph(warnings, engineResults.callGraph);
-        mergeByLocation(warnings);
         mergeByTypeDiff(warnings);
+        mergeSameArray(warnings);
 
-        return produceFinalWarnings(warnings);
+        return mergeAndFilterWarnings(warnings);
+    }
+
+    function group(warnings) {
+        return groupByLocation(warnings);
     }
 
     function computeTypeDiffs(warnings, typeGraph, typeToRoot) {
@@ -110,11 +114,11 @@
         warnings = callGraphModule.markWarningsForMerging(callGraph, warnings);
     }
 
-    function mergeByLocation(warnings) {
+    function mergeSameArray(warnings) {
         var locToWarnings = {};
         warnings.forEach(function(w) {
-            var loc = w.typeDescription.location;
-            if (loc && loc !== "undefined") {
+            if (w.typeDescription.kind === "array") {
+                var loc = w.typeDescription.location;
                 var warningsAtLoc = locToWarnings[loc] || [];
                 warningsAtLoc.forEach(function(otherWarning) {
                     w.addMergeWith(otherWarning);
@@ -124,6 +128,22 @@
                 locToWarnings[loc] = warningsAtLoc;
             }
         });
+        return locToWarnings;
+    }
+
+    function groupByLocation(warnings) {
+        var locToWarnings = {};
+        warnings.forEach(function(w) {
+            var loc = w.typeDescription.location;
+            var warningsAtLoc = locToWarnings[loc] || [];
+            warningsAtLoc.forEach(function(otherWarning) {
+                w.addGroupWith(otherWarning);
+                otherWarning.addGroupWith(w);
+            });
+            warningsAtLoc.push(w);
+            locToWarnings[loc] = warningsAtLoc;
+        });
+        return locToWarnings;
     }
 
     function mergeByTypeDiff(warnings) {
@@ -166,16 +186,19 @@
         });
     }
 
-    function produceFinalWarnings(warnings) {
-        // 1) merge warnings (transitive closure)
+    /**
+     * @param {type} warnings
+     * @returns {map} 
+     */
+    function transitiveClosure(warnings) {
         var idxToFinal = {}; // nb -> nb
-        var finalToIdxs = {}; // nb -> nb -> true
+        var leaderToIdxs = {}; // nb -> nb -> true
         var i, i1, i2, w1, w2;
         for (i = 0; i < warnings.length; i++) {
             idxToFinal[i] = i;
             var idxs = {};
             idxs[i] = true;
-            finalToIdxs[i] = idxs;
+            leaderToIdxs[i] = idxs;
         }
 
         var changed = true;
@@ -190,11 +213,11 @@
                         var newFinal = idxToFinal[i1];
                         var oldFinalOf2 = idxToFinal[i2];
                         idxToFinal[i2] = newFinal;
-                        Object.keys(finalToIdxs[oldFinalOf2]).forEach(function(i3) {
+                        Object.keys(leaderToIdxs[oldFinalOf2]).forEach(function(i3) {
                             idxToFinal[i3] = newFinal;
-                            finalToIdxs[newFinal][i3] = true;
+                            leaderToIdxs[newFinal][i3] = true;
                         });
-                        finalToIdxs[oldFinalOf2] = {};
+                        leaderToIdxs[oldFinalOf2] = {};
 
                         changed = true;
                         break outer;
@@ -202,13 +225,18 @@
                 }
             }
         }
+        return leaderToIdxs;
+    }
 
-        // 2) keep a final warning iff none of the warnings in its group is marked for removal
-        var finalWarnings = [];
-        Object.keys(finalToIdxs).forEach(function(finalIdx) {
-            var idxs = finalToIdxs[finalIdx];
+    function mergeAndFilterWarnings(warnings) {
+        var mergedToIdxs = transitiveClosure(warnings);
+
+        // keep a warning iff none of the warnings in its merge set is marked for removal
+        var result = [];
+        Object.keys(mergedToIdxs).forEach(function(finalIdx) {
+            var idxs = mergedToIdxs[finalIdx];
             if (Object.keys(idxs).length > 0) {
-                var finalWarning = warnings[finalIdx];
+                var mergedWarning = warnings[finalIdx];
                 var keep = true;
                 // check if any of the warnings this final warning represents is marked for removal
                 Object.keys(idxs).forEach(function(inGroupIdx) {
@@ -216,10 +244,11 @@
                         keep = false;
                 });
                 if (keep)
-                    finalWarnings.push(finalWarning);
+                    result.push(mergedWarning);
             }
         });
-        return finalWarnings;
+
+        return result;
     }
 
     function TypeDiffEntry(expr, kinds) {
@@ -329,5 +358,6 @@
 
     // exports
     module.filterAndMerge = filterAndMerge;
+    module.group = group;
 
 })();

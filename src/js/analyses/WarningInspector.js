@@ -51,6 +51,7 @@
             });
             if (Object.keys(warning.ids).length === knownIds) {
                 console.log("Skipping known warning (" + Object.keys(warning.warningNbs) + "): " + Object.keys(commentsOfKnown));
+//                console.log(warning.text);
             } else {
                 console.log("===============================\n" + warning.text + "\n");
                 var inspectedIdsTemplates = Object.keys(warning.ids).map(function(id) {
