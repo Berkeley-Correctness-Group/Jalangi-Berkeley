@@ -20,6 +20,7 @@
 
     var util = importModule("CommonUtil");
     var callGraphModule = importModule("CallGraph");
+    var typeUtil = importModule("TypeUtil");
 
     var maxTypes = 2;
 
@@ -301,26 +302,10 @@
     function kinds(nodes) {
         var result = {};
         nodes.forEach(function(node) {
-            var kind = getKind(node.name);
+            var kind = typeUtil.getKind(node.name);
             result[kind] = true;
         });
         return result;
-    }
-
-    function getKind(type) {
-        if (type === "undefined" || type === "null" || type === "object" || type === "function"
-              || type === "string" || type === "number" || type === "boolean"
-              || type.indexOf("global scope") === 0 || type.indexOf("native function") === 0)
-            return type;
-        else if (type.indexOf("object(") === 0)
-            return "object";
-        else if (type.indexOf("function(") === 0)
-            return "function";
-        else if (type.indexOf("frame(") === 0)
-            return "frame";
-        else if (type.indexOf("array(") === 0)
-            return "array";
-        util.assert(false, type);
     }
 
     // boilerplate to use this file both in browser and in node application

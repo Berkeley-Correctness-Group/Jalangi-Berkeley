@@ -9370,7 +9370,7 @@ var settings = [            //Some settings.
   false,                //Override to allow for MBC1 instead of ROM only (compatibility for broken 3rd-party cartridges).
   false,                //Override MBC RAM disabling and always allow reading and writing to the banks.
   false,                //Use the GameBoy boot ROM instead of the GameBoy Color boot ROM.
-  true, // MP: modified to crash                //Scale the canvas in JS, or let the browser scale the canvas?
+  false, // MP: modify to true to crash                //Scale the canvas in JS, or let the browser scale the canvas?
   0x10,                //Internal audio buffer pre-interpolation factor.
   1                  //Volume level set.
 ];

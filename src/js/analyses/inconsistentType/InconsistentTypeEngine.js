@@ -225,7 +225,6 @@
             callGraph.fExit(smemory);
         };
 
-
         this.readPre = function(iid, name, val, isGlobal) {
             if (name !== "this") {
                 updateType(smemory.getFrame(name), name, val, iid);

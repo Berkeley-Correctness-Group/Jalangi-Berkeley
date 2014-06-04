@@ -1,11 +1,12 @@
 (function() {
 
     var util = importModule("CommonUtil");
+    var typeUtil = importModule("TypeUtil");
     var visualization = importModule("Visualization");
     var filterAndMerge = importModule("FilterAndMerge");
 
     function analyzeTypes(engineResults, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
-        var tableAndRoots = equiv3(engineResults.typeNameToFieldTypes);
+        var tableAndRoots = equiv(engineResults.typeNameToFieldTypes);
 
         var typeGraph = createTypeGraph(tableAndRoots[1], tableAndRoots[0], engineResults.typeNameToFieldTypes);
 
@@ -254,9 +255,16 @@
         });
     }
 
-    function equiv3(typeNameToFieldTypes) {
-        var fieldNamesToTypes = createFieldNamesToTypes(typeNameToFieldTypes);
-        var typeToRoot = initialTypeToRoot(fieldNamesToTypes);
+    /**
+     * Merges types that are structurally equivalent.
+     * Starts with assumption that all types of the same kind are equivalent,
+     * and splits types whenever a difference is found.
+     * @param {map} typeNameToFieldTypes
+     * @returns {Array}
+     */
+    function equiv(typeNameToFieldTypes) {
+        var fieldNamesAndKindToTypes = createFieldNamesAndKindToTypes(typeNameToFieldTypes);
+        var typeToRoot = initialTypeToRoot(fieldNamesAndKindToTypes);
         var changed = true;
         var type;
         while (changed) {
@@ -264,7 +272,7 @@
             typeLoop: for (type in typeToRoot) {
                 if (util.HOP(typeToRoot, type)) {
                     if (!areSameTypes(type, typeToRoot[type], typeNameToFieldTypes, {})) {
-                        assignOtherRoot(type, typeToRoot, fieldNamesToTypes, typeNameToFieldTypes);
+                        assignOtherRoot(type, typeToRoot, fieldNamesAndKindToTypes, typeNameToFieldTypes);
                         changed = true;
                         break typeLoop;
                     }
@@ -294,26 +302,28 @@
         return typeToRoot;
     }
 
-    function getFieldNames(type, typeNameToFieldTypes) {
+    function getFieldNamesAndKind(type, typeNameToFieldTypes) {
         var fieldToFieldTypes = typeNameToFieldTypes[type];
         var fieldNames = Object.keys(fieldToFieldTypes).sort().toString();
-        return fieldNames;
+        var kind = typeUtil.getKind(type);
+        var concreteKind = kind === "frame" ? type : kind; // for frames, keep the type name to make sure that frames are not merged by equiv()
+        return fieldNames+"@@@@"+concreteKind;
     }
 
-    function createFieldNamesToTypes(typeNameToFieldTypes) {
-        var fieldNamesToTypes = {};
+    function createFieldNamesAndKindToTypes(typeNameToFieldTypes) {
+        var fieldNamesAndKindToTypes = {};
         for (var type in typeNameToFieldTypes) {
             if (util.HOP(typeNameToFieldTypes, type)) {
-                var fieldNames = getFieldNames(type, typeNameToFieldTypes);
-                var typesWithFieldNames = {};
-                if (util.HOP(fieldNamesToTypes, fieldNames)) {
-                    typesWithFieldNames = fieldNamesToTypes[fieldNames];
+                var fieldNamesAndKind = getFieldNamesAndKind(type, typeNameToFieldTypes);
+                var typesWithFieldNamesAndKind = {};
+                if (util.HOP(fieldNamesAndKindToTypes, fieldNamesAndKind)) {
+                    typesWithFieldNamesAndKind = fieldNamesAndKindToTypes[fieldNamesAndKind];
                 }
-                typesWithFieldNames[type] = true;
-                fieldNamesToTypes[fieldNames] = typesWithFieldNames;
+                typesWithFieldNamesAndKind[type] = true;
+                fieldNamesAndKindToTypes[fieldNamesAndKind] = typesWithFieldNamesAndKind;
             }
         }
-        return fieldNamesToTypes;
+        return fieldNamesAndKindToTypes;
     }
 
     // structural comparison of two types
@@ -364,7 +374,7 @@
 
     function assignOtherRoot(type, typeToRoot, fieldNamesToTypes, typeNameToFieldTypes) {
         var oldRoot = typeToRoot[type];
-        var candidateTypes = fieldNamesToTypes[getFieldNames(type, typeNameToFieldTypes)];
+        var candidateTypes = fieldNamesToTypes[getFieldNamesAndKind(type, typeNameToFieldTypes)];
         delete candidateTypes[oldRoot];
         if (Object.keys(candidateTypes).length === 0) {
             typeToRoot[type] = type;
