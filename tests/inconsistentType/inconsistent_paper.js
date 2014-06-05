@@ -18,18 +18,16 @@
 
 function addWrapped(x, y) {
     if (y) {
-        return x.p + y.p;
+        return x.v + y.v;
     } else {
-        return x.p;
+        return x.v;
     }
 }
 
-function Wrapper(p) {
-    this.p = p;
+function Wrapper(v) {
+    this.v = v;
 }
 
-var n = "18";
-var s1 = addWrapped({p:23});
-var s2 = addWrapped(new Wrapper(23));
-var s3 = addWrapped({p: n}, new Wrapper(5));
-console.log(s1 + ", " + s2 + ", " + s3);
+addWrapped({v:23});
+addWrapped({v:20}, new Wrapper(3));
+addWrapped({v:"18"}, new Wrapper(5));
