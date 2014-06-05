@@ -21,8 +21,10 @@
     var util = importModule("CommonUtil");
     var callGraphModule = importModule("CallGraph");
     var typeUtil = importModule("TypeUtil");
+    var benchmarkHelper = importModule("BenchmarkHelper");
 
     var maxTypes = 2;
+    var filteredComponents = ["jquery"];
 
     var PrimitiveTypeNodes;
 
@@ -32,6 +34,7 @@
         filterByBeliefs(warnings, engineResults.frameToBeliefs);
         filterNullRelated(warnings);
         filterByNbTypes(warnings);
+        filterByComponent(warnings);
         mergeUsingCallGraph(warnings, engineResults.callGraph);
         mergeByTypeDiff(warnings);
         mergeSameArray(warnings);
@@ -106,6 +109,15 @@
         warnings.forEach(function(w) {
             if (w.observedTypesAndLocations.length > maxTypes) {
                 w.filterBecause.nbTypes = true;
+            }
+        });
+    }
+
+    function filterByComponent(warnings) {
+        warnings.forEach(function(w) {
+            var component = benchmarkHelper.locationToComponent(w.typeDescription.location);
+            if (filteredComponents.indexOf(component) !== -1) {
+                w.filterBecause.component = true;
             }
         });
     }

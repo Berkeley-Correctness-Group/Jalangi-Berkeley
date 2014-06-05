@@ -83,7 +83,9 @@
         } else if (node.type === "LogicalExpression") {
             visitLogicalExpression(node);
         } else if (node.type === "BinaryExpression") {
-            visitBinaryExpression(node)
+            visitBinaryExpression(node);
+        } else if (node.type === "UnaryExpression") {
+            visitUnaryExpression(node);
         }
     }
 
@@ -109,6 +111,13 @@
         } else if (binExpr.right.type === "Literal" && isTypeNameLiteral(binExpr.right) &&
               binExpr.left.type === "UnaryExpression" && binExpr.left.operator === "typeof" && binExpr.left.argument.type === "Identifier") {
             createConditionalBeliefTypeOf(binExpr.left.argument.name, binExpr.right.value);
+        }
+    }
+    
+    function visitUnaryExpression(unExpr) {
+        if (unExpr.operator === "!" && unExpr.argument.type === "Identifier") {  // e.g., "!x"
+            insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(unExpr.argument.name, "undefined")});
+            insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(unExpr.argument.name, "null")});
         }
     }
 
