@@ -3,7 +3,7 @@
 rm -rf instrumentFF_tmp
 rm -rf webapps
 mkdir webapps
-for bm in "joomla"
+for bm in "zurmo" # "joomla joomla-admin moodle"
 do
   echo "####################################"
   echo ${bm}

@@ -72,6 +72,9 @@ function computeInputVariants(str, n) {
 
 function RegExpBenchmark() {
   function Exec(re, string) {
+    if (string === undefined) {
+      var XXXXX = "DEBUG HERE";
+    }
     var sum = 0;
     re.lastIndex = 0;
     var array = re.exec(string);
@@ -1797,7 +1800,8 @@ function RegExpBenchmark() {
       sum += runBlock9();
       sum += runBlock10();
       sum += runBlock11();
-      if (sum != 1666109) throw new Error("Wrong checksum.");
+      if (sum != 1666173) throw new Error("Wrong checksum.");   // fixed
+      //if (sum != 1666109) throw new Error("Wrong checksum.");  // original
     }
   }
 

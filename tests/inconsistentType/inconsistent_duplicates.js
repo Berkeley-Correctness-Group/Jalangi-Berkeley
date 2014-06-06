@@ -16,18 +16,17 @@
 
 // Author: Michael Pradel
 
-function addWrapped(x, y) {
-    if (y) {
-        return x.v + y.v;
-    } else {
-        return x.v;
+(function() {
+    
+    function foo(x, y) {
+        bar(y);
     }
-}
-
-function Wrapper(v) {
-    this.v = v;
-}
-
-addWrapped({v:23});
-addWrapped({v:20});
-addWrapped({v:"18"}, new Wrapper(5));
+    
+    function bar(z) {}
+    
+    var u;
+    foo(23, "aa");
+    foo(23, u);
+    
+    
+})();
