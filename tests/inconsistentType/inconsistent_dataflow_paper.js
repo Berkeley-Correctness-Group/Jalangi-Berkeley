@@ -16,17 +16,13 @@
 
 // Author: Michael Pradel
 
-(function() {
-
-    function foo(a) {
-    }
-
-    var a2 = new Array(1, 2);
-    var a2_ = new Array(1, 2);
-    var a3 = new Array(1, 2, 3);
-
-    foo(a2);
-    foo(a2_);
-    foo(a3);
-
-})();
+function f(x) {
+  var y = x;
+  return g(y);
+//  return z;
+}
+function g(a) {
+  return a;
+}
+f(23);/*#\label{line:dataflow_call1}#*/
+f({p:"abc"});/*#\label{line:dataflow_call2}#*/

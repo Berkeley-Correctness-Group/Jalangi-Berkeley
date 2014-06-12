@@ -306,7 +306,7 @@
         var fieldToFieldTypes = typeNameToFieldTypes[type];
         var fieldNames = Object.keys(fieldToFieldTypes).sort().toString();
         var kind = typeUtil.getKind(type);
-        var concreteKind = kind === "frame" ? type : kind; // for frames, keep the type name to make sure that frames are not merged by equiv()
+        var concreteKind = kind === "frame" || kind === "function" ? type : kind; // for frames and functions, keep the type name to make sure that frames are not merged by equiv()
         return fieldNames+"@@@@"+concreteKind;
     }
 

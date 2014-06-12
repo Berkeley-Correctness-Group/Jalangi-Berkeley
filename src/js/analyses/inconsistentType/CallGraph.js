@@ -1,3 +1,5 @@
+// Author: Parker Schuh, Michael Pradel
+
 (function() {
     var util = importModule("CommonUtil");
 
