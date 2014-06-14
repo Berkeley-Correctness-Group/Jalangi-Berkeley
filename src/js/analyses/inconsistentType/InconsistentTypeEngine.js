@@ -192,7 +192,7 @@
                 }
             }
         }
-        
+
         function updateBeliefs(frame, varName, type) {
             var sframe = smemory.getShadowObject(frame);
             if (sframe && sframe.shadow) {
@@ -239,8 +239,8 @@
 
         this.literal = function(iid, val) {
             if (typeof val === "string" && val.indexOf(beliefPrefix) === 0) { // belief "annotation" produced by preprocessor
-               var nameAndType = val.slice(beliefPrefix.length).split(beliefInfix);
-               updateBeliefs(smemory.getFrame(nameAndType[0]), nameAndType[0], nameAndType[1]);
+                var nameAndType = val.slice(beliefPrefix.length).split(beliefInfix);
+                updateBeliefs(smemory.getFrame(nameAndType[0]), nameAndType[0], nameAndType[1]);
             } else {
                 return annotateObject(iid, val);
             }

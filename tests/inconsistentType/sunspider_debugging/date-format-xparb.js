@@ -430,3 +430,9 @@ var week2 = new Date("12/31/2007 1:11:11").getWeekOfYear();
 console.log(week1 + " -- "+typeof week1);
 console.log(week2 + " -- "+typeof week2);
 console.log("Are two moments in the same New Year's Eve in the same week?   "+(week1 === week2)+"   (Should be true.)");
+
+var week3 = new Date("01/01/2007 1:11:10").getWeekOfYear();
+var week4 = new Date("01/01/2007 1:11:11").getWeekOfYear();
+console.log(week3 + " -- "+typeof week3);
+console.log(week4 + " -- "+typeof week4);
+console.log((week3 === week4)+"   (Should be true.)");

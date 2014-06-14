@@ -16,14 +16,8 @@
 
 // Author: Michael Pradel
 
-(function() {
-    
-    var x = {};
-    
-    x = null;
-    
-    
-    x = undefined;
-    
-    
-})();
+var x, y;
+x = {a:5};
+y = {myX:x, b:true};
+x = {a:"hi there"};
+y = {myX:x, b:true};

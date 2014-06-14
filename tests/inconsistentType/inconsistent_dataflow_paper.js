@@ -19,7 +19,6 @@
 function f(x) {
   var y = x;
   return g(y);
-//  return z;
 }
 function g(a) {
   return a;

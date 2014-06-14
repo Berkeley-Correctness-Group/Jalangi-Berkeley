@@ -35,7 +35,8 @@
         filterNullRelated(warnings);
         filterByNbTypes(warnings);
         filterByComponent(warnings);
-        mergeUsingCallGraph(warnings, engineResults.callGraph);
+        mergeViaDataflow(warnings, engineResults.callGraph);
+//        mergeUsingCallGraph(warnings, engineResults.callGraph);
         mergeByTypeDiff(warnings);
         mergeSameArray(warnings);
 
@@ -48,9 +49,7 @@
 
     function computeTypeDiffs(warnings, typeGraph, typeToRoot) {
         warnings.forEach(function(w) {
-            var observedTypes = w.observedTypesAndLocations.map(function(tl) {
-                return tl[0].typeName;
-            });
+            var observedTypes = w.observedTypes();
             var typeNodes = observedTypes.map(function(typeName) {
                 var rootName = typeToRoot[typeName];
                 return typeGraph[rootName];
@@ -72,15 +71,16 @@
             if (varNameToTypes) {
                 var beliefTypes = varNameToTypes[w.fieldName];
                 if (beliefTypes) {
-                    var observedTypes = {};
-                    w.observedTypesAndLocations.forEach(function(tl) {
-                        observedTypes[tl[0].typeName] = true;
+                    var observedTypesArray = w.observedTypes();
+                    var observedTypesSet = {};
+                    observedTypesArray.forEach(function(t) {
+                        observedTypesSet[t] = true;
                     });
                     // remove types that the programmer believes to be OK
                     Object.keys(beliefTypes).forEach(function(beliefType) {
-                        delete observedTypes[beliefType];
+                        delete observedTypesSet[beliefType];
                     });
-                    if (Object.keys(observedTypes).length <= 1) {
+                    if (Object.keys(observedTypesSet).length <= 1) {
                         w.filterBecause.belief = true;
                     }
                 }
@@ -96,8 +96,15 @@
     function filterNullRelated(warnings) {
         return warnings.filter(function(w) {
             var hasNonNullRelated = Object.keys(w.typeDiff).some(function(diffKey) {
-                var diff = w.typeDiff[diffKey];
-                return diff.kinds.indexOf("null") === -1;
+                var diffKinds = w.typeDiff[diffKey].kinds;
+                // Variant 1: null vs object/array/function
+//                var containsNull = diffKinds.indexOf("null") !== -1;
+//                var containsNonObject = diffKinds.some(function(kind) {
+//                    return kind !== "object" && kind !== "array" && kind !== "function" && kind !== "null";
+//                });
+//                return !containsNull || (containsNull && containsNonObject);
+                // Variant 2: null vs any other type
+                return diffKinds.indexOf("null") === -1;
             });
             if (!hasNonNullRelated) {
                 w.filterBecause.nullRelated = true;
@@ -126,6 +133,45 @@
         warnings = callGraphModule.markWarningsForMerging(callGraph, warnings);
     }
 
+    function mergeViaDataflow(warnings, callGraph) {
+        function calls(frame1, frame2) {
+            return callGraph[frame1] && callGraph[frame1][frame2];
+        }
+
+        warnings.forEach(function(w1) {
+            warnings.forEach(function(w2) {
+                if (w1 !== w2) {
+                    var t1 = w1.typeDescription.typeName;
+                    var t2 = w2.typeDescription.typeName;
+                    var kind1 = w1.typeDescription.kind;
+                    var kind2 = w2.typeDescription.kind;
+                    var prop1 = w1.fieldName;
+                    var prop2 = w2.fieldName;
+                    var observed1 = w1.observedTypes();
+                    var observed2 = w2.observedTypes();
+                    if (util.sameArrays(observed1, observed2)) {
+                        if (kind1 === "function" && kind2 === "frame" &&
+                              prop1.indexOf("__arg") === 0 && callGraph.frame_fn[t1] === t2) {
+                            merge(w1, w2);
+                        } else if (kind1 === "frame" && kind2 === "function" &&
+                              prop2 === "return" && callGraph.frame_fn[t2] === t1) {
+                            merge(w1, w2);
+                        } else if (kind1 === "frame" && kind2 === "function" &&
+                              prop2.indexOf("__arg") === 0 && calls(t1, callGraph.frame_fn[t2])) {
+                            merge(w1, w2);
+                        } else if (kind1 === "frame" && kind2 === "frame") {
+                            merge(w1, w2);
+                        } else if (kind1 === "function" && kind2 === "function" &&
+                              prop1 === "return" && prop2 === "return" &&
+                              calls(callGraph.frame_fn[t1], callGraph.frame_fn[t2])) {
+                            merge(w1, w2);
+                        }
+                    }
+                }
+            });
+        });
+    }
+
     function mergeSameArray(warnings) {
         var locToWarnings = {};
         warnings.forEach(function(w) {
@@ -133,14 +179,18 @@
                 var loc = w.typeDescription.location;
                 var warningsAtLoc = locToWarnings[loc] || [];
                 warningsAtLoc.forEach(function(otherWarning) {
-                    w.addMergeWith(otherWarning);
-                    otherWarning.addMergeWith(w);
+                    merge(w, otherWarning);
                 });
                 warningsAtLoc.push(w);
                 locToWarnings[loc] = warningsAtLoc;
             }
         });
         return locToWarnings;
+    }
+
+    function merge(w1, w2) {
+        w1.addMergeWith(w2);
+        w2.addMergeWith(w1);
     }
 
     function groupByLocation(warnings) {
@@ -189,8 +239,7 @@
                         // the above algorithm may not find a bijective mapping between diff entries, even though one exists
                         // (but does so in practice; will improve it if we find a case where it matters)
                         if (match) {
-                            w1.addMergeWith(w2);
-                            w2.addMergeWith(w1);
+                            merge(w1, w2);
                         }
                     }
                 }

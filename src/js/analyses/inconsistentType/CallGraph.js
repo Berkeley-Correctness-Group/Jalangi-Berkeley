@@ -184,7 +184,7 @@
         checkAllEdges(disjointUnion);
         var groups = groupWarnings(disjointUnion);
         markForMerging(groups, warnings);
-//        return removeDuplicates(disjointUnion, warnings, groups);  // now moved to FilterAndMerge
+//        return removeDuplicates(disjointUnion, warnings, groups);  // moved to FilterAndMerge
     };
 
     function markForMerging(groups, warnings) {

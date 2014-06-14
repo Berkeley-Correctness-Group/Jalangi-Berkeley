@@ -16,14 +16,11 @@
 
 // Author: Michael Pradel
 
-(function() {
+var foo = function(x) {
+    if (x) {
+    }
+};
+
+foo();
+foo(null);
     
-    var x = {};
-    
-    x = null;
-    
-    
-    x = undefined;
-    
-    
-})();

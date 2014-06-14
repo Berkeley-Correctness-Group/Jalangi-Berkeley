@@ -1,13 +1,14 @@
 (function() {
 
-    var util = require('../CommonUtil.js');
-
     function urlToBenchmark(url) {
-        if (url.indexOf("http://127.0.0.1/") !== -1) { // web app
-            var urlSuffix = url.slice("http://127.0.0.1/".length);
-            return urlSuffix.slice(0, urlSuffix.indexOf("/"));
-        } else if (url.indexOf("../jalangi/tests") !== -1) { // node.js benchmark
-            return url.slice("../jalangi/tests/".length);
+        if (url.indexOf("http://127.0.0.1:8000/tests/octane2/index_") !== -1) { // octane benchmark
+            var b = url.slice("http://127.0.0.1:8000/tests/octane2/index_".length);
+            b = b.slice(0, b.indexOf(".html"));
+            return b;
+        } else if (url.indexOf("/home/m/research/projects/jalangi/tests/sunspider1/") === 0) { // sunspider benchmark
+            var b = url.slice("/home/m/research/projects/jalangi/tests/sunspider1/".length);
+            b = b.slice(0, b.indexOf(".js_beliefs"));
+            return b;
         } else {
             return url;
         }
@@ -18,7 +19,6 @@
      * @returns {String}
      */
     function locationToComponent(loc) {
-        util.assert(typeof loc === "string", typeof loc);
         var c = "other";
         if (loc.indexOf("jquery") !== -1)
             c = "jquery";
@@ -29,10 +29,28 @@
 
         return c;
     }
-    
-    
 
-    exports.locationToComponent = locationToComponent;
-    exports.urlToBenchmark = urlToBenchmark;
+
+
+    // boilerplate to use this file both in browser and in node application
+    var module;
+    if (typeof exports !== "undefined") {
+        // export to code running in node application
+        module = exports;
+    } else {
+        // export to code running in browser
+        window.$BenchmarkHelper = {};
+        module = window.$BenchmarkHelper;
+    }
+
+    function importModule(moduleName) {
+        if (typeof exports !== "undefined") {
+            return require('./' + moduleName + ".js");
+        } else {
+            return window['$' + moduleName];
+        }
+    }
+    module.locationToComponent = locationToComponent;
+    module.urlToBenchmark = urlToBenchmark;
 
 })();

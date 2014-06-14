@@ -80,7 +80,17 @@
         if (Object.keys(o1).length !== Object.keys(o2).length)
             return false;
         for (var p1 in o1) {
-            if (HOP(o1, p1) && !HOP(o2, p1)) 
+            if (HOP(o1, p1) && !HOP(o2, p1))
+                return false;
+        }
+        return true;
+    }
+
+    function sameArrays(a1, a2) {
+        if (a1.length !== a2.length)
+            return false;
+        for (var i = 0; i < a1.length; i++) {
+            if (a1[i] !== a2[i])
                 return false;
         }
         return true;
@@ -107,6 +117,7 @@
     module.valueArray = valueArray;
     module.commonSuffix = commonSuffix;
     module.sameProps = sameProps;
+    module.sameArrays = sameArrays;
 
 })();
 

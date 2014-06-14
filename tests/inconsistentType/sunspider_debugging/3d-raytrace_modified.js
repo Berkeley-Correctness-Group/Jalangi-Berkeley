@@ -438,5 +438,9 @@ for (var y = 0; y < size; y++) {\n\
     return s;
 }
 
-testOutput = arrayToCanvasCommands(raytraceScene());
-console.log(testOutput);
+//testOutput = arrayToCanvasCommands(raytraceScene());
+//console.log(testOutput);
+
+for (var rep=0;rep<1000;rep++) {
+  testOutput = arrayToCanvasCommands(raytraceScene());
+}

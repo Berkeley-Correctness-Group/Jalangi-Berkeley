@@ -17,8 +17,9 @@
 // Author: Michael Pradel
 
 function addWrapped(x, y) {
-    if (y) {
-        return x.v + y.v;
+    var z = y;
+    if (z) {
+        return x.v + z.v;
     } else {
         return x.v;
     }
@@ -29,5 +30,5 @@ function Wrapper(v) {
 }
 
 addWrapped({v:23});
-addWrapped({v:20});
+addWrapped({v:20}, new Wrapper(3));
 addWrapped({v:"18"}, new Wrapper(5));

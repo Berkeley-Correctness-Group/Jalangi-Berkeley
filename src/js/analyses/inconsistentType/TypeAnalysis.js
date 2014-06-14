@@ -5,13 +5,17 @@
     var visualization = importModule("Visualization");
     var filterAndMerge = importModule("FilterAndMerge");
 
-    function analyzeTypes(engineResults, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
+    function analyzeTypes(engineResults, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes, resultSummary) {
+        resultSummary = resultSummary || {};
+        resultSummary.typesAll = Object.keys(engineResults.typeNames).length;
         var tableAndRoots = equiv(engineResults.typeNameToFieldTypes);
+        resultSummary.typesMerged = Object.keys(tableAndRoots[1]).length;
 
         var typeGraph = createTypeGraph(tableAndRoots[1], tableAndRoots[0], engineResults.typeNameToFieldTypes);
 
         // TODO analyze() and visualization should use typeGraph
         var warnings = analyze(engineResults.typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
+        resultSummary.inconsistentTypes = warnings.length; // TODO should count before removing structural subtypes
         warnings = filterAndMerge.filterAndMerge(warnings, engineResults, typeGraph, tableAndRoots, PrimitiveTypeNodes);
 
         if (visualizeAllTypes) {
@@ -68,7 +72,13 @@
         if (this.mergeWith.indexOf(otherWarning) === -1)
             this.mergeWith.push(otherWarning);
     };
-    
+
+    InconsistentTypeWarning.prototype.observedTypes = function() {
+        return this.observedTypesAndLocations.map(function(tl) {
+            return tl[0].typeName;
+        }).sort();
+    };
+
     function UndefinedFieldWarning(typeDescription, locations, highlightedIIDs) {
         this.typeDescription = typeDescription;
         this.locations = locations;
@@ -307,7 +317,7 @@
         var fieldNames = Object.keys(fieldToFieldTypes).sort().toString();
         var kind = typeUtil.getKind(type);
         var concreteKind = kind === "frame" || kind === "function" ? type : kind; // for frames and functions, keep the type name to make sure that frames are not merged by equiv()
-        return fieldNames+"@@@@"+concreteKind;
+        return fieldNames + "@@@@" + concreteKind;
     }
 
     function createFieldNamesAndKindToTypes(typeNameToFieldTypes) {
