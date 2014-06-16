@@ -46,7 +46,7 @@ public class OctaneExperimentRunner {
 	String baseUrl = "http://127.0.0.1:8000/tests/octane2/";
 	String emptyPageUrl = "http://127.0.0.1:8000/tests/inconsistentType/empty.html";
 	WebDriver driver;
-	int maxWaitTime = 5*60;
+	int maxWaitTime = 30*60;
 
 	public static void main(String[] args) throws Exception {
 		assert(args.length == 1);
@@ -63,7 +63,7 @@ public class OctaneExperimentRunner {
 		FirefoxProfile profile = new FirefoxProfile();
 		System.setProperty("webdriver.firefox.logfile", firefoxLogFile);
 		profile.setPreference("webdriver.log.file", javascriptLogFile);
-		profile.setPreference("dom.max_script_run_time", 120);
+		profile.setPreference("dom.max_script_run_time", maxWaitTime);
 		profile.setPreference("extensions.sdk.console.logLevel", "info");
 		profile.addExtension(new File(jalangiFFxpi));
 		driver = new FirefoxDriver(binary, profile, desiredCapabilities);
@@ -71,12 +71,7 @@ public class OctaneExperimentRunner {
 
 		testBenchmark(benchmark);
 
-		// trigger beforeunload event after last benchmark
-//		driver.get("about:blank");
-
-		System.out.println("Almost done");
-//		driver.quit();
-
+		driver.quit();
 		System.out.println("Done :-)");
 	}
 

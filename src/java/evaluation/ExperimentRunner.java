@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
+import org.junit.Test;
 import org.openqa.jetty.log.LogStream.STDOUT;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -42,13 +43,24 @@ public class ExperimentRunner {
 	final String javascriptLogFile = "/tmp/firefox_javascript.out";
 
 	String baseUrl = "http://127.0.0.1";
+	String jbBaseUrl = "http://127.0.0.1:8000";
 	WebDriver driver;
+	int maxWaitTime = 30 * 60;
 
 	public static void main(String[] args) throws Exception {
-		new ExperimentRunner().runAll();
+		if (args.length != 1) {
+			throw new IllegalArgumentException(
+					"need exactly 1 argument (benchmark)");
+		}
+		ExperimentRunner runner = new ExperimentRunner();
+		runner.setup();
+
+		runner.runOne(args[0]);
+
+		// runner.runAll();
 	}
 
-	private void runAll() throws Exception {
+	private void setup() throws Exception {
 		DesiredCapabilities desiredCapabilities = DesiredCapabilities.firefox();
 		LoggingPreferences loggingPreferences = new LoggingPreferences();
 		loggingPreferences.enable(LogType.BROWSER, Level.ALL);
@@ -58,30 +70,56 @@ public class ExperimentRunner {
 		FirefoxProfile profile = new FirefoxProfile();
 		System.setProperty("webdriver.firefox.logfile", firefoxLogFile);
 		profile.setPreference("webdriver.log.file", javascriptLogFile);
-		profile.setPreference("dom.max_script_run_time", 120);
+		profile.setPreference("dom.max_script_run_time", maxWaitTime);
 		profile.addExtension(new File(jalangiFFxpi));
 		driver = new FirefoxDriver(binary, profile, desiredCapabilities);
 		driver.manage().timeouts().implicitlyWait(120, TimeUnit.SECONDS);
+	}
 
-		// testToyExample();
-
-//		testJoomla();
-//		testJoomlaAdmin();
-//		testCmsmadesimple();
-//		testMediawiki();
-//		testMoodle();
-//		testDokuwiki();
-//		testOsclass();
-//		testPhpbb();
-//		testWordpress();
-		testZurmo();
-//		testProcesswire();
+	private void runOne(String bm) throws Exception {
+		if (bm.equals("joomla")) {
+			testJoomla();
+		} else if (bm.equals("joomla-admin")) {
+			testJoomlaAdmin();
+		} else if (bm.equals("moodle")) {
+			testMoodle();
+		} else if (bm.equals("zurmo")) {
+			testZurmo();
+		} else if (bm.equals("annex")) {
+			testAnnex();
+		} else if (bm.equals("calculator")) {
+			testCalculator();
+		} else if (bm.equals("tenframe")) {
+			testTenframe();
+		} else if (bm.equals("todolist")) {
+			testTodolist();
+		}
+		
 
 		// trigger beforeunload event after last benchmark
-		driver.get("about:blank");
+		driver.get("http://127.0.0.1:8000/tests/inconsistentType/empty.html");
+		driver.close();
 
-		System.out.println("Almost done");
-//		driver.quit();
+		System.out.println("Done :-)");
+	}
+
+	private void runAll() throws Exception {
+		// testToyExample();
+
+		testJoomla();
+		// testJoomlaAdmin();
+		// testCmsmadesimple();
+		// testMediawiki();
+		// testMoodle();
+		// testDokuwiki();
+		// testOsclass();
+		// testPhpbb();
+		// testWordpress();
+		// testZurmo();
+		// testProcesswire();
+
+		// trigger beforeunload event after last benchmark
+		driver.get("http://127.0.0.1:8000/tests/inconsistentType/empty.html");
 
 		System.out.println("Done :-)");
 	}
@@ -90,8 +128,96 @@ public class ExperimentRunner {
 		driver.get("http://127.0.0.1:8000/tests/inconsistentType/inconsistent8.html");
 	}
 
+	public void testAnnex() throws Exception {
+		driver.get(jbBaseUrl + "/tests/tizen_firefox/annex/");
+		driver.findElement(By.id("open1")).click();
+		driver.findElement(By.id("a24")).click();
+		driver.findElement(By.id("a35")).click();
+		driver.findElement(By.id("a15")).click();
+		driver.findElement(By.cssSelector("a.configure > img")).click();
+		driver.findElement(
+				By.cssSelector("div.configure_panel_help > div.configure_panel_text"))
+				.click();
+		driver.findElement(By.linkText("Go Back")).click();
+		driver.findElement(By.cssSelector("a.configure > img")).click();
+		driver.findElement(By.cssSelector("div.configure_panel_startover"))
+				.click();
+		driver.findElement(By.cssSelector("a.configure > img")).click();
+		driver.findElement(By.cssSelector("a.configure > img")).click();
+	}
+
+	public void testCalculator() throws Exception {
+		driver.get(jbBaseUrl + "/tests/tizen_firefox/calculator/");
+		driver.findElement(By.id("button2")).click();
+		driver.findElement(By.id("button3")).click();
+		driver.findElement(By.id("buttonadd")).click();
+		driver.findElement(By.id("button6")).click();
+		driver.findElement(By.id("buttonequal")).click();
+		driver.findElement(By.id("buttonclear")).click();
+		driver.findElement(By.id("buttonmemorylist")).click();
+		driver.findElement(By.id("buttonM1close")).click();
+		driver.findElement(By.id("buttonM1edit")).click();
+		driver.findElement(By.id("memoryclearall")).click();
+		driver.findElement(By.id("dialogokbutton")).click();
+		driver.findElement(By.id("memoryClose")).click();
+		driver.findElement(By.id("button4")).click();
+		driver.findElement(By.id("button5")).click();
+		driver.findElement(By.id("buttonarccos")).click();
+		driver.findElement(By.id("buttonsubtract")).click();
+		driver.findElement(By.id("buttoninverse")).click();
+		driver.findElement(By.id("button8")).click();
+		driver.findElement(By.id("buttonequal")).click();
+		driver.findElement(By.id("openhistorybutton")).click();
+		driver.findElement(By.id("closehistorybutton")).click();
+		driver.findElement(By.id("buttonrad")).click();
+		driver.findElement(By.id("buttonmemorize")).click();
+		driver.findElement(By.id("buttonmemorize")).click();
+		driver.findElement(By.id("buttonmemorylist")).click();
+		driver.findElement(By.id("buttonM2edit")).click();
+		driver.findElement(By.id("mnedescriptioninput")).clear();
+		driver.findElement(By.id("mnedescriptioninput")).sendKeys("33");
+		driver.findElement(By.id("mnesave")).click();
+		driver.findElement(By.id("memoryClose")).click();
+		driver.findElement(By.id("buttonclosecurrentformula")).click();
+		driver.findElement(By.id("buttonclosemainentry")).click();
+	}
+
+	public void testTenframe() throws Exception {
+		driver.get(jbBaseUrl + "/tests/tizen_firefox/tenframe/");
+		driver.findElement(By.id("home_rockets")).click();
+		driver.findElement(By.id("rockets_add3")).click();
+		driver.findElement(By.id("rockets_add3")).click();
+		driver.findElement(By.id("rockets_add3")).click();
+		driver.findElement(By.id("rockets_add4")).click();
+		driver.findElement(By.id("rockets_add4")).click();
+		driver.findElement(By.id("rockets_add3")).click();
+		driver.findElement(By.id("game_menu_tab")).click();
+		driver.findElement(By.id("game_menu_home")).click();
+		driver.findElement(By.id("home_bowling")).click();
+		driver.findElement(By.id("bowling_rollbutton")).click();
+	}
+
+	public void testTodolist() throws Exception {
+		driver.get(jbBaseUrl + "/tests/tizen_firefox/todolist/");
+		driver.findElement(By.cssSelector("a.day-view-button.ui-link > img"))
+				.click();
+		driver.findElement(
+				By.cssSelector("#dayouter > div.day > div.container > div.header > span.add"))
+				.click();
+		driver.findElement(
+				By.cssSelector("div.editui_buttons > fieldset.save > a > span.text"))
+				.click();
+		driver.findElement(By.name("text")).clear();
+		driver.findElement(By.name("text")).sendKeys("aaa");
+		driver.findElement(By.cssSelector("span.text.afternoon")).click();
+		driver.findElement(By.cssSelector("#red > img")).click();
+		driver.findElement(
+				By.cssSelector("div.editui_buttons > fieldset.save > a > span.text"))
+				.click();
+	}
+
 	public void testCmsmadesimple() throws Exception {
-		driver.get(baseUrl + "/cmsmadesimple/");
+		driver.get(jbBaseUrl + "/cmsmadesimple/");
 		driver.findElement(By.cssSelector("a.menuactive > span")).click();
 		driver.findElement(By.cssSelector("a.menuparent > span")).click();
 		driver.findElement(By.linkText("Pages and navigation")).click();

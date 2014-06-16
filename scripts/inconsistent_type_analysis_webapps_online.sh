@@ -3,11 +3,11 @@
 rm -rf instrumentFF_tmp
 rm -rf webapps
 mkdir webapps
-for bm in "zurmo" # "joomla joomla-admin moodle"
+for bm in annex calculator tenframe todolist joomla-admin moodle zurmo 
 do
   echo "####################################"
   echo ${bm}
-  java -cp thirdparty/selenium-server-standalone-2.41.0.jar:/home/m/eclipse/workspace/JalangiWebAppEvaluation/bin/ evaluation.ExperimentRunner ${bm}
+  java -cp thirdparty/selenium-server-standalone-2.41.0.jar:/home/m/eclipse/workspace/WebAppEvaluation/bin/ evaluation.ExperimentRunner ${bm}
   mkdir webapps/${bm}
   mv /tmp/analysisResults.json webapps/${bm}/analysisResults.json
   mkdir webapps/${bm}/sourcemaps

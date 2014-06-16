@@ -36,7 +36,6 @@
         filterByNbTypes(warnings);
         filterByComponent(warnings);
         mergeViaDataflow(warnings, engineResults.callGraph);
-//        mergeUsingCallGraph(warnings, engineResults.callGraph);
         mergeByTypeDiff(warnings);
         mergeSameArray(warnings);
 
@@ -127,10 +126,6 @@
                 w.filterBecause.component = true;
             }
         });
-    }
-
-    function mergeUsingCallGraph(warnings, callGraph) {
-        warnings = callGraphModule.markWarningsForMerging(callGraph, warnings);
     }
 
     function mergeViaDataflow(warnings, callGraph) {

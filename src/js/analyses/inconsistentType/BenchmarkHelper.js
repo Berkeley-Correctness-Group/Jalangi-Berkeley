@@ -9,6 +9,15 @@
             var b = url.slice("/home/m/research/projects/jalangi/tests/sunspider1/".length);
             b = b.slice(0, b.indexOf(".js_beliefs"));
             return b;
+        } else if (url.indexOf("http://127.0.0.1:8000/tests/tizen_firefox/" === 0)) {
+            var b = url.slice("http://127.0.0.1:8000/tests/tizen_firefox/".length);
+            return b;
+        } else if (url.indexOf("http://127.0.0.1/joomla" === 0)) {
+            return "joomla";
+        } else if (url.indexOf("http://127.0.0.1/moodle" === 0)) {
+            return "moodle";
+        } else if (url.indexOf("http://127.0.0.1/zurmo" === 0)) {
+            return "zurmo";
         } else {
             return url;
         }

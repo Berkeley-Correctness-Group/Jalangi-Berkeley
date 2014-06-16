@@ -146,6 +146,10 @@
             insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(varName, "null")});
         } else if (rhs.type === "Identifier" && rhs.name === "undefined") {
             insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(varName, "undefined")});
+        } else if (rhs.type === "LogicalExpression" && rhs.operator === "||" && rhs.left.type === "Identifier") { // e.g., "x = y || z"
+            insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(rhs.left.name, "undefined")});
+            insertionsToMake.push({fct:functionStack[functionStack.length - 1], stmt:freshBeliefStmt(rhs.left.name, "null")});
+            
         }
     }
 

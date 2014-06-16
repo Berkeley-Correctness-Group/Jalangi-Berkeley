@@ -120,18 +120,19 @@
                 if (!util.HOP(done, typeOrFunctionName)) {
                     done[typeOrFunctionName] = true;
                     var fieldMap = typeNameToFieldTypes[typeOrFunctionName];
-                    for (var field in fieldMap) {
-                        if (util.HOP(fieldMap, field)) {
-                            if (field === "undefined") {
-                                var typeDescription = toTypeDescription(typeOrFunctionName, iidToLocation);
-                                var locations = toLocations(typeMap, iidToLocation);
-                                var highlightedIIDs = {};
-                                highlightedIIDs[typeOrFunctionName] = true;
-                                var warning = new UndefinedFieldWarning(typeDescription, locations, highlightedIIDs);
-                                warnings.push(warning);
-                            }
-                        }
-                    }
+                    // disabled because doesn't find anything
+//                    for (var field in fieldMap) {
+//                        if (util.HOP(fieldMap, field)) {
+//                            if (field === "undefined") {
+//                                var typeDescription = toTypeDescription(typeOrFunctionName, iidToLocation);
+//                                var locations = toLocations(typeMap, iidToLocation);
+//                                var highlightedIIDs = {};
+//                                highlightedIIDs[typeOrFunctionName] = true;
+//                                var warning = new UndefinedFieldWarning(typeDescription, locations, highlightedIIDs);
+//                                warnings.push(warning);
+//                            }
+//                        }
+//                    }
                     for (var field in fieldMap) {
                         if (util.HOP(fieldMap, field)) {
                             var typeMap = fieldMap[field];

@@ -38,7 +38,7 @@ workingDirName = jalangiBerkeleyBaseDir+"instrumentFF_tmp/"
 ## URLs to include
 included = [ r'127.0.0.1' ]
 # .js files to exclude (e.g., libraries)
-excluded = [ ] # [ r'jquery', r'iscroll', r'peg-0.6.2', r'String.js', r'jsviews' ]
+excluded = [ r'jquery', r'mootools', r'bootstrap', r'peg-0.6.2', r'date.js', r'less-1.2.0', r'interactions.js' ]
 
 ## Jalangi analyses to apply
 #jalangiAnalysisFiles = [
@@ -46,6 +46,9 @@ excluded = [ ] # [ r'jquery', r'iscroll', r'peg-0.6.2', r'String.js', r'jsviews'
 #]
 #jalangiAnalysisFiles = [
 #    jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine2.js"
+#]
+#jalangiAnalysisFiles = [
+#    jalangiBaseDir+"src/js/analyses/logNaN/logNaN.js"
 #]
 #jalangiAnalysisFiles = [
 #    jalangiBerkeleyBaseDir+"src/js/analyses/executionCounters/ExecutionCountersEngine.js"
