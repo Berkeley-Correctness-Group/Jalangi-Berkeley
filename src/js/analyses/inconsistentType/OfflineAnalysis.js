@@ -11,7 +11,7 @@
     // parameters
     var inspectedWarningsFile = "/home/m/research/experiments/inconsistentTypes/inspectedWarnings.json";
     var visualizeAllTypes = false;
-    var visualizeWarningTypes = true;
+    var visualizeWarningTypes = false;
 
     function readFile(fileName) {
         var data = fs.readFileSync(fileName);
@@ -45,7 +45,7 @@
         return this.name + "," + this.typesAll + "," + this.typesMerged + "," + this.inconsistentTypes + "," + this.warnings + "," + this.bugs;
     };
 
-    function analyze(loggedResults, sourcemapDir) {
+    function analyze(loggedResults, sourcemapDir, filterMergeConfig) {
         var benchmark2TypeData = {};
         loggedResults.forEach(function(loggedResult) {
             var benchmark = benchmarkHelper.urlToBenchmark(loggedResult.url);
@@ -64,7 +64,7 @@
                 var triple = iids[iid];
                 return triple ? triple.toString() : "<unknown location>";
             };
-            var typeWarnings = typeAnalysis.analyzeTypes(typeData, iidFct, false, visualizeAllTypes, visualizeWarningTypes, resultSummary);
+            var typeWarnings = typeAnalysis.analyzeTypes(typeData, iidFct, false, visualizeAllTypes, visualizeWarningTypes, resultSummary, filterMergeConfig);
             resultSummary.warnings = typeWarnings.length;
 
             analyzeWarnings(typeWarnings, resultSummary);
@@ -107,6 +107,13 @@
     var benchmarkDir = process.argv[2];
     var loggedResults = readFile(benchmarkDir + "/analysisResults.json");
     var sourcemapDir = benchmarkDir + "/sourcemaps/";
-    analyze(loggedResults, sourcemapDir);
+    
+    // read filter/merge config (if available)
+    var filterMergeConfig = {};
+    try {
+        filterMergeConfig = readFile("filterAndMergeConfig.json");
+    } catch (e) { /* ignore if no config file exists */ }
+    
+    analyze(loggedResults, sourcemapDir, filterMergeConfig);
 
 })();

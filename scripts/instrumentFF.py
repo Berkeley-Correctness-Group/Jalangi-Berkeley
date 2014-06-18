@@ -38,7 +38,7 @@ workingDirName = jalangiBerkeleyBaseDir+"instrumentFF_tmp/"
 ## URLs to include
 included = [ r'127.0.0.1' ]
 # .js files to exclude (e.g., libraries)
-excluded = [ r'jquery', r'mootools', r'bootstrap', r'peg-0.6.2', r'date.js', r'less-1.2.0', r'interactions.js', r'yui' ]
+excluded = [ r'jquery', r'mootools', r'bootstrap', r'peg-0.6.2', r'date.js', r'less-1.2.0', r'interactions.js', r'yui', r'tinymce' ]
 
 ## Jalangi analyses to apply
 #jalangiAnalysisFiles = [

@@ -1,7 +1,7 @@
 (function() {
 
     function urlToBenchmark(url) {
-        if (url.indexOf("http://127.0.0.1:8000/tests/octane2/index_") !== -1) { // octane benchmark
+        if (url.indexOf("http://127.0.0.1:8000/tests/octane2/index_") === 0) { // octane benchmark
             var b = url.slice("http://127.0.0.1:8000/tests/octane2/index_".length);
             b = b.slice(0, b.indexOf(".html"));
             return b;
@@ -9,14 +9,15 @@
             var b = url.slice("/home/m/research/projects/jalangi/tests/sunspider1/".length);
             b = b.slice(0, b.indexOf(".js_beliefs"));
             return b;
-        } else if (url.indexOf("http://127.0.0.1:8000/tests/tizen_firefox/" === 0)) {
+        } else if (url.indexOf("http://127.0.0.1:8000/tests/tizen_firefox/") === 0) {
             var b = url.slice("http://127.0.0.1:8000/tests/tizen_firefox/".length);
+            b = b.slice(0, b.indexOf("/"));
             return b;
-        } else if (url.indexOf("http://127.0.0.1/joomla" === 0)) {
+        } else if (url.indexOf("http://127.0.0.1/joomla") === 0) {
             return "joomla";
-        } else if (url.indexOf("http://127.0.0.1/moodle" === 0)) {
+        } else if (url.indexOf("http://127.0.0.1/moodle") === 0) {
             return "moodle";
-        } else if (url.indexOf("http://127.0.0.1/zurmo" === 0)) {
+        } else if (url.indexOf("http://127.0.0.1/zurmo") === 0) {
             return "zurmo";
         } else {
             return url;

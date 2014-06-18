@@ -23,22 +23,55 @@
     var benchmarkHelper = importModule("BenchmarkHelper");
 
     var maxTypes = 2;
+    var maxNbDiffEntries = 2;
     var filteredComponents = ["jquery"];
 
     var PrimitiveTypeNodes;
 
-    function filterAndMerge(warnings, engineResults, typeGraph, tableAndRoots, PrimitiveTypeNodes_) {
+    // default configuration
+    var config = {
+        filterByBeliefs:true,
+        filterNullRelated:true,
+        filterByNbTypes:2, // number of false
+        filterByNbTypeDiffEntries:2, // number or false
+        mergeViaDataflow:true,
+        mergeByTypeDiff:true,
+        mergeSameArray:true
+    };
+
+    function filterAndMerge(warnings, engineResults, typeGraph, tableAndRoots, PrimitiveTypeNodes_, filterMergeConfig) {
+        overrideDefaultConfig(filterMergeConfig);
+
         PrimitiveTypeNodes = PrimitiveTypeNodes_;
         computeTypeDiffs(warnings, typeGraph, tableAndRoots[0]);
-        filterByBeliefs(warnings, engineResults.frameToBeliefs);
-        filterNullRelated(warnings);
-        filterByNbTypes(warnings);
-        filterByComponent(warnings);
-        mergeViaDataflow(warnings, engineResults.callGraph);
-        mergeByTypeDiff2(warnings);
-        mergeSameArray(warnings);
+        if (config.filterByBeliefs)
+            filterByBeliefs(warnings, engineResults.frameToBeliefs);
+        if (config.filterNullRelated)
+            filterNullRelated(warnings);
+        if (config.filterByNbTypes) {
+            maxTypes = config.filterByNbTypes;
+            filterByNbTypes(warnings);
+        }
+        if (config.filterByNbTypeDiffEntries) {
+            maxNbDiffEntries = config.filterByNbTypeDiffEntries;
+            filterByNbTypeDiffEntries(warnings);
+        }
+        if (config.mergeViaDataflow)
+            mergeViaDataflow(warnings, engineResults.callGraph);
+        if (config.mergeByTypeDiff)
+            mergeByTypeDiff(warnings);
+        if (config.mergeSameArray)
+            mergeSameArray(warnings);
 
         return mergeAndFilterWarnings(warnings);
+    }
+
+    function overrideDefaultConfig(config_) {
+        for (var key in config_) {
+            if (util.HOP(config_, key)) {
+                config[key] = config_[key];
+            }
+        }
     }
 
     function group(warnings) {
@@ -118,12 +151,12 @@
         });
     }
 
-    function filterByComponent(warnings) {
+    function filterByNbTypeDiffEntries(warnings) {
         warnings.forEach(function(w) {
-            var component = benchmarkHelper.locationToComponent(w.typeDescription.location);
-            if (filteredComponents.indexOf(component) !== -1) {
-                w.filterBecause.component = true;
-            }
+            var diffEntries = util.valueArray(w.typeDiff);
+            if (diffEntries.length > maxNbDiffEntries) {
+                w.filterBecause.nbTypeDiffEntries = true;
+            };
         });
     }
 
@@ -202,7 +235,7 @@
         return locToWarnings;
     }
 
-    function mergeByTypeDiff(warnings) {
+    function mergeByTypeDiffCombinatorial(warnings) {
         warnings.forEach(function(w1) {
             var diffEntries1 = util.valueArray(w1.typeDiff);
             warnings.forEach(function(w2) {
@@ -242,8 +275,7 @@
         });
     }
 
-    function mergeByTypeDiff2(warnings) {
-        console.log(new Date() + "     type diff2: starting with " + warnings.length + " warnings") // TODO RAD
+    function mergeByTypeDiff(warnings) {
         var diffHashToWarnings = {}; // string --> array of warnings
         warnings.forEach(function(w) {
             var diffEntries = util.valueArray(w.typeDiff);
@@ -258,7 +290,7 @@
         for (var hash in diffHashToWarnings) {
             if (util.HOP(diffHashToWarnings, hash)) {
                 var warningsForHash = diffHashToWarnings[hash];
-                mergeByTypeDiff(warningsForHash);
+                mergeByTypeDiffCombinatorial(warningsForHash);
             }
         }
     }

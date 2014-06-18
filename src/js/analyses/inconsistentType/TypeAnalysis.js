@@ -5,7 +5,7 @@
     var visualization = importModule("Visualization");
     var filterAndMerge = importModule("FilterAndMerge");
 
-    function analyzeTypes(engineResults, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes, resultSummary) {
+    function analyzeTypes(engineResults, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes, resultSummary, filterMergeConfig) {
         resultSummary = resultSummary || {};
         resultSummary.typesAll = Object.keys(engineResults.typeNames).length;
         var tableAndRoots = equiv(engineResults.typeNameToFieldTypes);
@@ -13,10 +13,15 @@
 
         var typeGraph = createTypeGraph(tableAndRoots[1], tableAndRoots[0], engineResults.typeNameToFieldTypes);
 
+        var pruneStructuralSubtypes = true;  // do not prune structural subtypes unless specified otherwise via config
+        if (filterMergeConfig && filterMergeConfig.filterStructuralSubtypes !== undefined && !filterMergeConfig.filterStructuralSubtypes) {
+            pruneStructuralSubtypes = false;
+        }
+
         // TODO analyze() and visualization should use typeGraph
-        var warnings = analyze(engineResults.typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
+        var warnings = analyze(engineResults.typeNameToFieldTypes, tableAndRoots[0], iidToLocation, pruneStructuralSubtypes);
         resultSummary.inconsistentTypes = warnings.length; // TODO should count before removing structural subtypes
-        warnings = filterAndMerge.filterAndMerge(warnings, engineResults, typeGraph, tableAndRoots, PrimitiveTypeNodes);
+        warnings = filterAndMerge.filterAndMerge(warnings, engineResults, typeGraph, tableAndRoots, PrimitiveTypeNodes, filterMergeConfig);
 
         if (visualizeAllTypes) {
             var allHighlightedIIDs = {};
@@ -115,7 +120,7 @@
         return this.kind + " originated at " + this.location;
     };
 
-    function analyze(typeNameToFieldTypes, table, iidToLocation) {
+    function analyze(typeNameToFieldTypes, table, iidToLocation, pruneStructuralSubtypes) {
         var warnings = [];
         var done = {};
         for (var typeOrFunctionName in typeNameToFieldTypes) {
@@ -146,7 +151,7 @@
                                         for (var type2 in typeMap) {
                                             if (util.HOP(typeMap, type2) && util.HOP(table, type2)) {
                                                 if (type1 < type2 && getRoot(table, type1) !== getRoot(table, type2)) {
-                                                    if (!structuralSubTypes(table, typeNameToFieldTypes, type1, type2) &&
+                                                    if ((!pruneStructuralSubtypes || !structuralSubTypes(table, typeNameToFieldTypes, type1, type2)) &&
                                                           !potentiallyCompatibleFunctions(typeNameToFieldTypes, type1, type2)) {
                                                         // types are inconsistent: report warning
                                                         var typeDescription = toTypeDescription(typeOrFunctionName, iidToLocation);
