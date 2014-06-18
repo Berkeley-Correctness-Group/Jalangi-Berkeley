@@ -65,17 +65,6 @@
         return values;
     }
 
-    function commonSuffix(a1, a2) {
-        var result = [];
-        var i1 = a1.length - 1;
-        var i2 = a2.length - 1;
-        for (; i1 >= 0 && i2 >= 0; i1--, i2--) {
-            if (a1[i1] === a2[i2])
-                result.push(a1[i1]);
-        }
-        return result.reverse();
-    }
-
     function sameProps(o1, o2) {
         if (Object.keys(o1).length !== Object.keys(o2).length)
             return false;
@@ -115,7 +104,6 @@
     module.mergeToLeft = mergeToLeft;
     module.nbOfValues = nbOfValues;
     module.valueArray = valueArray;
-    module.commonSuffix = commonSuffix;
     module.sameProps = sameProps;
     module.sameArrays = sameArrays;
 

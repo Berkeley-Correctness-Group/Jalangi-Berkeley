@@ -19,7 +19,6 @@
 (function() {
 
     var util = importModule("CommonUtil");
-    var callGraphModule = importModule("CallGraph");
     var typeUtil = importModule("TypeUtil");
     var benchmarkHelper = importModule("BenchmarkHelper");
 
@@ -36,7 +35,7 @@
         filterByNbTypes(warnings);
         filterByComponent(warnings);
         mergeViaDataflow(warnings, engineResults.callGraph);
-        mergeByTypeDiff(warnings);
+        mergeByTypeDiff2(warnings);
         mergeSameArray(warnings);
 
         return mergeAndFilterWarnings(warnings);
@@ -208,38 +207,60 @@
             var diffEntries1 = util.valueArray(w1.typeDiff);
             warnings.forEach(function(w2) {
                 if (w1 !== w2) {
-                    var diffEntries2 = util.valueArray(w2.typeDiff);
-                    if (diffEntries1.length === diffEntries2.length) {
-                        // try to find a bijective mapping between the diff entries,
-                        // so that e1 and e2 have a common suffix and point to the same types
-                        var match = true;
-                        for (var i1 = 0; i1 < diffEntries1.length; i1++) {
-                            var entry1 = diffEntries1[i1];
-                            var entry2;
-                            diffEntries2.some(function(entry) {
+                    if (!w1.willMergeWith(w2) && !w2.willMergeWith(w1)) { // skip type diff comparison if they are merged anyway
+                        var diffEntries2 = util.valueArray(w2.typeDiff);
+                        if (diffEntries1.length === diffEntries2.length) {
+                            // try to find a bijective mapping between the diff entries,
+                            // so that e1 and e2 have a common suffix and point to the same types
+                            var match = true;
+                            for (var i1 = 0; i1 < diffEntries1.length; i1++) {
+                                var entry1 = diffEntries1[i1];
                                 var exprParts1 = entry1.expr.split(".").slice(1);
-                                var exprParts2 = entry.expr.split(".").slice(1);
-                                var commonSuffix = exprParts1.length > 0 && exprParts2.length > 0 &&
-                                      util.commonSuffix(exprParts1, exprParts2).length > 0;
-                                if (commonSuffix && util.sameProps(entry1.kinds, entry.kinds)) {
-                                    entry2 = entry;
-                                    return true;
+                                var entry2;
+                                diffEntries2.some(function(entry) {
+                                    var exprParts2 = entry.expr.split(".").slice(1);
+                                    var haveCommonSuffix = exprParts1.length > 0 && exprParts2.length > 0 && exprParts1[exprParts1.length - 1] === exprParts2[exprParts2.length - 1];
+                                    if (haveCommonSuffix && util.sameProps(entry1.kinds, entry.kinds)) {
+                                        entry2 = entry;
+                                        return true;
+                                    }
+                                });
+                                if (entry2 === undefined) {
+                                    match = false;
+                                    break;
                                 }
-                            });
-                            if (entry2 === undefined) {
-                                match = false;
-                                break;
                             }
-                        }
-                        // the above algorithm may not find a bijective mapping between diff entries, even though one exists
-                        // (but does so in practice; will improve it if we find a case where it matters)
-                        if (match) {
-                            merge(w1, w2);
+                            // the above algorithm may not find a bijective mapping between diff entries, even though one exists
+                            // (but does so for all our benchmarks; will improve it if we find a case where it matters)
+                            if (match) {
+                                merge(w1, w2);
+                            }
                         }
                     }
                 }
             });
         });
+    }
+
+    function mergeByTypeDiff2(warnings) {
+        console.log(new Date() + "     type diff2: starting with " + warnings.length + " warnings") // TODO RAD
+        var diffHashToWarnings = {}; // string --> array of warnings
+        warnings.forEach(function(w) {
+            var diffEntries = util.valueArray(w.typeDiff);
+            var hash = diffEntries.length;
+            diffEntries.forEach(function(entry) {
+                hash += entry.kinds.sort().toString();
+            });
+            var warningsForHash = diffHashToWarnings[hash] || [];
+            warningsForHash.push(w);
+            diffHashToWarnings[hash] = warningsForHash;
+        });
+        for (var hash in diffHashToWarnings) {
+            if (util.HOP(diffHashToWarnings, hash)) {
+                var warningsForHash = diffHashToWarnings[hash];
+                mergeByTypeDiff(warningsForHash);
+            }
+        }
     }
 
     /**
@@ -309,7 +330,7 @@
 
     function TypeDiffEntry(expr, kinds) {
         this.expr = expr;
-        this.kinds = kinds;
+        this.kinds = kinds; // array of string
     }
 
     TypeDiffEntry.prototype.toString = function() {

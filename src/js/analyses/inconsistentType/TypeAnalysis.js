@@ -72,6 +72,10 @@
         if (this.mergeWith.indexOf(otherWarning) === -1)
             this.mergeWith.push(otherWarning);
     };
+    
+    InconsistentTypeWarning.prototype.willMergeWith = function(otherWarning) {
+        return this.mergeWith.indexOf(otherWarning) !== -1;
+    };
 
     InconsistentTypeWarning.prototype.observedTypes = function() {
         return this.observedTypesAndLocations.map(function(tl) {
