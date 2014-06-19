@@ -171,6 +171,8 @@
             });
         });
 
+        fs.unlinkSync("filterAndMergeConfig.json");
+
         configToNbWarnings[configKey] = totalNbWarnings;
         console.log("CONFIG_RESULT: " + configKey + "," + totalNbWarnings);
     }
@@ -206,11 +208,12 @@
             var config = configs[configKey];
             var column = [""];
             for (var i = 1; i < firstColumn.length - 1; i++) {
-                if (config[firstColumn[i]] !== undefined && config[firstColumn[i]]) {
-                    if (typeof config[firstColumn[i]] === "boolean")
-                        column.push(config[firstColumn[i]] ? "y&" : "n&");
+                var key = firstColumn[i];               
+                if (config[key] !== undefined) {
+                    if (typeof config[key] === "boolean")
+                        column.push(config[key] ? "y&" : "n&");
                     else
-                        column.push(config[firstColumn[i]] + "&");
+                        column.push(config[key] + "&");
                 } else {
                     column.push("y&");
                 }

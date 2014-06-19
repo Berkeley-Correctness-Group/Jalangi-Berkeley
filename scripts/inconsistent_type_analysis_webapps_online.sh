@@ -3,7 +3,7 @@
 rm -rf instrumentFF_tmp
 rm -rf webapps
 mkdir webapps
-for bm in tenframe # annex calculator tenframe todolist joomla-admin moodle zurmo 
+for bm in annex calculator tenframe todolist joomla-admin moodle zurmo 
 do
   echo "####################################"
   echo ${bm}

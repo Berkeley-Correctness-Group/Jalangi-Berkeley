@@ -17,8 +17,7 @@
 // Author: Michael Pradel
 
 function f(x) {
-  var y = x;
-  return g(y);
+  return g(x);
 }
 function g(a) {
   return a;

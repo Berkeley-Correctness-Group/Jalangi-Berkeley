@@ -17,9 +17,8 @@
 // Author: Michael Pradel
 
 function addWrapped(x, y) {
-    var z = y;
-    if (z) {
-        return x.v + z.v;
+    if (y) {
+        return x.v + y.v;
     } else {
         return x.v;
     }

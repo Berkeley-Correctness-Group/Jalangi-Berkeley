@@ -20,11 +20,9 @@
 
     var util = importModule("CommonUtil");
     var typeUtil = importModule("TypeUtil");
-    var benchmarkHelper = importModule("BenchmarkHelper");
 
     var maxTypes = 2;
     var maxNbDiffEntries = 2;
-    var filteredComponents = ["jquery"];
 
     var PrimitiveTypeNodes;
 
@@ -156,13 +154,13 @@
             var diffEntries = util.valueArray(w.typeDiff);
             if (diffEntries.length > maxNbDiffEntries) {
                 w.filterBecause.nbTypeDiffEntries = true;
-            };
+            }
         });
     }
 
     function mergeViaDataflow(warnings, callGraph) {
         function calls(frame1, frame2) {
-            return callGraph[frame1] && callGraph[frame1][frame2];
+            return callGraph.calls[frame1] && callGraph.calls[frame1][frame2];
         }
 
         warnings.forEach(function(w1) {
@@ -177,16 +175,11 @@
                     var observed1 = w1.observedTypes();
                     var observed2 = w2.observedTypes();
                     if (util.sameArrays(observed1, observed2)) {
-                        if (kind1 === "function" && kind2 === "frame" &&
-                              prop1.indexOf("__arg") === 0 && callGraph.frame_fn[t1] === t2) {
-                            merge(w1, w2);
-                        } else if (kind1 === "frame" && kind2 === "function" &&
+                        if (kind1 === "frame" && kind2 === "function" &&
                               prop2 === "return" && callGraph.frame_fn[t2] === t1) {
                             merge(w1, w2);
-                        } else if (kind1 === "frame" && kind2 === "function" &&
-                              prop2.indexOf("__arg") === 0 && calls(t1, callGraph.frame_fn[t2])) {
-                            merge(w1, w2);
-                        } else if (kind1 === "frame" && kind2 === "frame") {
+                        } else if (kind1 === "frame" && kind2 === "frame" &&
+                              calls(t1, t2)) {
                             merge(w1, w2);
                         } else if (kind1 === "function" && kind2 === "function" &&
                               prop1 === "return" && prop2 === "return" &&
