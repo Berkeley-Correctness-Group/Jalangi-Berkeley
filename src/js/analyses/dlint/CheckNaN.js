@@ -1,7 +1,7 @@
 // Author: Koushik Sen
 
 
-(function (sandbox) {
+(function(sandbox) {
     function CheckNaN() {
         var iidToLocation = sandbox.iidToLocation;
         var Constants = sandbox.Constants;
@@ -28,9 +28,9 @@
 //
 //        this.invokeFunPre = function (iid, f, base, args, isConstructor) {};
 //
-        this.invokeFun = function (iid, f, base, args, val, isConstructor) {
+        this.invokeFun = function(iid, f, base, args, val, isConstructor) {
             if (val !== val) {
-                info[iid] = (info[iid]|0) + 1;
+                info[iid] = (info[iid] | 0) + 1;
             }
             return val;
         };
@@ -40,9 +40,9 @@
 //                info[iid] = (info[iid]|0) + 1;
 //        };
 //
-        this.getField = function (iid, base, offset, val) {
+        this.getField = function(iid, base, offset, val) {
             if (val !== val) {
-                info[iid] = (info[iid]|0) + 1;
+                info[iid] = (info[iid] | 0) + 1;
             }
             return val;
         };
@@ -71,18 +71,18 @@
 //
 //        this.binaryPre = function (iid, op, left, right) {};
 //
-        this.binary = function (iid, op, left, right, result_c) {
+        this.binary = function(iid, op, left, right, result_c) {
             if (result_c !== result_c) {
-                info[iid] = (info[iid]|0) + 1;
+                info[iid] = (info[iid] | 0) + 1;
             }
             return result_c;
         };
 //
 //        this.unaryPre = function (iid, op, left) {};
 //
-        this.unary = function (iid, op, left, result_c) {
+        this.unary = function(iid, op, left, result_c) {
             if (result_c !== result_c) {
-                info[iid] = (info[iid]|0) + 1;
+                info[iid] = (info[iid] | 0) + 1;
             }
             return result_c;
         };
@@ -95,20 +95,20 @@
 //
 //        this.beginExecution = function (data) {};
 //
-        this.endExecution = function () {
+        this.endExecution = function() {
             var tmp = [];
             for (var iid in info) {
                 if (HOP(info, iid)) {
                     tmp.push({iid:iid, count:info[iid]});
                 }
             }
-            sort.call(tmp, function(a,b) {
+            sort.call(tmp, function(a, b) {
                 return b.count - a.count;
             });
             for (var x in tmp) {
                 if (HOP(tmp, x)) {
                     x = tmp[x];
-                    console.log("Observed NaN at "+iidToLocation(x.iid)+" "+ x.count+" time(s).");
+                    sandbox.dlintWarnings.push("Observed NaN at " + iidToLocation(x.iid) + " " + x.count + " time(s).");
                 }
             }
         };
@@ -135,6 +135,5 @@
 
     }
 
-//    sandbox.analysis = new UndefinedOffset();
     sandbox.analysis = new CheckNaN();
 }(J$));

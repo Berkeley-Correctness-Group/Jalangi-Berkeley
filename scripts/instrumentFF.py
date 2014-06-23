@@ -53,14 +53,22 @@ excluded = [ r'jquery', r'mootools', r'bootstrap', r'peg-0.6.2', r'date.js', r'l
 #jalangiAnalysisFiles = [
 #    jalangiBerkeleyBaseDir+"src/js/analyses/executionCounters/ExecutionCountersEngine.js"
 #]
+#jalangiAnalysisFiles = [ 
+#   jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/TypeUtil.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/BenchmarkHelper.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/CallGraph.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/FilterAndMerge.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/TypeAnalysis.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/InconsistentTypeEngine.js"
+#]
 jalangiAnalysisFiles = [ 
-   jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/TypeUtil.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/BenchmarkHelper.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/CallGraph.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/FilterAndMerge.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/TypeAnalysis.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/InconsistentTypeEngine.js"
+   jalangiBaseDir+"src/js/analyses/ChainedAnalyses.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/DLintPre.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/UndefinedOffset.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/ShadowProtoProperty.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/CheckNaN.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/DLintPost.js",
 ]
 #jalangiAnalysis = jalangiBaseDir+"src/js/analyses/logundefinedread/logUndefinedRead.js"
 

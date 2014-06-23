@@ -111,7 +111,7 @@
             for (var x in tmp) {
                 if (HOP(tmp, x)) {
                     x = tmp[x];
-                    console.log("Written property "+ x.offset+" at "+iidToLocation(x.iid)+" "+ x.count+" time(s) and it shadows the property in its prototype.");
+                    sandbox.dlintWarnings.push("Written property "+ x.offset+" at "+iidToLocation(x.iid)+" "+ x.count+" time(s) and it shadows the property in its prototype.");
                 }
             }
         };

@@ -97,7 +97,7 @@
             for (var x in tmp) {
                 if (HOP(tmp, x)) {
                     x = tmp[x];
-                    console.log("Accessed property 'undefined' at "+iidToLocation(x.iid)+" "+ x.count+" time(s).");
+                    sandbox.dlintWarnings.push("Accessed property 'undefined' at "+iidToLocation(x.iid)+" "+ x.count+" time(s).");
                 }
             }
         };
