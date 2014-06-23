@@ -17,11 +17,13 @@
      * @param {string} text
      * @param {string->true} ids
      * @param {number->true} warningNbs
+     * @param {string} kindsSummary
      */
-    function Warning(text, ids, warningNbs) {
+    function Warning(text, ids, warningNbs, kindsSummary) {
         this.text = text;
         this.ids = ids;
         this.warningNbs = warningNbs;
+        this.kindsSummary = kindsSummary;
     }
 
     /**
@@ -51,7 +53,7 @@
                     knownIds++;
             });
             if (Object.keys(warning.ids).length === knownIds) {
-                console.log("Skipping known warning (" + Object.keys(warning.warningNbs) + "): " + Object.keys(commentsOfKnown));
+                console.log("Skipping known warning (" + Object.keys(warning.warningNbs) + "): " + Object.keys(commentsOfKnown) + " -- kinds: " + warning.kindsSummary);
 //                console.log(warning.text);
                 var isBug = Object.keys(commentsOfKnown).some(function(comment) {
                     return comment.indexOf("bug") === 0;

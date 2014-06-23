@@ -339,14 +339,17 @@
             var idxs = mergedToIdxs[finalIdx];
             if (Object.keys(idxs).length > 0) {
                 var mergedWarning = warnings[finalIdx];
+                mergedWarning.mergeWith = [];
                 var keep = true;
                 // check if any of the warnings this final warning represents is marked for removal
                 Object.keys(idxs).forEach(function(inGroupIdx) {
                     if (Object.keys(warnings[inGroupIdx].filterBecause).length > 0)
                         keep = false;
+                    mergedWarning.mergeWith.push(warnings[inGroupIdx]);
                 });
-                if (keep)
+                if (keep) {
                     result.push(mergedWarning);
+                }
             }
         });
 

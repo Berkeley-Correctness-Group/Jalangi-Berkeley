@@ -99,7 +99,7 @@
                 }
             });
             warningNbs[w.id] = true;
-            toInspect.push(new inspector.Warning(warningText, warningIds, warningNbs));
+            toInspect.push(new inspector.Warning(warningText, warningIds, warningNbs, w.kindsSummary()));
         });
         inspector.inspect(toInspect, inspectedWarningsFile, resultSummary);
     }
