@@ -85,6 +85,26 @@
         return true;
     }
 
+    function stringToHash(str) {
+        if (Object.prototype.toString.apply(str) !== "[object String]")
+            throw "Should only call for strings, but passed: " + str;
+        var hash = 0;
+        if (!str)
+            return hash;
+        for (var i = 0; i < str.length; i++) {
+            var char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return hash;
+    }
+
+    function hashInto(oldHash, x) {
+        var result = ((oldHash << 5) - oldHash) + x;
+        result = result & result;
+        return result;
+    }
+
     // boilerplate to use this file both in browser and in node application
     var module;
     if (typeof exports !== "undefined") {
@@ -106,6 +126,8 @@
     module.valueArray = valueArray;
     module.sameProps = sameProps;
     module.sameArrays = sameArrays;
+    module.stringToHash = stringToHash;
+    module.hashInto = hashInto;
 
 })();
 

@@ -137,3 +137,4 @@
 
     sandbox.analysis = new CheckNaN();
 }(J$));
+

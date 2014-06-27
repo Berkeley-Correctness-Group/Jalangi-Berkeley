@@ -62,19 +62,23 @@ excluded = [ r'jquery', r'mootools', r'bootstrap', r'peg-0.6.2', r'date.js', r'l
 #   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/TypeAnalysis.js",
 #   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/InconsistentTypeEngine.js"
 #]
+#jalangiAnalysisFiles = [ 
+#   jalangiBaseDir+"src/js/analyses/ChainedAnalyses.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/DLintPre.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/UndefinedOffset.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/ShadowProtoProperty.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/CheckNaN.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/DLintPost.js",
+#]
 jalangiAnalysisFiles = [ 
-   jalangiBaseDir+"src/js/analyses/ChainedAnalyses.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/DLintPre.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/UndefinedOffset.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/ShadowProtoProperty.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/CheckNaN.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/DLintPost.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine3.js",
 ]
 #jalangiAnalysis = jalangiBaseDir+"src/js/analyses/logundefinedread/logUndefinedRead.js"
 
 # whether to preprocess code before giving it to the Jalangi instrumenter
 # (disable unless you're running the inconsistentType analysis)
-preprocess = True
+preprocess = False
 
 ## constants
 jalangiSuffix = "_jalangi_.js"
