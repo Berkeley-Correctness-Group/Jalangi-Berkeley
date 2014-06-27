@@ -12,7 +12,7 @@ do
   mkdir sunspider/${bm_short}
   mv jalangi_tmp/analysisResults.json sunspider/${bm_short}/analysisResults.json
   mkdir sunspider/${bm_short}/src
-  mv ${bm} sunspider/${bm_short}/src/
+  cp ${bm} sunspider/${bm_short}/src/
 done
 
 
