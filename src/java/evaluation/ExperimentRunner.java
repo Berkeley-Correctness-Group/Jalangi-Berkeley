@@ -194,7 +194,7 @@ public class ExperimentRunner {
 		driver.findElement(By.id("game_menu_tab")).click();
 		driver.findElement(By.id("game_menu_home")).click();
 		driver.findElement(By.id("home_bowling")).click();
-		driver.findElement(By.id("bowling_rollbutton")).click();
+//		driver.findElement(By.id("bowling_rollbutton")).click();
 	}
 
 	public void testTodolist() throws Exception {
