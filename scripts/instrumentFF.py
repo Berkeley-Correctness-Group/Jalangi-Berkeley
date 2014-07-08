@@ -36,7 +36,7 @@ jalangiBaseDir = jalangiBerkeleyBaseDir+"/../jalangi/"
 workingDirName = jalangiBerkeleyBaseDir+"instrumentFF_tmp/"
 
 ## URLs to include
-included = [ r'127.0.0.1' ]
+included = [ r'127.0.0.1', r'sridharan.net', r'google-analytics.com' ]
 # .js files to exclude (e.g., libraries)
 excluded = [ r'jquery', r'mootools', r'bootstrap', r'peg-0.6.2', r'date.js', r'less-1.2.0', r'interactions.js', r'yui', r'tinymce' ]
 
@@ -47,9 +47,9 @@ excluded = [ r'jquery', r'mootools', r'bootstrap', r'peg-0.6.2', r'date.js', r'l
 #jalangiAnalysisFiles = [
 #    jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine2.js"
 #]
-#jalangiAnalysisFiles = [
-#    jalangiBaseDir+"src/js/analyses/logNaN/logNaN.js"
-#]
+jalangiAnalysisFiles = [
+    jalangiBaseDir+"src/js/analyses/logNaN/logNaN.js"
+]
 #jalangiAnalysisFiles = [
 #    jalangiBerkeleyBaseDir+"src/js/analyses/executionCounters/ExecutionCountersEngine.js"
 #]
@@ -70,10 +70,10 @@ excluded = [ r'jquery', r'mootools', r'bootstrap', r'peg-0.6.2', r'date.js', r'l
 #   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/CheckNaN.js",
 #   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/DLintPost.js",
 #]
-jalangiAnalysisFiles = [ 
-   jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine3.js",
-]
+#jalangiAnalysisFiles = [ 
+#   jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine3.js",
+#]
 #jalangiAnalysis = jalangiBaseDir+"src/js/analyses/logundefinedread/logUndefinedRead.js"
 
 # whether to preprocess code before giving it to the Jalangi instrumenter
