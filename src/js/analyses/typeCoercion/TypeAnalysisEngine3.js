@@ -24,6 +24,7 @@
 
         // data structures
         function UnaryObservation(iid, operation, type, resultType, value, resultValue) {
+            this.kind = operation === "conditional" ? "conditional" : "unary";
             this.iid = iid;
             this.operation = operation;
             this.type = type;
@@ -34,6 +35,7 @@
         }
 
         function BinaryObservation(iid, operation, leftType, rightType, resultType, leftValue, rightValue, resultValue) {
+            this.kind = "binary";
             this.iid = iid;
             this.operation = operation;
             this.leftType = leftType;
@@ -43,6 +45,17 @@
             this.rightValue = rightValue;
             this.resultValue = resultValue;
             this.hash = util.stringToHash(hashSeed + iid + operation + leftType + rightType + resultType + leftValue + rightValue + resultValue);
+        }
+
+        function ExplicitObservation(iid, operation, inputType, outputType, inputValue, outputValue) {
+            this.kind = "explicit";
+            this.iid = iid;
+            this.operation = operation;
+            this.inputType = inputType;
+            this.outputType = outputType;
+            this.inputValue = inputValue;
+            this.outputValue = outputValue;
+            this.hash = util.stringToHash(hashSeed + iid + operation + inputType + outputType + inputValue + outputValue);
         }
 
         // state
@@ -74,15 +87,16 @@
                 return "null";
             if (v !== v)
                 return "NaN";
-            var t = Object.prototype.toString.call(v);
-            if (t === "[object String]") {
-                if (v)  // abstract string to empty or non-empty
-                    return "s";
+            var t = typeof v;
+            if (t === "string") {
+                if (v)  // abstract string to empty or non-empty (to save space)
+                    return "someString";
                 else
                     return "";
-            }
-            if (t === "number") {
-                return 23;  // abstract numbers to NaN or 23 (=some number)
+            } else if (t === "number") {
+                return 23;  // abstract numbers to NaN or 23 (= some number)
+            } else if (t === "boolean") {
+                return v;   // for booleans, store the actual value
             }
             return "<ref>";
         }
@@ -95,8 +109,6 @@
             hashToFrequency[obs.hash] = oldFreq + 1;
 
             obsCtr++;
-//            if (obsCtr % 1000 === 0)
-//                console.log("Observations: " + obsCtr);
         }
 
         // hooks
@@ -114,6 +126,10 @@
         };
 
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {
+            if (f.name === "Number" || f.name === "Boolean" || f.name === "String" || f.name === "Object") {
+                var obs = new ExplicitObservation(iid, f.name, toTypeString(args[0]), toTypeString(val), toValueString(args[0]), toValueString(val));
+                addObservation(obs);
+            }
             return val;
         };
 
@@ -157,9 +173,28 @@
                 var obs;
                 if (!(leftType === rightType && rightType === resultType)) {
                     obs = new BinaryObservation(iid, op, leftType, rightType, resultType,
-                          toValueString(left), toValueString(right), toValueString(result_c));
+                          toValueString(left), toValueString(right), toValueString(result_c));  // record values only for type coercions (for efficiency)
                 } else {
                     obs = new BinaryObservation(iid, op, leftType, rightType, resultType);
+                }
+                // for equality operations, compute what the result is with the alternative operator
+                var altResult;
+                switch (op) {
+                    case "===":
+                        altResult = left == right;
+                        break;
+                    case "!==":
+                        altResult = left != right;
+                        break;
+                    case "==":
+                        altResult = left === right;
+                        break;
+                    case "!=":
+                        altResult = left !== right;
+                        break;
+                }
+                if (altResult !== undefined) {
+                    obs.alternativeResultValue = altResult;
                 }
                 addObservation(obs);
             }
@@ -231,14 +266,14 @@
             };
             if (sandbox.Constants.isBrowser) {
                 console.log("Sending results to jalangiFF");
-                window.$jalangiFFLogResult(JSON.stringify(results), true);
+                window.$jalangiFFLogResult(JSON.stringify(results, 0, 2), true);
             } else {
                 var fs = require("fs");
                 var benchmark = process.argv[1];
                 var wrappedResults = [{url:benchmark, value:results}];
                 var outFile = process.cwd() + "/analysisResults.json";
                 console.log("Writing analysis results to " + outFile);
-                fs.writeFileSync(outFile, JSON.stringify(wrappedResults));
+                fs.writeFileSync(outFile, JSON.stringify(wrappedResults, 0, 2));
             }
         };
 
