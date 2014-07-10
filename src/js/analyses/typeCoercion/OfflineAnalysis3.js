@@ -20,8 +20,10 @@
 
 
     var fs = require('fs');
+    var stats = require('numbers').statistic;
     var util = require("./CommonUtil.js");
     var offlineCommon = require('../OfflineAnalysesCommon.js');
+
     function mergeObs(bmDirs) {
         var allHashToObs = {};
         var allHashToFreq = {};
@@ -34,11 +36,13 @@
                 var hashToObs = analysisResult.value.hashToObservations;
                 var hashToFreq = analysisResult.value.hashToFrequency;
                 Object.keys(hashToObs).forEach(function(hash) {
+                    var obs = hashToObs[hash];
+                    obs.location = obs.operation + " at " + iids[obs.iid] + "(" + obs.iid + ") of " + bm;  // unique identifier of source code location
+                    obs.benchmark = bm;
                     if (util.HOP(allHashToObs, hash)) {
-                        console.log("Hash collision! Ignoring observation with hash " + hash + " from " + bmDir);
+                        // have already seen this observation: add frequency to total frequency
+                        allHashToFreq[hash] = allHashToFreq[hash] + hashToFreq[hash];
                     } else {
-                        var obs = hashToObs[hash];
-                        obs.location = obs.operation + " at " + iids[obs.iid] + "(" + obs.iid + ") of " + bm;  // unique identifier of source code location
                         allHashToObs[hash] = hashToObs[hash];
                         allHashToFreq[hash] = hashToFreq[hash];
                     }
@@ -49,9 +53,12 @@
     }
 
     /*
-     * String description of the coercion (or "none").
+     * Analyze the kind of coercion and
+     *  - return a string representation (if mode is "string")
+     *  - return an abstracted string representation (if mode is "abstract")
+     *  - return "none", "potentially harmful" or "harmless (if mode is "classify").
      */
-    function coercionOfObservation(obs, precise) {
+    function coercionOfObservation(obs, mode) {
         function abstractType(t) {
             return t.indexOf("[object") === 0 ? "object" : t;
         }
@@ -81,10 +88,16 @@
             if (obs.type === "boolean") {
                 return "none";
             } else {
-                if (precise) {
+                if (mode === "string") {
                     return obs.type + " in conditional";
-                } else {
+                } else if (mode === "abstract") {
                     return abstractType(obs.type) + " in conditional";
+                } else if (mode === "classify") {
+                    if (obs.type === "function") {
+                        return "potentially harmful";
+                    } else {
+                        return "harmless";
+                    }
                 }
             }
         } else if (obs.kind === "unary") {
@@ -92,30 +105,40 @@
                 if (obs.type === "number") {
                     return "none";
                 } else {
-                    if (precise) {
+                    if (mode === "string") {
                         return op + " " + obs.type;
-                    } else {
+                    } else if (mode === "abstract") {
                         return "+-~ " + abstractType(obs.type);
+                    } else if (mode === "classify") {
+                        return "potentially harmful";
                     }
                 }
             } else if (op === "~") {
                 if (obs.type === "number") {
                     return "none";
                 } else {
-                    if (precise) {
+                    if (mode === "string") {
                         return op + " " + obs.type;
-                    } else {
+                    } else if (mode === "abstract") {
                         return "+-~ " + abstractType(obs.type);
+                    } else if (mode === "classify") {
+                        return "potentially harmful";
                     }
                 }
             } else if (op === "!") {
                 if (obs.type === "boolean") {
                     return "none";
                 } else {
-                    if (precise) {
+                    if (mode === "string") {
                         return op + " " + obs.type;
-                    } else {
+                    } else if (mode === "abstract") {
                         return op + " " + abstractType(obs.type);
+                    } else if (mode === "classify") {
+                        if (obs.type === "function") {
+                            return "potentially harmful";
+                        } else {
+                            return "harmless";
+                        }
                     }
                 }
             }
@@ -125,10 +148,12 @@
                 if (obs.leftType === "number" && obs.rightType === "number") {
                     return "none";
                 } else {
-                    if (precise) {
+                    if (mode === "string") {
                         return obs.leftType + " " + op + " " + obs.rightType;
-                    } else {
+                    } else if (mode === "abstract") {
                         return ignoreOrder(abstractType(obs.leftType), "ARITHM_OP", abstractType(obs.rightType));
+                    } else if (mode === "classify") {
+                        return "potentially harmful";
                     }
                 }
             } else if (op === "+") {
@@ -136,10 +161,12 @@
                       (obs.leftType === "string" && obs.rightType === "string")) {
                     return "none";
                 } else {
-                    if (precise) {
+                    if (mode === "string") {
                         return obs.leftType + " " + op + " " + obs.rightType;
-                    } else {
+                    } else if (mode === "abstract") {
                         return ignoreOrder(abstractType(obs.leftType), "+", abstractType(obs.rightType));
+                    } else if (mode === "classify") {
+                        // TODO
                     }
                 }
             } else if (op === "<" || op === ">" || op === "<=" || op === ">=") {
@@ -147,10 +174,12 @@
                       (obs.leftType === "string" && obs.rightType === "string")) {
                     return "none";
                 } else {
-                    if (precise) {
+                    if (mode === "string") {
                         return obs.leftType + " " + op + " " + obs.rightType;
-                    } else {
+                    } else if (mode === "abstract") {
                         return ignoreOrder(abstractType(obs.leftType), "REL_OP", abstractType(obs.rightType));
+                    } else if (mode === "classify") {
+                        // TODO
                     }
                 }
             } else if (op === "==" || op === "!=" || op === "===" || op === "!==") {
@@ -160,36 +189,38 @@
                       (obs.leftType === "undefined" && obs.rightType === "null")) {
                     return "none";
                 } else {
-                    if (precise) {
+                    if (mode === "string") {
                         return obs.leftType + " " + op + " " + obs.rightType;
-                    } else {
+                    } else if (mode === "abstract") {
                         var leftType = stronglyAbstractType(obs.leftType);
                         var rightType = stronglyAbstractType(obs.rightType);
-                        if (leftType === "NaN" || rightType === "NaN") {
-                            return ignoreOrder("NaN", "EQ_OP", "something");
-                        } else {
-                            return ignoreOrder(stronglyAbstractType(obs.leftType), "EQ_OP", stronglyAbstractType(obs.rightType));
-                        }
+                        return ignoreOrder(stronglyAbstractType(obs.leftType), "EQ_OP", stronglyAbstractType(obs.rightType));
+                    } else if (mode === "classify") {
+                        // TODO
                     }
                 }
             } else if (op === "&" || op === "^" || op === "|") {
                 if (obs.leftType === "number" && obs.rightType === "number") {
                     return "none";
                 } else {
-                    if (precise) {
+                    if (mode === "string") {
                         return obs.leftType + " " + op + " " + obs.rightType;
-                    } else {
+                    } else if (mode === "abstract") {
                         return ignoreOrder(abstractType(obs.leftType), "BIT_OP", abstractType(obs.rightType));
+                    } else if (mode === "classify") {
+                        // TODO
                     }
                 }
             } else if (op === "&&" || op === "||") {
                 if (obs.leftType === "boolean" && obs.rightType === "boolean") {
                     return "none";
                 } else {
-                    if (precise) {
+                    if (mode === "string") {
                         return obs.leftType + " " + op + " " + obs.rightType;
-                    } else {
+                    } else if (mode === "abstract") {
                         return ignoreOrder(abstractType(obs.leftType), "BOOL_OP", abstractType(obs.rightType));
+                    } else if (mode === "classify") {
+                        // TODO
                     }
                 }
             }
@@ -228,8 +259,15 @@
         });
     }
 
-    function prevalenceOfCoercionsDynamic(obsAndFreq) {
-        console.log("\n====== Prevalence of type coercions (dynamic) ======\n");
+    function PrevalenceResults(conditionalHisto, unaryHisto, binaryHisto) {
+        this.conditionalHisto = conditionalHisto;
+        this.unaryHisto = unaryHisto;
+        this.binaryHisto = binaryHisto;
+    }
+
+    function prevalenceOfCoercionsDynamic(obsAndFreq, silent) {
+        if (!silent)
+            console.log("\n====== Prevalence of type coercions (dynamic) ======\n");
         var hashToObservations = obsAndFreq[0];
         var hashToFrequency = obsAndFreq[1];
         var conditionalCoercionToFreq = {};
@@ -238,18 +276,21 @@
         Object.keys(hashToObservations).forEach(function(hash) {
             var obs = hashToObservations[hash];
             if (obs.kind !== "explicit") {
-                var coercion = coercionOfObservation(obs);
+                var coercion = coercionOfObservation(obs, "abstract");
                 var map = obs.kind === "conditional" ? conditionalCoercionToFreq : (obs.kind === "unary" ? unaryCoercionToFreq : binaryCoercionToFreq);
                 var oldFreq = map[coercion] || 0;
                 map[coercion] = oldFreq + hashToFrequency[hash];
             }
         });
-        printHistogram("Conditionals", conditionalCoercionToFreq);
-        printHistogram("Unary", unaryCoercionToFreq);
-        printHistogram("Binary", binaryCoercionToFreq);
+        if (!silent) {
+            printHistogram("Conditionals", conditionalCoercionToFreq);
+            printHistogram("Unary", unaryCoercionToFreq);
+            printHistogram("Binary", binaryCoercionToFreq);
+        }
+        return new PrevalenceResults(conditionalCoercionToFreq, unaryCoercionToFreq, binaryCoercionToFreq);
     }
 
-    function prevalenceOfCoercionsStatic(obsAndFreq) {
+    function prevalenceOfCoercionsStatic(obsAndFreq, silent) {
         function countLocs(coercionToLocs) {
             Object.keys(coercionToLocs).forEach(function(coercion) {
                 var nbLocs = Object.keys(coercionToLocs[coercion]).length;
@@ -257,7 +298,8 @@
             });
         }
 
-        console.log("\n====== Prevalence of type coercions (static) ======\n");
+        if (!silent)
+            console.log("\n====== Prevalence of type coercions (static) ======\n");
         var hashToObservations = obsAndFreq[0];
         var conditionalCoercionToLocs = {};
         var unaryCoercionToLocs = {};
@@ -265,7 +307,7 @@
         Object.keys(hashToObservations).forEach(function(hash) {
             var obs = hashToObservations[hash];
             if (obs.kind !== "explicit") {
-                var coercion = coercionOfObservation(obs);
+                var coercion = coercionOfObservation(obs, "abstract");
                 var map = obs.kind === "conditional" ? conditionalCoercionToLocs : (obs.kind === "unary" ? unaryCoercionToLocs : binaryCoercionToLocs);
                 var locsWithCoercion = map[coercion] || {};
                 locsWithCoercion[obs.location] = true;
@@ -275,9 +317,36 @@
         countLocs(conditionalCoercionToLocs);
         countLocs(unaryCoercionToLocs);
         countLocs(binaryCoercionToLocs);
-        printHistogram("Conditionals", conditionalCoercionToLocs);
-        printHistogram("Unary", unaryCoercionToLocs);
-        printHistogram("Binary", binaryCoercionToLocs);
+        if (!silent) {
+            printHistogram("Conditionals", conditionalCoercionToLocs);
+            printHistogram("Unary", unaryCoercionToLocs);
+            printHistogram("Binary", binaryCoercionToLocs);
+        }
+        return new PrevalenceResults(conditionalCoercionToLocs, unaryCoercionToLocs, binaryCoercionToLocs);
+    }
+
+    function PrevalenceResultsMulti(groupToConditionalHisto, groupToUnaryHisto, groupToBinaryHisto) {
+        this.groupToConditionalHisto = groupToConditionalHisto;
+        this.groupToUnaryHisto = groupToUnaryHisto;
+        this.groupToBinaryHisto = groupToBinaryHisto;
+    }
+
+    function prevalenceOfCoercionsMultiple(caption, dynamic, groupToObsAndFreq, outputFct) {
+        console.log("\n====== " + caption + " ====== \n");
+        var groupToConditionalHisto = {};
+        var groupToUnaryHisto = {};
+        var groupToBinaryHisto = {};
+        var prevalenceAnalysisFct = dynamic ? prevalenceOfCoercionsDynamic : prevalenceOfCoercionsStatic;
+        Object.keys(groupToObsAndFreq).forEach(function(group) {
+            var prevalenceResults = prevalenceAnalysisFct(groupToObsAndFreq[group], true);
+            groupToConditionalHisto[group] = prevalenceResults.conditionalHisto;
+            groupToUnaryHisto[group] = prevalenceResults.unaryHisto;
+            groupToBinaryHisto[group] = prevalenceResults.binaryHisto;
+        });
+        outputFct("Conditionals", groupToConditionalHisto);
+        outputFct("Unary", groupToUnaryHisto);
+        outputFct("Binary", groupToBinaryHisto);
+        return new PrevalenceResultsMulti(groupToConditionalHisto, groupToUnaryHisto, groupToBinaryHisto);
     }
 
     function polymorphicCodeLocations(obsAndFreq) {
@@ -289,7 +358,7 @@
             var obs = hashToObservations[hash];
             if (obs.kind !== "explicit") {
                 var types = typesOfObservation(obs).toString();
-                var coercion = coercionOfObservation(obs);
+                var coercion = coercionOfObservation(obs, "string");
                 var locationToTypes = coercion === "none" ? locationToUncoercedTypes : locationToCoercedTypes;
                 var typesAtLocation = locationToTypes[obs.location] || {};
                 typesAtLocation[types] = true;
@@ -421,6 +490,90 @@
         });
     }
 
+    function groupObservations(obsAndFreq, groupForObservationFct) {
+        var bmToObsAndFreq = {};
+        var hashToObservations = obsAndFreq[0];
+        var hashToFreq = obsAndFreq[1];
+        Object.keys(hashToObservations).forEach(function(hash) {
+            var obs = hashToObservations[hash];
+            var group = groupForObservationFct(obs);
+            var obsAndFreqOfBenchmark = bmToObsAndFreq[group] || [{}, {}];
+            obsAndFreqOfBenchmark[0][hash] = obs;
+            var oldFreq = obsAndFreqOfBenchmark[1][hash] || 0;
+            obsAndFreqOfBenchmark[1][hash] = oldFreq + hashToFreq[hash];
+            bmToObsAndFreq[group] = obsAndFreqOfBenchmark;
+        });
+        return bmToObsAndFreq;
+    }
+
+    function byBenchmark(obs) {
+        return obs.benchmark;
+    }
+
+    function byLibOrNonLib(obs) {
+        return isLibrary(obs.location) ? "lib" : "non-lib";
+    }
+
+    function byComponent(obs) {
+        return componentOfLocation(obs.location);
+    }
+
+    function summarizeHistosPercentages(caption, groupToHisto) {
+        var xToPercentages = {}; // string --> array of number
+        var allX = {};
+        Object.keys(groupToHisto).forEach(function(group) {
+            var histo = groupToHisto[group];
+            Object.keys(histo).forEach(function(x) {
+                allX[x] = true;
+            });
+        });
+        Object.keys(groupToHisto).forEach(function(group) {
+            var histo = groupToHisto[group];
+            var total = totalOfHisto(histo);
+            if (total > 0) {
+                Object.keys(allX).forEach(function(x) {
+                    var percentages = xToPercentages[x] || [];
+                    var nbInHisto = histo[x] || 0;
+                    var percentage = Math.round((nbInHisto / total) * 10000) / 100;
+                    percentages.push(percentage);
+                    xToPercentages[x] = percentages;
+                });
+            }
+        });
+        // sort and print
+        var entries = [];
+        Object.keys(xToPercentages).forEach(function(x) {
+            var avgPercentage = stats.mean(xToPercentages[x]);
+            entries.push({x:x, percentages:xToPercentages[x], mean:avgPercentage});
+        });
+        entries.sort(function(a, b) {
+            return b.avgPercentage - a.avgPercentage;
+        });
+        console.log(caption);
+        entries.forEach(function(e) {
+            var sortedPercentages = e.percentages.sort(function(a, b) {
+                return b - a;
+            });
+            console.log("  " + e.x + " --> " + sortedPercentages);
+        });
+        console.log();
+    }
+
+    function totalOfHisto(histo) {
+        var total = 0;
+        Object.keys(histo).forEach(function(x) {
+            total += histo[x];
+        });
+        return total;
+    }
+
+    function printHistosAll(caption, groupToHisto) {
+        console.log(caption);
+        Object.keys(groupToHisto).forEach(function(group) {
+            printHistogram(group, groupToHisto[group]);
+        });
+    }
+
     function printHistogram(caption, histogram) {
         var pairs = [];
         var total = 0;
@@ -443,6 +596,22 @@
         return part + " (" + Math.round((part / total) * 10000) / 100 + "%)";
     }
 
+    var libraryPatterns = ['jquery', 'mootools', 'bootstrap', 'peg-0.6.2', 'date.js', 'less-1.2.0', 'interactions.js', 'yui', 'tinymce'];
+    function isLibrary(location) {
+        for (var i = 0; i < libraryPatterns.length; i++) {
+            if (location.indexOf(libraryPatterns[i]) !== -1)
+                return true;
+        }
+        return false;
+    }
+
+    function componentOfLocation(location) {
+        for (var i = 0; i < libraryPatterns.length; i++) {
+            if (location.indexOf(libraryPatterns[i]) !== -1)
+                return libraryPatterns[i];
+        }
+        return "non-lib";
+    }
 
     var bmGroupDirs = process.argv.slice(2); // directories that contain benchmark directories (e.g., "sunspider" contains "3d-cube")
     var bmDirs = [];
@@ -453,11 +622,26 @@
     });
     var obsAndFreq = mergeObs(bmDirs);
     typesAndOperators(obsAndFreq);
+
+    // over all benchmarks
     prevalenceOfCoercionsDynamic(obsAndFreq);
     prevalenceOfCoercionsStatic(obsAndFreq);
     polymorphicCodeLocations(obsAndFreq);
     equalityOperationsDynamic(obsAndFreq);
     equalityOperationsStatic(obsAndFreq);
+
+    // per benchmark
+    prevalenceOfCoercionsMultiple("Prevalence of type coercions by benchmark (dynamic)", true, groupObservations(obsAndFreq, byBenchmark), summarizeHistosPercentages);
+    prevalenceOfCoercionsMultiple("Prevalence of type coercions by benchmark (static)", false, groupObservations(obsAndFreq, byBenchmark), summarizeHistosPercentages);
+
+    // lib vs non-lib
+    prevalenceOfCoercionsMultiple("Prevalence of type coercions by lib/non-lib (dynamic)", true, groupObservations(obsAndFreq, byLibOrNonLib), printHistosAll);
+    prevalenceOfCoercionsMultiple("Prevalence of type coercions by lib/non-lib (static)", false, groupObservations(obsAndFreq, byLibOrNonLib), printHistosAll);
+
+    // specific libs
+    prevalenceOfCoercionsMultiple("Prevalence of type coercions for specific libs (dynamic)", true, groupObservations(obsAndFreq, byComponent), printHistosAll);
+    prevalenceOfCoercionsMultiple("Prevalence of type coercions for specific libs (static)", false, groupObservations(obsAndFreq, byComponent), printHistosAll);
+
     explicitConversions(obsAndFreq);
 
 })();
