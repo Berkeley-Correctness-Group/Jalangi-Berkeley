@@ -51,7 +51,28 @@
     /*
      * String description of the coercion (or "none").
      */
-    function coercionOfObservation(obs) {
+    function coercionOfObservation(obs, precise) {
+        function abstractType(t) {
+            return t.indexOf("[object") === 0 ? "object" : t;
+        }
+
+        function stronglyAbstractType(t) {
+            if (t.indexOf("[object") === 0 || t === "function" || t === "array")
+                return "object";
+            else if (t === "number" || t === "boolean")
+                return "primitive";
+            else
+                return t;
+        }
+
+        function ignoreOrder(left, op, right) {
+            if (left < right) {
+                return left + " " + op + " " + right;
+            } else {
+                return right + " " + op + " " + left;
+            }
+        }
+
         var op = obs.operation;
         if (obs.kind === "explicit") {
             return "none";
@@ -60,26 +81,42 @@
             if (obs.type === "boolean") {
                 return "none";
             } else {
-                return obs.type + " in conditional";
+                if (precise) {
+                    return obs.type + " in conditional";
+                } else {
+                    return abstractType(obs.type) + " in conditional";
+                }
             }
         } else if (obs.kind === "unary") {
             if (op === "+" || op === "-") {
                 if (obs.type === "number") {
                     return "none";
                 } else {
-                    return op + " " + obs.type;
+                    if (precise) {
+                        return op + " " + obs.type;
+                    } else {
+                        return "+-~ " + abstractType(obs.type);
+                    }
                 }
             } else if (op === "~") {
                 if (obs.type === "number") {
                     return "none";
                 } else {
-                    return op + " " + obs.type;
+                    if (precise) {
+                        return op + " " + obs.type;
+                    } else {
+                        return "+-~ " + abstractType(obs.type);
+                    }
                 }
             } else if (op === "!") {
                 if (obs.type === "boolean") {
                     return "none";
                 } else {
-                    return op + " " + obs.type;
+                    if (precise) {
+                        return op + " " + obs.type;
+                    } else {
+                        return op + " " + abstractType(obs.type);
+                    }
                 }
             }
         } else if (obs.kind === "binary") {
@@ -88,21 +125,33 @@
                 if (obs.leftType === "number" && obs.rightType === "number") {
                     return "none";
                 } else {
-                    return obs.leftType + " " + op + " " + obs.rightType;
+                    if (precise) {
+                        return obs.leftType + " " + op + " " + obs.rightType;
+                    } else {
+                        return ignoreOrder(abstractType(obs.leftType), "ARITHM_OP", abstractType(obs.rightType));
+                    }
                 }
             } else if (op === "+") {
                 if ((obs.leftType === "number" && obs.rightType === "number") ||
                       (obs.leftType === "string" && obs.rightType === "string")) {
                     return "none";
                 } else {
-                    return obs.leftType + " " + op + " " + obs.rightType;
+                    if (precise) {
+                        return obs.leftType + " " + op + " " + obs.rightType;
+                    } else {
+                        return ignoreOrder(abstractType(obs.leftType), "+", abstractType(obs.rightType));
+                    }
                 }
             } else if (op === "<" || op === ">" || op === "<=" || op === ">=") {
                 if ((obs.leftType === "number" && obs.rightType === "number") ||
                       (obs.leftType === "string" && obs.rightType === "string")) {
                     return "none";
                 } else {
-                    return obs.leftType + " " + op + " " + obs.rightType;
+                    if (precise) {
+                        return obs.leftType + " " + op + " " + obs.rightType;
+                    } else {
+                        return ignoreOrder(abstractType(obs.leftType), "REL_OP", abstractType(obs.rightType));
+                    }
                 }
             } else if (op === "==" || op === "!=" || op === "===" || op === "!==") {
                 if (obs.leftType === obs.rightType) {
@@ -111,19 +160,37 @@
                       (obs.leftType === "undefined" && obs.rightType === "null")) {
                     return "none";
                 } else {
-                    return obs.leftType + " " + op + " " + obs.rightType;
+                    if (precise) {
+                        return obs.leftType + " " + op + " " + obs.rightType;
+                    } else {
+                        var leftType = stronglyAbstractType(obs.leftType);
+                        var rightType = stronglyAbstractType(obs.rightType);
+                        if (leftType === "NaN" || rightType === "NaN") {
+                            return ignoreOrder("NaN", "EQ_OP", "something");
+                        } else {
+                            return ignoreOrder(stronglyAbstractType(obs.leftType), "EQ_OP", stronglyAbstractType(obs.rightType));
+                        }
+                    }
                 }
             } else if (op === "&" || op === "^" || op === "|") {
                 if (obs.leftType === "number" && obs.rightType === "number") {
                     return "none";
                 } else {
-                    return obs.leftType + " " + op + " " + obs.rightType;
+                    if (precise) {
+                        return obs.leftType + " " + op + " " + obs.rightType;
+                    } else {
+                        return ignoreOrder(abstractType(obs.leftType), "BIT_OP", abstractType(obs.rightType));
+                    }
                 }
             } else if (op === "&&" || op === "||") {
                 if (obs.leftType === "boolean" && obs.rightType === "boolean") {
                     return "none";
                 } else {
-                    return obs.leftType + " " + op + " " + obs.rightType;
+                    if (precise) {
+                        return obs.leftType + " " + op + " " + obs.rightType;
+                    } else {
+                        return ignoreOrder(abstractType(obs.leftType), "BOOL_OP", abstractType(obs.rightType));
+                    }
                 }
             }
         }
@@ -161,7 +228,7 @@
         });
     }
 
-    function prevalenceOfCoercions(obsAndFreq) {
+    function prevalenceOfCoercionsDynamic(obsAndFreq) {
         console.log("\n====== Prevalence of type coercions (dynamic) ======\n");
         var hashToObservations = obsAndFreq[0];
         var hashToFrequency = obsAndFreq[1];
@@ -180,6 +247,37 @@
         printHistogram("Conditionals", conditionalCoercionToFreq);
         printHistogram("Unary", unaryCoercionToFreq);
         printHistogram("Binary", binaryCoercionToFreq);
+    }
+
+    function prevalenceOfCoercionsStatic(obsAndFreq) {
+        function countLocs(coercionToLocs) {
+            Object.keys(coercionToLocs).forEach(function(coercion) {
+                var nbLocs = Object.keys(coercionToLocs[coercion]).length;
+                coercionToLocs[coercion] = nbLocs;
+            });
+        }
+
+        console.log("\n====== Prevalence of type coercions (static) ======\n");
+        var hashToObservations = obsAndFreq[0];
+        var conditionalCoercionToLocs = {};
+        var unaryCoercionToLocs = {};
+        var binaryCoercionToLocs = {};
+        Object.keys(hashToObservations).forEach(function(hash) {
+            var obs = hashToObservations[hash];
+            if (obs.kind !== "explicit") {
+                var coercion = coercionOfObservation(obs);
+                var map = obs.kind === "conditional" ? conditionalCoercionToLocs : (obs.kind === "unary" ? unaryCoercionToLocs : binaryCoercionToLocs);
+                var locsWithCoercion = map[coercion] || {};
+                locsWithCoercion[obs.location] = true;
+                map[coercion] = locsWithCoercion;
+            }
+        });
+        countLocs(conditionalCoercionToLocs);
+        countLocs(unaryCoercionToLocs);
+        countLocs(binaryCoercionToLocs);
+        printHistogram("Conditionals", conditionalCoercionToLocs);
+        printHistogram("Unary", unaryCoercionToLocs);
+        printHistogram("Binary", binaryCoercionToLocs);
     }
 
     function polymorphicCodeLocations(obsAndFreq) {
@@ -312,6 +410,17 @@
         printHistogram("Change of outcome when changing non-strict equality operator to strict", changesForNonStrict);
     }
 
+    function explicitConversions(obsAndFreq) {
+        console.log("\n====== Explicit type conversions ======\n");
+        var hashToObservations = obsAndFreq[0];
+        Object.keys(hashToObservations).forEach(function(hash) {
+            var obs = hashToObservations[hash];
+            if (obs.kind === "explicit") {
+                console.log(obs.location);
+            }
+        });
+    }
+
     function printHistogram(caption, histogram) {
         var pairs = [];
         var total = 0;
@@ -335,7 +444,7 @@
     }
 
 
-    var bmGroupDirs = process.argv.slice(2); // directories that contain benchmark directories (e.g., "sunspider" contains "3d-cube" etc.)
+    var bmGroupDirs = process.argv.slice(2); // directories that contain benchmark directories (e.g., "sunspider" contains "3d-cube")
     var bmDirs = [];
     bmGroupDirs.forEach(function(bmGroupDir) {
         fs.readdirSync(bmGroupDir).forEach(function(bmName) {
@@ -344,9 +453,11 @@
     });
     var obsAndFreq = mergeObs(bmDirs);
     typesAndOperators(obsAndFreq);
-    prevalenceOfCoercions(obsAndFreq);
+    prevalenceOfCoercionsDynamic(obsAndFreq);
+    prevalenceOfCoercionsStatic(obsAndFreq);
     polymorphicCodeLocations(obsAndFreq);
     equalityOperationsDynamic(obsAndFreq);
     equalityOperationsStatic(obsAndFreq);
+    explicitConversions(obsAndFreq);
 
 })();

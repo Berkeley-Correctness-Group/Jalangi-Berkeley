@@ -70,8 +70,8 @@
                 return "undefined";
             if (v === null)
                 return "null";
-            if (v !== v)
-                return "NaN";
+//            if (v !== v)
+//                return "NaN";
             var s = Object.prototype.toString.call(v);
             if (s === "[object Array]")
                 return "array";
@@ -126,7 +126,7 @@
         };
 
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {
-            if (f.name === "Number" || f.name === "Boolean" || f.name === "String" || f.name === "Object") {
+            if (!isConstructor && (f.name === "Number" || f.name === "Boolean" || f.name === "String" || f.name === "Object")) {
                 var obs = new ExplicitObservation(iid, f.name, toTypeString(args[0]), toTypeString(val), toValueString(args[0]), toValueString(val));
                 addObservation(obs);
             }
