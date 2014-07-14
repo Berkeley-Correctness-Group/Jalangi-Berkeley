@@ -29,7 +29,7 @@
 
 (function (sandbox) {
     function TrackHiddenClass() {
-        var MIN_CACHE_HITS = 20;
+        var MIN_CACHE_HITS = 1;
         var iidToLocation = sandbox.iidToLocation;
         var smemory = sandbox.smemory;
         var Constants = sandbox.Constants;
@@ -42,7 +42,7 @@
 
         var root = {};
         var idToHiddenClass = [];
-        var warning_limit = 10;
+        var warning_limit = 1000;
 
         function annotateObjectWithCreationLocation(obj, iid) {
             var sobj = smemory.getShadowObject(obj);
@@ -83,6 +83,7 @@
                 meta.miss++;
                 meta.lastKey = key;
             }
+
             meta.keysToCount[key] = (meta.keysToCount[key] | 0) + 1;
             meta.objectLocs[loc] = (meta.objectLocs[loc] | 0) + 1;
         }
@@ -192,7 +193,6 @@
         function updateHiddenClass(obj, fld, val) {
             if (!hasGetterSetter(obj, fld)) {
                 var hiddenClass = getHiddenClass(obj);
-
                 fld = "" + fld;
                 if (hiddenClass) {
                     if (HOP(obj, fld)) {
@@ -241,6 +241,25 @@
             return val;
         };
 
+
+        function getRank(meta) {
+            var rank = meta.miss;
+            var maxCount = -1;
+            var secondMaxCount = -1;
+            for (var hiddenKey in meta.keysToCount) {
+                if (HOP(meta.keysToCount, hiddenKey)) {
+                    var count = meta.keysToCount[hiddenKey];
+                    if(maxCount<count){
+                        secondMaxCount = maxCount;
+                        maxCount = count;
+                    } else if(secondMaxCount<count){
+                        secondMaxCount = count;
+                    }
+                }
+            }
+            return rank + secondMaxCount;
+        }
+
         this.endExecution = function () {
             console.log('\n\n');
             console.log("---------------------------");
@@ -249,11 +268,12 @@
             var tmp = [];
             for (var iid in info) {
                 if (HOP(info, iid)) {
-                    tmp.push({iid:iid, count:info[iid].miss, meta:info[iid]});
+                    var tmpRank = getRank(info[iid]);
+                    tmp.push({iid:iid, count:info[iid].miss, meta:info[iid], rank: tmpRank});
                 }
             }
             sort.call(tmp, function(a,b) {
-                return b.count - a.count;
+                return b.rank - a.rank;
             });
             var len = tmp.length;
             for (var i=0; i<len && i<warning_limit; i++) {
@@ -291,4 +311,3 @@
     }
     sandbox.analysis = new TrackHiddenClass();
 })(J$);
-
