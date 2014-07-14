@@ -19,24 +19,57 @@
 (function() {
 
     var util = importModule("CommonUtil");
-    var callGraphModule = importModule("CallGraph");
     var typeUtil = importModule("TypeUtil");
 
     var maxTypes = 2;
+    var maxNbDiffEntries = 2;
 
     var PrimitiveTypeNodes;
 
-    function filterAndMerge(warnings, engineResults, typeGraph, tableAndRoots, PrimitiveTypeNodes_) {
+    // default configuration
+    var config = {
+        filterByBeliefs:true,
+        filterNullRelated:true,
+        filterByNbTypes:2, // number of false
+        filterByNbTypeDiffEntries:2, // number or false
+        mergeViaDataflow:true,
+        mergeByTypeDiff:true,
+        mergeSameArray:true
+    };
+
+    function filterAndMerge(warnings, engineResults, typeGraph, tableAndRoots, PrimitiveTypeNodes_, filterMergeConfig) {
+        overrideDefaultConfig(filterMergeConfig);
+
         PrimitiveTypeNodes = PrimitiveTypeNodes_;
         computeTypeDiffs(warnings, typeGraph, tableAndRoots[0]);
-        filterByBeliefs(warnings, engineResults.frameToBeliefs);
-        filterNullRelated(warnings);
-        filterByNbTypes(warnings);
-        mergeUsingCallGraph(warnings, engineResults.callGraph);
-        mergeByTypeDiff(warnings);
-        mergeSameArray(warnings);
+        if (config.filterByBeliefs)
+            filterByBeliefs(warnings, engineResults.frameToBeliefs);
+        if (config.filterNullRelated)
+            filterNullRelated(warnings);
+        if (config.filterByNbTypes) {
+            maxTypes = config.filterByNbTypes;
+            filterByNbTypes(warnings);
+        }
+        if (config.filterByNbTypeDiffEntries) {
+            maxNbDiffEntries = config.filterByNbTypeDiffEntries;
+            filterByNbTypeDiffEntries(warnings);
+        }
+        if (config.mergeViaDataflow)
+            mergeViaDataflow(warnings, engineResults.callGraph);
+        if (config.mergeByTypeDiff)
+            mergeByTypeDiff(warnings);
+        if (config.mergeSameArray)
+            mergeSameArray(warnings);
 
         return mergeAndFilterWarnings(warnings);
+    }
+
+    function overrideDefaultConfig(config_) {
+        for (var key in config_) {
+            if (util.HOP(config_, key)) {
+                config[key] = config_[key];
+            }
+        }
     }
 
     function group(warnings) {
@@ -45,9 +78,7 @@
 
     function computeTypeDiffs(warnings, typeGraph, typeToRoot) {
         warnings.forEach(function(w) {
-            var observedTypes = w.observedTypesAndLocations.map(function(tl) {
-                return tl[0].typeName;
-            });
+            var observedTypes = w.observedTypes();
             var typeNodes = observedTypes.map(function(typeName) {
                 var rootName = typeToRoot[typeName];
                 return typeGraph[rootName];
@@ -69,15 +100,16 @@
             if (varNameToTypes) {
                 var beliefTypes = varNameToTypes[w.fieldName];
                 if (beliefTypes) {
-                    var observedTypes = {};
-                    w.observedTypesAndLocations.forEach(function(tl) {
-                        observedTypes[tl[0].typeName] = true;
+                    var observedTypesArray = w.observedTypes();
+                    var observedTypesSet = {};
+                    observedTypesArray.forEach(function(t) {
+                        observedTypesSet[t] = true;
                     });
                     // remove types that the programmer believes to be OK
                     Object.keys(beliefTypes).forEach(function(beliefType) {
-                        delete observedTypes[beliefType];
+                        delete observedTypesSet[beliefType];
                     });
-                    if (Object.keys(observedTypes).length <= 1) {
+                    if (Object.keys(observedTypesSet).length <= 1) {
                         w.filterBecause.belief = true;
                     }
                 }
@@ -93,8 +125,15 @@
     function filterNullRelated(warnings) {
         return warnings.filter(function(w) {
             var hasNonNullRelated = Object.keys(w.typeDiff).some(function(diffKey) {
-                var diff = w.typeDiff[diffKey];
-                return diff.kinds.indexOf("null") === -1;
+                var diffKinds = w.typeDiff[diffKey].kinds;
+                // Variant 1: null vs object/array/function
+//                var containsNull = diffKinds.indexOf("null") !== -1;
+//                var containsNonObject = diffKinds.some(function(kind) {
+//                    return kind !== "object" && kind !== "array" && kind !== "function" && kind !== "null";
+//                });
+//                return !containsNull || (containsNull && containsNonObject);
+                // Variant 2: null vs any other type
+                return diffKinds.indexOf("null") === -1;
             });
             if (!hasNonNullRelated) {
                 w.filterBecause.nullRelated = true;
@@ -110,8 +149,47 @@
         });
     }
 
-    function mergeUsingCallGraph(warnings, callGraph) {
-        warnings = callGraphModule.markWarningsForMerging(callGraph, warnings);
+    function filterByNbTypeDiffEntries(warnings) {
+        warnings.forEach(function(w) {
+            var diffEntries = util.valueArray(w.typeDiff);
+            if (diffEntries.length > maxNbDiffEntries) {
+                w.filterBecause.nbTypeDiffEntries = true;
+            }
+        });
+    }
+
+    function mergeViaDataflow(warnings, callGraph) {
+        function calls(frame1, frame2) {
+            return callGraph.calls[frame1] && callGraph.calls[frame1][frame2];
+        }
+
+        warnings.forEach(function(w1) {
+            warnings.forEach(function(w2) {
+                if (w1 !== w2) {
+                    var t1 = w1.typeDescription.typeName;
+                    var t2 = w2.typeDescription.typeName;
+                    var kind1 = w1.typeDescription.kind;
+                    var kind2 = w2.typeDescription.kind;
+                    var prop1 = w1.fieldName;
+                    var prop2 = w2.fieldName;
+                    var observed1 = w1.observedTypes();
+                    var observed2 = w2.observedTypes();
+                    if (util.sameArrays(observed1, observed2)) {
+                        if (kind1 === "frame" && kind2 === "function" &&
+                              prop2 === "return" && callGraph.frame_fn[t2] === t1) {
+                            merge(w1, w2);
+                        } else if (kind1 === "frame" && kind2 === "frame" &&
+                              calls(t1, t2)) {
+                            merge(w1, w2);
+                        } else if (kind1 === "function" && kind2 === "function" &&
+                              prop1 === "return" && prop2 === "return" &&
+                              calls(callGraph.frame_fn[t1], callGraph.frame_fn[t2])) {
+                            merge(w1, w2);
+                        }
+                    }
+                }
+            });
+        });
     }
 
     function mergeSameArray(warnings) {
@@ -121,14 +199,18 @@
                 var loc = w.typeDescription.location;
                 var warningsAtLoc = locToWarnings[loc] || [];
                 warningsAtLoc.forEach(function(otherWarning) {
-                    w.addMergeWith(otherWarning);
-                    otherWarning.addMergeWith(w);
+                    merge(w, otherWarning);
                 });
                 warningsAtLoc.push(w);
                 locToWarnings[loc] = warningsAtLoc;
             }
         });
         return locToWarnings;
+    }
+
+    function merge(w1, w2) {
+        w1.addMergeWith(w2);
+        w2.addMergeWith(w1);
     }
 
     function groupByLocation(warnings) {
@@ -146,44 +228,64 @@
         return locToWarnings;
     }
 
-    function mergeByTypeDiff(warnings) {
+    function mergeByTypeDiffCombinatorial(warnings) {
         warnings.forEach(function(w1) {
             var diffEntries1 = util.valueArray(w1.typeDiff);
             warnings.forEach(function(w2) {
                 if (w1 !== w2) {
-                    var diffEntries2 = util.valueArray(w2.typeDiff);
-                    if (diffEntries1.length === diffEntries2.length) {
-                        // try to find a bijective mapping between the diff entries,
-                        // so that e1 and e2 have a common suffix and point to the same types
-                        var match = true;
-                        for (var i1 = 0; i1 < diffEntries1.length; i1++) {
-                            var entry1 = diffEntries1[i1];
-                            var entry2;
-                            diffEntries2.some(function(entry) {
+                    if (!w1.willMergeWith(w2) && !w2.willMergeWith(w1)) { // skip type diff comparison if they are merged anyway
+                        var diffEntries2 = util.valueArray(w2.typeDiff);
+                        if (diffEntries1.length === diffEntries2.length) {
+                            // try to find a bijective mapping between the diff entries,
+                            // so that e1 and e2 have a common suffix and point to the same types
+                            var match = true;
+                            for (var i1 = 0; i1 < diffEntries1.length; i1++) {
+                                var entry1 = diffEntries1[i1];
                                 var exprParts1 = entry1.expr.split(".").slice(1);
-                                var exprParts2 = entry.expr.split(".").slice(1);
-                                var commonSuffix = exprParts1.length > 0 && exprParts2.length > 0 &&
-                                      util.commonSuffix(exprParts1, exprParts2).length > 0;
-                                if (commonSuffix && util.sameProps(entry1.kinds, entry.kinds)) {
-                                    entry2 = entry;
-                                    return true;
+                                var entry2;
+                                diffEntries2.some(function(entry) {
+                                    var exprParts2 = entry.expr.split(".").slice(1);
+                                    var haveCommonSuffix = exprParts1.length > 0 && exprParts2.length > 0 && exprParts1[exprParts1.length - 1] === exprParts2[exprParts2.length - 1];
+                                    if (haveCommonSuffix && util.sameProps(entry1.kinds, entry.kinds)) {
+                                        entry2 = entry;
+                                        return true;
+                                    }
+                                });
+                                if (entry2 === undefined) {
+                                    match = false;
+                                    break;
                                 }
-                            });
-                            if (entry2 === undefined) {
-                                match = false;
-                                break;
                             }
-                        }
-                        // the above algorithm may not find a bijective mapping between diff entries, even though one exists
-                        // (but does so in practice; will improve it if we find a case where it matters)
-                        if (match) {
-                            w1.addMergeWith(w2);
-                            w2.addMergeWith(w1);
+                            // the above algorithm may not find a bijective mapping between diff entries, even though one exists
+                            // (but does so for all our benchmarks; will improve it if we find a case where it matters)
+                            if (match) {
+                                merge(w1, w2);
+                            }
                         }
                     }
                 }
             });
         });
+    }
+
+    function mergeByTypeDiff(warnings) {
+        var diffHashToWarnings = {}; // string --> array of warnings
+        warnings.forEach(function(w) {
+            var diffEntries = util.valueArray(w.typeDiff);
+            var hash = diffEntries.length;
+            diffEntries.forEach(function(entry) {
+                hash += entry.kinds.sort().toString();
+            });
+            var warningsForHash = diffHashToWarnings[hash] || [];
+            warningsForHash.push(w);
+            diffHashToWarnings[hash] = warningsForHash;
+        });
+        for (var hash in diffHashToWarnings) {
+            if (util.HOP(diffHashToWarnings, hash)) {
+                var warningsForHash = diffHashToWarnings[hash];
+                mergeByTypeDiffCombinatorial(warningsForHash);
+            }
+        }
     }
 
     /**
@@ -237,14 +339,17 @@
             var idxs = mergedToIdxs[finalIdx];
             if (Object.keys(idxs).length > 0) {
                 var mergedWarning = warnings[finalIdx];
+                mergedWarning.mergeWith = [];
                 var keep = true;
                 // check if any of the warnings this final warning represents is marked for removal
                 Object.keys(idxs).forEach(function(inGroupIdx) {
                     if (Object.keys(warnings[inGroupIdx].filterBecause).length > 0)
                         keep = false;
+                    mergedWarning.mergeWith.push(warnings[inGroupIdx]);
                 });
-                if (keep)
+                if (keep) {
                     result.push(mergedWarning);
+                }
             }
         });
 
@@ -253,7 +358,7 @@
 
     function TypeDiffEntry(expr, kinds) {
         this.expr = expr;
-        this.kinds = kinds;
+        this.kinds = kinds; // array of string
     }
 
     TypeDiffEntry.prototype.toString = function() {

@@ -17,18 +17,21 @@
      * @param {string} text
      * @param {string->true} ids
      * @param {number->true} warningNbs
+     * @param {string} kindsSummary
      */
-    function Warning(text, ids, warningNbs) {
+    function Warning(text, ids, warningNbs, kindsSummary) {
         this.text = text;
         this.ids = ids;
         this.warningNbs = warningNbs;
+        this.kindsSummary = kindsSummary;
     }
 
     /**
      * @param {array of Warning} warningsToInspect
      * @param {string} knownWarningsFile
+     * @param {object} resultSummary
      */
-    function inspect(warningsToInspect, knownWarningsFile) {
+    function inspect(warningsToInspect, knownWarningsFile, resultSummary) {
         console.log("\n--------------------- WarningInspector -----------------");
         console.log("Warnings given to inspector: " + warningsToInspect.length);
         var knownWarnings = readFile(knownWarningsFile);
@@ -50,8 +53,14 @@
                     knownIds++;
             });
             if (Object.keys(warning.ids).length === knownIds) {
-                console.log("Skipping known warning (" + Object.keys(warning.warningNbs) + "): " + Object.keys(commentsOfKnown));
+                console.log("Skipping known warning (" + Object.keys(warning.warningNbs) + "): " + Object.keys(commentsOfKnown) + " -- kinds: " + warning.kindsSummary);
 //                console.log(warning.text);
+                var isBug = Object.keys(commentsOfKnown).some(function(comment) {
+                    return comment.indexOf("bug") === 0;
+                });
+                if (isBug) {
+                    resultSummary.bugs++;
+                }
             } else {
                 console.log("===============================\n" + warning.text + "\n");
                 var inspectedIdsTemplates = Object.keys(warning.ids).map(function(id) {

@@ -36,9 +36,10 @@ jalangiBaseDir = jalangiBerkeleyBaseDir+"/../jalangi/"
 workingDirName = jalangiBerkeleyBaseDir+"instrumentFF_tmp/"
 
 ## URLs to include
-included = [ r'127.0.0.1' ]
+included = [ r'127.0.0.1', r'sridharan.net', r'google-analytics.com' ]
 # .js files to exclude (e.g., libraries)
-excluded = [ ] # [ r'jquery', r'iscroll', r'peg-0.6.2', r'String.js', r'jsviews' ]
+#excluded = [ r'jquery', r'mootools', r'bootstrap', r'peg-0.6.2', r'date.js', r'less-1.2.0', r'interactions.js', r'yui', r'tinymce' ]
+excluded = [ ]
 
 ## Jalangi analyses to apply
 #jalangiAnalysisFiles = [
@@ -48,21 +49,37 @@ excluded = [ ] # [ r'jquery', r'iscroll', r'peg-0.6.2', r'String.js', r'jsviews'
 #    jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine2.js"
 #]
 #jalangiAnalysisFiles = [
+#    jalangiBaseDir+"src/js/analyses/logNaN/logNaN.js"
+#]
+#jalangiAnalysisFiles = [
 #    jalangiBerkeleyBaseDir+"src/js/analyses/executionCounters/ExecutionCountersEngine.js"
+#]
+#jalangiAnalysisFiles = [ 
+#   jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/TypeUtil.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/BenchmarkHelper.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/CallGraph.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/FilterAndMerge.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/TypeAnalysis.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/InconsistentTypeEngine.js"
+#]
+#jalangiAnalysisFiles = [ 
+#   jalangiBaseDir+"src/js/analyses/ChainedAnalyses.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/DLintPre.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/UndefinedOffset.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/ShadowProtoProperty.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/CheckNaN.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/DLintPost.js",
 #]
 jalangiAnalysisFiles = [ 
    jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/TypeUtil.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/CallGraph.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/FilterAndMerge.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/TypeAnalysis.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/inconsistentType/InconsistentTypeEngine.js"
+   jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine3.js",
 ]
 #jalangiAnalysis = jalangiBaseDir+"src/js/analyses/logundefinedread/logUndefinedRead.js"
 
 # whether to preprocess code before giving it to the Jalangi instrumenter
 # (disable unless you're running the inconsistentType analysis)
-preprocess = True
+preprocess = False
 
 ## constants
 jalangiSuffix = "_jalangi_.js"

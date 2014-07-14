@@ -18,8 +18,10 @@
 
 (function() {
 
+    var util = importModule("CommonUtil");
+
     function getKind(type) {
-        if (type === "undefined" || type === "null" || type === "object" || type === "function"
+        if (type === "undefined" || type === "null" || type === "object" || type === "function" || type === "array"
               || type === "string" || type === "number" || type === "boolean"
               || type.indexOf("global scope") === 0 || type.indexOf("native function") === 0)
             return type;

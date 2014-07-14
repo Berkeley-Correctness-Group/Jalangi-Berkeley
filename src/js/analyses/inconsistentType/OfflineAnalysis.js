@@ -11,7 +11,7 @@
     // parameters
     var inspectedWarningsFile = "/home/m/research/experiments/inconsistentTypes/inspectedWarnings.json";
     var visualizeAllTypes = false;
-    var visualizeWarningTypes = true;
+    var visualizeWarningTypes = false;
 
     function readFile(fileName) {
         var data = fs.readFileSync(fileName);
@@ -32,20 +32,20 @@
         util.mergeToLeft(allTypeData.frameToBeliefs, typeData.frameToBeliefs);
     }
 
-    function WarningStats(typeWarnings, typeWarningsByLoc) {
-        this.typeWarnings = typeWarnings;
-        this.typeWarningsByLoc = typeWarningsByLoc;
+    function ResultSummary(name) {
+        this.name = name;
+        this.typesAll = -1;
+        this.typesMerged = -1;
+        this.inconsistentTypes = -1;
+        this.warnings = -1;
+        this.bugs = -1;
     }
 
-    WarningStats.prototype.toString = function() {
-        return this.typeWarnings + "," + this.typeWarningsByLoc;
+    ResultSummary.prototype.toString = function() {
+        return this.name + "," + this.typesAll + "," + this.typesMerged + "," + this.inconsistentTypes + "," + this.warnings + "," + this.bugs;
     };
 
-    WarningStats.prototype.headerString = function() {
-        return "typeWarnings,typeWarningsByLoc";
-    };
-
-    function analyze(loggedResults, sourcemapDir) {
+    function analyze(loggedResults, sourcemapDir, filterMergeConfig) {
         var benchmark2TypeData = {};
         loggedResults.forEach(function(loggedResult) {
             var benchmark = benchmarkHelper.urlToBenchmark(loggedResult.url);
@@ -55,6 +55,7 @@
         });
 
         for (var benchmark in benchmark2TypeData) {
+            var resultSummary = new ResultSummary(benchmark);
             console.log("========== Benchmark: " + benchmark + " ============");
             var typeData = benchmark2TypeData[benchmark];
             console.log(Object.keys(typeData.typeNameToFieldTypes).length + " types");
@@ -63,30 +64,19 @@
                 var triple = iids[iid];
                 return triple ? triple.toString() : "<unknown location>";
             };
-            var typeWarnings = typeAnalysis.analyzeTypes(typeData, iidFct, false, visualizeAllTypes, visualizeWarningTypes);
+            var typeWarnings = typeAnalysis.analyzeTypes(typeData, iidFct, false, visualizeAllTypes, visualizeWarningTypes, resultSummary, filterMergeConfig);
+            resultSummary.warnings = typeWarnings.length;
 
-            warningStats(typeWarnings);
-            console.log();
-            analyzeWarnings(typeWarnings);
+            analyzeWarnings(typeWarnings, resultSummary);
+
+            console.log("ResultSummary: " + resultSummary.toString());
         }
     }
 
-    function warningStats(typeWarnings) {
-        // merge by location
-        var locToTypeWarnings = {};
-        typeWarnings.forEach(function(warning) {
-            var warningsAtLoc = locToTypeWarnings[warning.typeDescription.location] || [];
-            warningsAtLoc.push(warning);
-            locToTypeWarnings[warning.typeDescription.location] = warningsAtLoc;
-        });
-
-        var warningStats = new WarningStats(typeWarnings.length, Object.keys(locToTypeWarnings).length);
-        console.log(warningStats.headerString());
-        console.log(warningStats.toString());
-    }
-
-    function analyzeWarnings(warnings) {
+    function analyzeWarnings(warnings, resultSummary) {
         console.log("@@@ Analyzing type warnings:");
+
+        resultSummary.bugs = 0;
 
         var toInspect = [];
         warnings.forEach(function(w) {
@@ -109,14 +99,21 @@
                 }
             });
             warningNbs[w.id] = true;
-            toInspect.push(new inspector.Warning(warningText, warningIds, warningNbs));
+            toInspect.push(new inspector.Warning(warningText, warningIds, warningNbs, w.kindsSummary()));
         });
-        inspector.inspect(toInspect, inspectedWarningsFile);
+        inspector.inspect(toInspect, inspectedWarningsFile, resultSummary);
     }
 
     var benchmarkDir = process.argv[2];
     var loggedResults = readFile(benchmarkDir + "/analysisResults.json");
     var sourcemapDir = benchmarkDir + "/sourcemaps/";
-    analyze(loggedResults, sourcemapDir);
+    
+    // read filter/merge config (if available)
+    var filterMergeConfig = {};
+    try {
+        filterMergeConfig = readFile("filterAndMergeConfig.json");
+    } catch (e) { /* ignore if no config file exists */ }
+    
+    analyze(loggedResults, sourcemapDir, filterMergeConfig);
 
 })();

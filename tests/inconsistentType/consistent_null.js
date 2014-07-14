@@ -20,5 +20,5 @@ function foo(yy) {
     yy;
 }
 
-foo({ a: 42 });
+foo({ a: {} });
 foo({ a: null });

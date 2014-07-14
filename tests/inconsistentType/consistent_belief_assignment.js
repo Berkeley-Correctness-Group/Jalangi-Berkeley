@@ -22,10 +22,8 @@
     
     x = null;
     
-    var y = x;
     
     x = undefined;
     
-    y = x;
     
 })();

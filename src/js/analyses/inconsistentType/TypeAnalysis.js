@@ -5,14 +5,29 @@
     var visualization = importModule("Visualization");
     var filterAndMerge = importModule("FilterAndMerge");
 
-    function analyzeTypes(engineResults, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes) {
+    var kindsOnly = false; // when enabled, ignores the structure of all observed types and simply considers the kind of each type
+
+    function analyzeTypes(engineResults, iidToLocation, printWarnings, visualizeAllTypes, visualizeWarningTypes, resultSummary, filterMergeConfig) {
+        resultSummary = resultSummary || {};
+        resultSummary.typesAll = Object.keys(engineResults.typeNames).length;
+
+        if (kindsOnly)
+            focusOnKinds(engineResults);
+
         var tableAndRoots = equiv(engineResults.typeNameToFieldTypes);
+        resultSummary.typesMerged = Object.keys(tableAndRoots[1]).length;
 
         var typeGraph = createTypeGraph(tableAndRoots[1], tableAndRoots[0], engineResults.typeNameToFieldTypes);
 
+        var pruneStructuralSubtypes = true;  // do not prune structural subtypes unless specified otherwise via config
+        if (filterMergeConfig && filterMergeConfig.filterStructuralSubtypes !== undefined && !filterMergeConfig.filterStructuralSubtypes) {
+            pruneStructuralSubtypes = false;
+        }
+
         // TODO analyze() and visualization should use typeGraph
-        var warnings = analyze(engineResults.typeNameToFieldTypes, tableAndRoots[0], iidToLocation);
-        warnings = filterAndMerge.filterAndMerge(warnings, engineResults, typeGraph, tableAndRoots, PrimitiveTypeNodes);
+        var warnings = analyze(engineResults.typeNameToFieldTypes, tableAndRoots[0], iidToLocation, pruneStructuralSubtypes);
+        resultSummary.inconsistentTypes = warnings.length; // TODO should count before removing structural subtypes
+        warnings = filterAndMerge.filterAndMerge(warnings, engineResults, typeGraph, tableAndRoots, PrimitiveTypeNodes, filterMergeConfig);
 
         if (visualizeAllTypes) {
             var allHighlightedIIDs = {};
@@ -47,7 +62,7 @@
         warningCtr++;
         this.id = warningCtr;
         this.filterBecause = {}; // string --> true
-        this.mergeWith = []; // array of InconsistentTypeWarning
+        this.mergeWith = [];  // array of InconsistentTypeWarning
     }
 
     InconsistentTypeWarning.prototype.toString = function() {
@@ -61,6 +76,7 @@
         if (this.typeDiff) {
             s += "\n    Type diff:\n" + Object.keys(this.typeDiff).toString() + "\n";
         }
+        s += "Kinds summary: " + this.kindsSummary() + "\n";
         return s;
     };
 
@@ -68,7 +84,33 @@
         if (this.mergeWith.indexOf(otherWarning) === -1)
             this.mergeWith.push(otherWarning);
     };
-    
+
+    InconsistentTypeWarning.prototype.willMergeWith = function(otherWarning) {
+        return this.mergeWith.indexOf(otherWarning) !== -1;
+    };
+
+    InconsistentTypeWarning.prototype.observedTypes = function() {
+        return this.observedTypesAndLocations.map(function(tl) {
+            return tl[0].typeName;
+        }).sort();
+    };
+
+    InconsistentTypeWarning.prototype.kindsSummary = function() {
+        var setsOfKinds = {};
+        this.mergeWith.forEach(function(origW) {
+            var types = origW.observedTypes();
+            var kinds = types.map(typeUtil.getKind);
+            var kindsStr = "";
+            for (var i = 0; i < kinds.length; i++) {
+                kindsStr += kinds[i];
+                if (i < kinds.length - 1)
+                    kindsStr += " vs ";
+            }
+            setsOfKinds[kindsStr] = true;
+        });
+        return Object.keys(setsOfKinds).toString();
+    };
+
     function UndefinedFieldWarning(typeDescription, locations, highlightedIIDs) {
         this.typeDescription = typeDescription;
         this.locations = locations;
@@ -101,7 +143,7 @@
         return this.kind + " originated at " + this.location;
     };
 
-    function analyze(typeNameToFieldTypes, table, iidToLocation) {
+    function analyze(typeNameToFieldTypes, table, iidToLocation, pruneStructuralSubtypes) {
         var warnings = [];
         var done = {};
         for (var typeOrFunctionName in typeNameToFieldTypes) {
@@ -110,18 +152,19 @@
                 if (!util.HOP(done, typeOrFunctionName)) {
                     done[typeOrFunctionName] = true;
                     var fieldMap = typeNameToFieldTypes[typeOrFunctionName];
-                    for (var field in fieldMap) {
-                        if (util.HOP(fieldMap, field)) {
-                            if (field === "undefined") {
-                                var typeDescription = toTypeDescription(typeOrFunctionName, iidToLocation);
-                                var locations = toLocations(typeMap, iidToLocation);
-                                var highlightedIIDs = {};
-                                highlightedIIDs[typeOrFunctionName] = true;
-                                var warning = new UndefinedFieldWarning(typeDescription, locations, highlightedIIDs);
-                                warnings.push(warning);
-                            }
-                        }
-                    }
+                    // disabled because doesn't find anything
+//                    for (var field in fieldMap) {
+//                        if (util.HOP(fieldMap, field)) {
+//                            if (field === "undefined") {
+//                                var typeDescription = toTypeDescription(typeOrFunctionName, iidToLocation);
+//                                var locations = toLocations(typeMap, iidToLocation);
+//                                var highlightedIIDs = {};
+//                                highlightedIIDs[typeOrFunctionName] = true;
+//                                var warning = new UndefinedFieldWarning(typeDescription, locations, highlightedIIDs);
+//                                warnings.push(warning);
+//                            }
+//                        }
+//                    }
                     for (var field in fieldMap) {
                         if (util.HOP(fieldMap, field)) {
                             var typeMap = fieldMap[field];
@@ -131,7 +174,7 @@
                                         for (var type2 in typeMap) {
                                             if (util.HOP(typeMap, type2) && util.HOP(table, type2)) {
                                                 if (type1 < type2 && getRoot(table, type1) !== getRoot(table, type2)) {
-                                                    if (!structuralSubTypes(table, typeNameToFieldTypes, type1, type2) &&
+                                                    if ((!pruneStructuralSubtypes || !structuralSubTypes(table, typeNameToFieldTypes, type1, type2)) &&
                                                           !potentiallyCompatibleFunctions(typeNameToFieldTypes, type1, type2)) {
                                                         // types are inconsistent: report warning
                                                         var typeDescription = toTypeDescription(typeOrFunctionName, iidToLocation);
@@ -286,6 +329,13 @@
         typeToRoot['string'] = 'string';
         typeToRoot['undefined'] = 'undefined';
         typeToRoot['null'] = 'null';
+        
+        if (kindsOnly) {
+            typeToRoot['object'] = 'object';    
+            typeToRoot['array'] = 'array';    
+            typeToRoot['function'] = 'function';    
+        }
+        
         return tableAndRoots;
     }
 
@@ -306,8 +356,8 @@
         var fieldToFieldTypes = typeNameToFieldTypes[type];
         var fieldNames = Object.keys(fieldToFieldTypes).sort().toString();
         var kind = typeUtil.getKind(type);
-        var concreteKind = kind === "frame" ? type : kind; // for frames, keep the type name to make sure that frames are not merged by equiv()
-        return fieldNames+"@@@@"+concreteKind;
+        var concreteKind = kind === "frame" || kind === "function" ? type : kind; // for frames and functions, keep the type name to make sure that frames are not merged by equiv()
+        return fieldNames + "@@@@" + concreteKind;
     }
 
     function createFieldNamesAndKindToTypes(typeNameToFieldTypes) {
@@ -492,6 +542,47 @@
             }
         }
         return result;
+    }
+
+    function focusOnKinds(engineResults) {
+        var toDelete = [];
+        for (var typeName in engineResults.typeNames) {
+            if (util.HOP(engineResults.typeNames, typeName)) {
+                var kind = typeUtil.getKind(typeName);
+                if (kind === "object" || kind === "array") {
+                    toDelete.push(typeName);
+                }
+            }
+        }
+        toDelete.forEach(function(typeName) {
+            delete engineResults.typeNames[typeName];
+            delete engineResults.typeNameToFieldTypes[typeName];
+        });
+        
+        for (var typeName in engineResults.typeNameToFieldTypes) {
+            if (util.HOP(engineResults.typeNameToFieldTypes, typeName)) {
+                var fieldNameToTypes = engineResults.typeNameToFieldTypes[typeName];
+                for (var fieldName in fieldNameToTypes) {
+                    if (util.HOP(fieldNameToTypes, fieldName)) {
+                        var types = fieldNameToTypes[fieldName];
+                        var newTypes = {};
+                        Object.keys(types).forEach(function(t) {
+                            var k = typeUtil.getKind(t);
+                            if (k === "object") {
+                                newTypes.object = true;
+                            } else if (k === "array") {
+                                newTypes.array = true;
+                            } else if (k === "function") {
+                                newTypes.function = true;
+                            } else {
+                                newTypes[t] = true;
+                            }
+                        });
+                        fieldNameToTypes[fieldName] = newTypes;
+                    }
+                }
+            }
+        }
     }
 
     // boilerplate to use this file both in browser and in node application

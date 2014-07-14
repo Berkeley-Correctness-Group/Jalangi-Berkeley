@@ -1,3 +1,5 @@
+// Author: Parker Schuh, Michael Pradel
+
 (function() {
     var util = importModule("CommonUtil");
 
@@ -182,7 +184,7 @@
         checkAllEdges(disjointUnion);
         var groups = groupWarnings(disjointUnion);
         markForMerging(groups, warnings);
-//        return removeDuplicates(disjointUnion, warnings, groups);  // now moved to FilterAndMerge
+//        return removeDuplicates(disjointUnion, warnings, groups);  // moved to FilterAndMerge
     };
 
     function markForMerging(groups, warnings) {

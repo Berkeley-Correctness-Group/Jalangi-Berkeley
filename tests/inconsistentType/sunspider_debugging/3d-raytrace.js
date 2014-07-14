@@ -440,4 +440,3 @@ for (var y = 0; y < size; y++) {\n\
 
 testOutput = arrayToCanvasCommands(raytraceScene());
 console.log(testOutput);
-

@@ -25,10 +25,9 @@
         var typeAnalysis = importModule("TypeAnalysis");
         var util = importModule("CommonUtil");
         var callGraph = importModule("CallGraph");
-        var argPrefix = "__";
         var beliefPrefix = "ITA_Belief: ";
         var beliefInfix = " has type ";
-        var online = sandbox.Constants.isBrowser ? false : true;
+        var online = true//sandbox.Constants.isBrowser ? false : true;
         var printWarnings = true;
         var visualizeAllTypes = false; // only for node.js execution (i.e., not in browser)
         var visualizeWarningTypes = sandbox.Constants.isBrowser ? false : true; // only for node.js execution (i.e., not in browser)
@@ -186,13 +185,9 @@
                 tval = getAndInit(typeNameToFieldTypes, functionName);
                 setTypeInFunSignature(returnValue, tval, "return", callLocation);
                 setTypeInFunSignature(base, tval, "this", callLocation);
-                var len = args.length;
-                for (var i = 0; i < len; ++i) {
-                    setTypeInFunSignature(args[i], tval, argPrefix + "arg" + (i + 1), callLocation);
-                }
             }
         }
-        
+
         function updateBeliefs(frame, varName, type) {
             var sframe = smemory.getShadowObject(frame);
             if (sframe && sframe.shadow) {
@@ -239,8 +234,8 @@
 
         this.literal = function(iid, val) {
             if (typeof val === "string" && val.indexOf(beliefPrefix) === 0) { // belief "annotation" produced by preprocessor
-               var nameAndType = val.slice(beliefPrefix.length).split(beliefInfix);
-               updateBeliefs(smemory.getFrame(nameAndType[0]), nameAndType[0], nameAndType[1]);
+                var nameAndType = val.slice(beliefPrefix.length).split(beliefInfix);
+                updateBeliefs(smemory.getFrame(nameAndType[0]), nameAndType[0], nameAndType[1]);
             } else {
                 return annotateObject(iid, val);
             }
