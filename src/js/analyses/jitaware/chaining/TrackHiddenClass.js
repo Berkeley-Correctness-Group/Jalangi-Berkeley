@@ -42,7 +42,7 @@
 
         var root = {};
         var idToHiddenClass = [];
-        var warning_limit = 1000;
+        var warning_limit = 5;
 
         function annotateObjectWithCreationLocation(obj, iid) {
             var sobj = smemory.getShadowObject(obj);
@@ -60,10 +60,23 @@
         }
 
         function isArray (obj) {
-            return Array.isArray(obj) || (obj && obj.constructor && (obj instanceof Uint8Array || obj instanceof Uint16Array ||
+            var isNormalArray =  Array.isArray(obj) || (obj && obj.constructor && (obj instanceof Uint8Array || obj instanceof Uint16Array ||
                 obj instanceof Uint32Array || obj instanceof Uint8ClampedArray ||
                 obj instanceof ArrayBuffer || obj instanceof Int8Array || obj instanceof Int16Array ||
                 obj instanceof Int32Array || obj instanceof Float32Array || obj instanceof Float64Array));
+
+            if(isNormalArray) {
+                return true;
+            }
+
+            var shadowObj = smemory.getShadowObject(obj);
+            if(shadowObj) {
+                if(shadowObj.isArgumentsObj) {
+                    return true; // if is arguments object
+                }
+            }
+
+            return false;
         }
 
         function getMetaInfo(iid) {
@@ -240,6 +253,14 @@
                 updateHiddenClass(base, offset, val);
             return val;
         };
+
+        this.read = function (iid, name, val, isGlobal) {
+            if(name === 'arguments') {
+                var shadow_obj = smemory.getShadowObject(val);
+                shadow_obj.isArgumentsObj = true;
+            }
+            return val;
+        }
 
 
         function getRank(meta) {
