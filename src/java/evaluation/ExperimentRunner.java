@@ -48,14 +48,15 @@ public class ExperimentRunner {
 	int maxWaitTime = 30 * 60;
 
 	public static void main(String[] args) throws Exception {
-		if (args.length != 1) {
-			throw new IllegalArgumentException(
-					"need exactly 1 argument (benchmark)");
-		}
 		ExperimentRunner runner = new ExperimentRunner();
 		runner.setup();
-
-		runner.runOne(args[0]);
+		if (args.length == 1) {
+			runner.runOne(args[0]);
+		} else if (args.length == 2 && args[0].equals("--url")) {
+			runner.runUrl(args[1]);
+		} else {
+			throw new IllegalArgumentException("need 1 or 2 arguments");
+		}
 
 		// runner.runAll();
 	}
@@ -94,12 +95,18 @@ public class ExperimentRunner {
 		} else if (bm.equals("todolist")) {
 			testTodolist();
 		}
-		
 
 		// trigger beforeunload event after last benchmark
-		driver.get("http://127.0.0.1:8000/tests/inconsistentType/empty.html");
+		driver.get("http://127.0.0.1:8000/tests/empty.html");
 		driver.close();
 
+		System.out.println("Done :-)");
+	}
+
+	private void runUrl(String url) {
+		driver.get(url);
+		driver.get("http://127.0.0.1:8000/tests/empty.html");
+		driver.close();
 		System.out.println("Done :-)");
 	}
 
@@ -119,7 +126,7 @@ public class ExperimentRunner {
 		// testProcesswire();
 
 		// trigger beforeunload event after last benchmark
-		driver.get("http://127.0.0.1:8000/tests/inconsistentType/empty.html");
+		driver.get("http://127.0.0.1:8000/tests/empty.html");
 
 		System.out.println("Done :-)");
 	}
@@ -194,7 +201,7 @@ public class ExperimentRunner {
 		driver.findElement(By.id("game_menu_tab")).click();
 		driver.findElement(By.id("game_menu_home")).click();
 		driver.findElement(By.id("home_bowling")).click();
-//		driver.findElement(By.id("bowling_rollbutton")).click();
+		// driver.findElement(By.id("bowling_rollbutton")).click();
 	}
 
 	public void testTodolist() throws Exception {
