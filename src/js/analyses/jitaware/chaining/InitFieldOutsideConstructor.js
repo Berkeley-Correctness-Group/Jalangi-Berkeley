@@ -38,6 +38,7 @@
         var Utils = sandbox.Utils;
 
         var warning_limit = 30;
+        var MIN_COUNT = 100;
 
         // ---- JIT library functions start ----
 
@@ -102,6 +103,7 @@
                 var initObjNonConstrArr = [];
                 var initObjNonConstrDB = db.getByIndexArr(['JIT-checker', 'init-obj-nonconstr']);
                 var num = 0;
+                var report_num = 0;
                 for (var prop in initObjNonConstrDB) {
                     if (HOP(initObjNonConstrDB, prop)) {
                         initObjNonConstrArr.push({'iid': prop, 'count': initObjNonConstrDB[prop].count});
@@ -112,10 +114,13 @@
                     return b.count - a.count;
                 });
                 for (var i = 0; i < initObjNonConstrArr.length && i < warning_limit; i++) {
-                    console.log(' * [location: ' + iidToLocation(initObjNonConstrArr[i].iid) + '] <- No. usages: ' + initObjNonConstrArr[i].count);
+                    if(initObjNonConstrArr[i].count > MIN_COUNT) {
+                        console.log(' * [location: ' + iidToLocation(initObjNonConstrArr[i].iid) + '] <- No. usages: ' + initObjNonConstrArr[i].count);
+                        report_num++;
+                    }
                 }
-                console.log('Number of statements init objects in non-constructor: ' + num);
-
+                console.log('Number of statements init objects in non-constructor: ' + report_num);
+                console.log('[****]Nonconstructor: ' + report_num);
             } catch (e) {
                 console.log("error!!");
                 console.log(e);

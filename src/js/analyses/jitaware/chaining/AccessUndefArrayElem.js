@@ -95,6 +95,7 @@
                 }
                 console.log('...');
                 console.log('Number of loading undeclared or deleted array elements spotted: ' + num);
+                console.log('[****]AccessUndefArrayElem: ' + num);
             } catch (e) {
                 console.log("error!!");
                 console.log(e);

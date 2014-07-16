@@ -91,7 +91,7 @@
                             finalscore += (ninvoke / signum);
                         }
                     }
-                    if (uniquetypenum > 1) {
+                    if (uniquetypenum > 1 && total > 1000) {
                         array.push({'iid': defiid, 'score': finalscore, 'total': total});
                         num++;
                     }
@@ -117,6 +117,7 @@
                 }
             }
             console.log('Number of polymorphic function call: ' + num);
+            console.log('[****]PolyFun: ' + num);
         }
 
 

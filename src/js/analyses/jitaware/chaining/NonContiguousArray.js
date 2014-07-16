@@ -86,6 +86,7 @@
                 }
                 console.log('...');
                 console.log('Number of putting non-contiguous array statements: ' + num);
+                console.log('[****]NonContArray: ' + num);
                 console.log('Why: In order to handle large and sparse arrays, there are two types of array storage internally:\n' +
                     '\t * Fast Elements: linear storage for compact key sets\n' +
                     '\t * Dictionary Elements: hash table storage otherwise\n' +
