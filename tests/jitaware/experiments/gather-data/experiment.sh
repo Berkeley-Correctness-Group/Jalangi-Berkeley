@@ -59,9 +59,51 @@ runexp() {
 : <<'END'
 END
 
+
+
+# Google Octane
+runexp "Octane-Splay" "../jalangi/tests/octane/splay"
+runexp "Octane-Richards" "../jalangi/tests/octane/richards"
+runexp "Octane-DeltaBlue" "../jalangi/tests/octane/deltablue"
+runexp "Octane-Crypto" "../jalangi/tests/octane/crypto"
+runexp "Octane-Box2d" "../jalangi/tests/octane/box2d"
+runexp "Octane-Code-Load" "../jalangi/tests/octane/code-load"
+runexp "Octane-Gbemu" "../jalangi/tests/octane/gbemu"
+runexp "Octane-Earley-Boyer" "../jalangi/tests/octane/earley-boyer"
+runexp "Octane-Mandreel" "../jalangi/tests/octane/mandreel"
+runexp "Octane-Navier-Stokes" "../jalangi/tests/octane/navier-stokes"
+runexp "Octane-Pdfjs" "../jalangi/tests/octane/pdfjs"
+runexp "Octane-Raytrace" "../jalangi/tests/octane/raytrace"
+runexp "Octane-Regexp" "../jalangi/tests/octane/regexp"
+runexp "Octane-Typescript" "../jalangi/tests/octane/typescript"
+
 # SunSpider
 runexp "SunSpider-3d-Cube" "../jalangi/tests/sunspider1/3d-cube"
-
+runexp "SunSpider-3d-Morph" "../jalangi/tests/sunspider1/3d-morph"
+runexp "SunSpider-3d-Raytrace" "../jalangi/tests/sunspider1/3d-raytrace"
+runexp "SunSpider-Access-Binary-Trees" "../jalangi/tests/sunspider1/access-binary-trees"
+runexp "SunSpider-Access-Fannkuch" "../jalangi/tests/sunspider1/access-fannkuch"
+runexp "SunSpider-Access-Nbody" "../jalangi/tests/sunspider1/access-nbody"
+runexp "SunSpider-Access-Nsieve" "../jalangi/tests/sunspider1/access-nsieve"
+runexp "SunSpider-Bitops-3bit-Bits-in-Byte" "../jalangi/tests/sunspider1/bitops-3bit-bits-in-byte"
+runexp "SunSpider-Bitops-Bits-in-Byte" "../jalangi/tests/sunspider1/bitops-bits-in-byte"
+runexp "SunSpider-Bitops-Bitwise-And" "../jalangi/tests/sunspider1/bitops-bitwise-and"
+runexp "SunSpider-Bitops-Nsieve-Bits" "../jalangi/tests/sunspider1/bitops-nsieve-bits"
+runexp "SunSpider-Controlflow-Recursive" "../jalangi/tests/sunspider1/controlflow-recursive"
+runexp "SunSpider-Crypto-AES" "../jalangi/tests/sunspider1/crypto-aes"
+runexp "SunSpider-Crypto-MD5" "../jalangi/tests/sunspider1/crypto-md5"
+runexp "SunSpider-Crypto-SHA1" "../jalangi/tests/sunspider1/crypto-sha1"
+runexp "SunSpider-Date-Format-Tofte" "../jalangi/tests/sunspider1/date-format-tofte"
+runexp "SunSpider-Date-Format-Xparb" "../jalangi/tests/sunspider1/date-format-xparb"
+runexp "SunSpider-Math-Cordic" "../jalangi/tests/sunspider1/math-cordic"
+runexp "SunSpider-Math-Partial-Sums" "../jalangi/tests/sunspider1/math-partial-sums"
+runexp "SunSpider-Math-Spectral-Norm" "../jalangi/tests/sunspider1/math-spectral-norm"
+runexp "SunSpider-Regexp-DNA" "../jalangi/tests/sunspider1/regexp-dna"
+runexp "SunSpider-String-Base64" "../jalangi/tests/sunspider1/string-base64"
+runexp "SunSpider-String-Fasta" "../jalangi/tests/sunspider1/string-fasta"
+runexp "SunSpider-String-Tagcloud" "../jalangi/tests/sunspider1/string-tagcloud"
+runexp "SunSpider-String-Unpack-Code" "../jalangi/tests/sunspider1/string-unpack-code"
+runexp "SunSpider-String-Validate-Input" "../jalangi/tests/sunspider1/string-validate-input"
 
 
 
