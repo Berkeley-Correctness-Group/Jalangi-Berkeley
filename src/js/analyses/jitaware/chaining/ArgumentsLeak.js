@@ -117,6 +117,7 @@
                     console.log(' * [location: ' + iidToLocation(argsLeakingArr[i].iid) + '] <- No. usages: ' + argsLeakingArr[i].count);
                 }
                 console.log('Number of statements that leaks arguments object: ' + num);
+                console.log('[****]ArgLeak: ' + num);
             } catch (e) {
                 console.log("error!!");
                 console.log(e);

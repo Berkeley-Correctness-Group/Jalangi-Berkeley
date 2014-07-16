@@ -35,7 +35,7 @@
  *    for example, array[1] = 0.1 excludes Uint8Array, Uint8ClampedArray, Uint16Array, Int8Array, Int16Array and Int32Array.
  *                 array[1] = {} excludes all typed arrays
  * 3) does the program apply typeof operator on the array?
- *    for exmaple, if(typeof arr) { ... } else { ... }
+ *    for example, if(typeof arr) { ... } else { ... }
  *
  * 4) does the program use function of the array
  *    for example, array.slice. typed array does not have those functions
@@ -399,7 +399,8 @@
             var iidArray = [];
             for(var iid in reportDB){
                 if(HOP(reportDB, iid)){
-                    iidArray.push({'iid':iid, value: reportDB[iid].count});
+                    if(reportDB[iid].count > 1000)
+                        iidArray.push({'iid':iid, value: reportDB[iid].count});
                 }
             }
             // prioritization function
@@ -410,8 +411,9 @@
             // print final results
             console.log('-------------Fix Array Refactor Report-------------');
             console.log('Array created at the following locations may be special-typed:');
+            var num = 0;
             for (var i = 0; i < iidArray.length; i++) {
-                var iid = iidArray[i].iid;
+                var iid = iidArray[i].iid; num++;
                 // print location
                 console.log('location: ' + iidToLocation(iid));
                 console.log('\t[Oper-Count]:\t' + reportDB[iid].count);
@@ -482,6 +484,7 @@
                     }
                 }
             }
+            console.log('[****]typedArray: ' + num);
 
             console.log('---------------------------------------------------');
             // print array constructing locations that could not be typed

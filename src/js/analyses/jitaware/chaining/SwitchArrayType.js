@@ -125,6 +125,7 @@
                 }
                 console.log('...');
                 console.log('Number of switching array type spotted: ' + num);
+                console.log('[****]SwitchArrayType: ' + num);
 
             } catch (e) {
                 console.log("error!!");

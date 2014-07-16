@@ -78,6 +78,7 @@
                     console.log(' * [location: ' + iidToLocation(binaryUndefinedArr[i].iid) + '] <- No. usages: ' + binaryUndefinedArr[i].count);
                 }
                 console.log('Number of statements that perform binary operation on undefined values: ' + num);
+                console.log('[****]BinaryOpUndef: ' + num);
 
             } catch (e) {
                 console.log("error!!");

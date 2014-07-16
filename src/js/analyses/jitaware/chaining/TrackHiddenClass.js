@@ -297,10 +297,12 @@
                 return b.rank - a.rank;
             });
             var len = tmp.length;
+            var num = 0;
             for (var i=0; i<len && i<warning_limit; i++) {
                 var x = tmp[i];
                 if (x.count > MIN_CACHE_HITS) {
                     var meta = x.meta;
+                    num++;
                     console.log("property access at " + iidToLocation(x.iid) + " has missed cache " + x.count + " time(s).");
                     for (var loc in meta.objectLocs) {
                         if (HOP(meta.objectLocs, loc)) {
@@ -327,6 +329,7 @@
                     }
                 }
             }
+            console.log('[****]HiddenClass: ' + num);
         };
 
     }
