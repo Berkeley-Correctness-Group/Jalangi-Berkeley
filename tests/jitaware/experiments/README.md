@@ -66,7 +66,7 @@ node src/js/commands/benchmark_exp.js
 ```
 finally after the experiment finished, open the file ```Jalangi-Berkeley/tests/jitaware/experiments/exp_output/result.csv``` using Excel.
 
-
+### Automatically Collect Benchmark and Warning Statistics
 
 To collect warning statistics from all analsis on SunSpider and Google Octane:
 
