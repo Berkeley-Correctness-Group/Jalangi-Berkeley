@@ -1149,7 +1149,7 @@ function VMulti(M, V) {\n\
 }\n\
 \n\
 function VMulti2(M, V) {\n\
-  var Vect = new Float64Array(2);//var Vect = new Array();\n\
+  var Vect = new Array(); //var Vect = new Float64Array(2);//\n\
   var i = 0;\n\
   for (;i < 3; i++) Vect[i] = M[i][0] * V[0] + M[i][1] * V[1] + M[i][2] * V[2];\n\
   return Vect;\n\
@@ -1221,7 +1221,7 @@ function RotateZ(M, Phi) {\n\
 \n\
 function DrawQube() {\n\
   // calc current normals\n\
-  var CurN = new Array();\n\
+  var CurN = new Array(5);\n\
   var i = 5;\n\
   Q.LastPx = 0;\n\
   for (; i > -1; i--) CurN[i] = VMulti2(MQube, Q.Normal[i]);\n\
@@ -1371,6 +1371,513 @@ Origin = null;\n\
 Testing = null;\n\
 LoopTime = null;\n\
 DisplArea = null;\n\
+\n\
+\n\
+var _sunSpiderInterval = new Date() - _sunSpiderStartDate;\n\
+\n\
+record(_sunSpiderInterval);\n\
+</script>\n\
+\n\
+\n\
+</body>\n\
+</html>\n\
+", "<!DOCTYPE html>\n\
+<head>\n\
+\n\
+<meta charset=utf8>\n\
+\n\
+<!--\n\
+ Copyright (C) 2007 Apple Inc.  All rights reserved.\n\
+\n\
+ Redistribution and use in source and binary forms, with or without\n\
+ modification, are permitted provided that the following conditions\n\
+ are met:\n\
+ 1. Redistributions of source code must retain the above copyright\n\
+    notice, this list of conditions and the following disclaimer.\n\
+ 2. Redistributions in binary form must reproduce the above copyright\n\
+    notice, this list of conditions and the following disclaimer in the\n\
+    documentation and/or other materials provided with the distribution.\n\
+\n\
+ THIS SOFTWARE IS PROVIDED BY APPLE COMPUTER, INC. ``AS IS'' AND ANY\n\
+ EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n\
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\n\
+ PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE COMPUTER, INC. OR\n\
+ CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,\n\
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,\n\
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n\
+ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY\n\
+ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n\
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n\
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. \n\
+-->\n\
+\n\
+<title>SunSpider 3d-raytrace</title>\n\
+<link rel=\"stylesheet\" href=\"../sunspider.css\">\n\
+</head>\n\
+\n\
+<body>\n\
+<h3>3d-raytrace</h3>\n\
+<div id=\"console\">\n\
+</div>\n\
+<script>\n\
+function record(time) {\n\
+    document.getElementById(\"console\").innerHTML = time + \"ms\";\n\
+    if (window.parent) {\n\
+        parent.recordResult(time);\n\
+    }\n\
+}\n\
+\n\
+var _sunSpiderStartDate = new Date();\n\
+\n\
+/*\n\
+ * Copyright (C) 2007 Apple Inc.  All rights reserved.\n\
+ *\n\
+ * Redistribution and use in source and binary forms, with or without\n\
+ * modification, are permitted provided that the following conditions\n\
+ * are met:\n\
+ * 1. Redistributions of source code must retain the above copyright\n\
+ *    notice, this list of conditions and the following disclaimer.\n\
+ * 2. Redistributions in binary form must reproduce the above copyright\n\
+ *    notice, this list of conditions and the following disclaimer in the\n\
+ *    documentation and/or other materials provided with the distribution.\n\
+ *\n\
+ * THIS SOFTWARE IS PROVIDED BY APPLE COMPUTER, INC. ``AS IS'' AND ANY\n\
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n\
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\n\
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE COMPUTER, INC. OR\n\
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,\n\
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,\n\
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n\
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY\n\
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n\
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n\
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. \n\
+ */\n\
+\n\
+function createVector(x,y,z) {\n\
+    return new Array(x,y,z);\n\
+}\n\
+\n\
+function sqrLengthVector(self) {\n\
+    return self[0] * self[0] + self[1] * self[1] + self[2] * self[2];\n\
+}\n\
+\n\
+function lengthVector(self) {\n\
+    return Math.sqrt(self[0] * self[0] + self[1] * self[1] + self[2] * self[2]);\n\
+}\n\
+\n\
+function addVector(self, v) {\n\
+    self[0] += v[0];\n\
+    self[1] += v[1];\n\
+    self[2] += v[2];\n\
+    return self;\n\
+}\n\
+\n\
+function subVector(self, v) {\n\
+    self[0] -= v[0];\n\
+    self[1] -= v[1];\n\
+    self[2] -= v[2];\n\
+    return self;\n\
+}\n\
+\n\
+function scaleVector(self, scale) {\n\
+    self[0] *= scale;\n\
+    self[1] *= scale;\n\
+    self[2] *= scale;\n\
+    return self;\n\
+}\n\
+\n\
+function normaliseVector(self) {\n\
+    var len = Math.sqrt(self[0] * self[0] + self[1] * self[1] + self[2] * self[2]);\n\
+    self[0] /= len;\n\
+    self[1] /= len;\n\
+    self[2] /= len;\n\
+    return self;\n\
+}\n\
+\n\
+function add(v1, v2) {\n\
+    return new Array(v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]);\n\
+}\n\
+\n\
+function sub(v1, v2) {\n\
+    return new Array(v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]);\n\
+}\n\
+\n\
+function scalev(v1, v2) {\n\
+    return new Array(v1[0] * v2[0], v1[1] * v2[1], v1[2] * v2[2]);\n\
+}\n\
+\n\
+function dot(v1, v2) {\n\
+    return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];\n\
+}\n\
+\n\
+function scale(v, scale) {\n\
+    return [v[0] * scale, v[1] * scale, v[2] * scale];\n\
+}\n\
+\n\
+function cross(v1, v2) {\n\
+    return [v1[1] * v2[2] - v1[2] * v2[1], \n\
+            v1[2] * v2[0] - v1[0] * v2[2],\n\
+            v1[0] * v2[1] - v1[1] * v2[0]];\n\
+\n\
+}\n\
+\n\
+function normalise(v) {\n\
+    var len = lengthVector(v);\n\
+    return [v[0] / len, v[1] / len, v[2] / len];\n\
+}\n\
+\n\
+function transformMatrix(self, v) {\n\
+    var vals = self;\n\
+    var x  = vals[0] * v[0] + vals[1] * v[1] + vals[2] * v[2] + vals[3];\n\
+    var y  = vals[4] * v[0] + vals[5] * v[1] + vals[6] * v[2] + vals[7];\n\
+    var z  = vals[8] * v[0] + vals[9] * v[1] + vals[10] * v[2] + vals[11];\n\
+    return [x, y, z];\n\
+}\n\
+\n\
+function invertMatrix(self) {\n\
+    var temp = new Array(16);\n\
+    var tx = -self[3];\n\
+    var ty = -self[7];\n\
+    var tz = -self[11];\n\
+    for (h = 0; h < 3; h++) \n\
+        for (v = 0; v < 3; v++) \n\
+            temp[h + v * 4] = self[v + h * 4];\n\
+    for (i = 0; i < 11; i++)\n\
+        self[i] = temp[i];\n\
+    self[3] = tx * self[0] + ty * self[1] + tz * self[2];\n\
+    self[7] = tx * self[4] + ty * self[5] + tz * self[6];\n\
+    self[11] = tx * self[8] + ty * self[9] + tz * self[10];\n\
+    return self;\n\
+}\n\
+\n\
+\n\
+// Triangle intersection using barycentric coord method\n\
+function Triangle(p1, p2, p3) {\n\
+    var edge1 = sub(p3, p1);\n\
+    var edge2 = sub(p2, p1);\n\
+    var normal = cross(edge1, edge2);\n\
+    if (Math.abs(normal[0]) > Math.abs(normal[1]))\n\
+        if (Math.abs(normal[0]) > Math.abs(normal[2]))\n\
+            this.axis = 0; \n\
+        else \n\
+            this.axis = 2;\n\
+    else\n\
+        if (Math.abs(normal[1]) > Math.abs(normal[2])) \n\
+            this.axis = 1;\n\
+        else \n\
+            this.axis = 2;\n\
+    var u = (this.axis + 1) % 3;\n\
+    var v = (this.axis + 2) % 3;\n\
+    var u1 = edge1[u];\n\
+    var v1 = edge1[v];\n\
+    \n\
+    var u2 = edge2[u];\n\
+    var v2 = edge2[v];\n\
+    this.normal = normalise(normal);\n\
+    this.nu = normal[u] / normal[this.axis];\n\
+    this.nv = normal[v] / normal[this.axis];\n\
+    this.nd = dot(normal, p1) / normal[this.axis];\n\
+    var det = u1 * v2 - v1 * u2;\n\
+    this.eu = p1[u];\n\
+    this.ev = p1[v]; \n\
+    this.nu1 = u1 / det;\n\
+    this.nv1 = -v1 / det;\n\
+    this.nu2 = v2 / det;\n\
+    this.nv2 = -u2 / det; \n\
+    this.material = [0.7, 0.7, 0.7];\n\
+}\n\
+\n\
+Triangle.prototype.intersect = function(orig, dir, near, far) {\n\
+    var u = (this.axis + 1) % 3;\n\
+    var v = (this.axis + 2) % 3;\n\
+    var d = dir[this.axis] + this.nu * dir[u] + this.nv * dir[v];\n\
+    var t = (this.nd - orig[this.axis] - this.nu * orig[u] - this.nv * orig[v]) / d;\n\
+    if (t < near || t > far)\n\
+        return null;\n\
+    var Pu = orig[u] + t * dir[u] - this.eu;\n\
+    var Pv = orig[v] + t * dir[v] - this.ev;\n\
+    var a2 = Pv * this.nu1 + Pu * this.nv1;\n\
+    if (a2 < 0) \n\
+        return null;\n\
+    var a3 = Pu * this.nu2 + Pv * this.nv2;\n\
+    if (a3 < 0) \n\
+        return null;\n\
+\n\
+    if ((a2 + a3) > 1) \n\
+        return null;\n\
+    return t;\n\
+}\n\
+\n\
+function Scene(a_triangles) {\n\
+    this.triangles = a_triangles;\n\
+    this.lights = [];\n\
+    this.ambient = [0,0,0];\n\
+    this.background = [0.8,0.8,1];\n\
+}\n\
+var zero = new Array(0,0,0);\n\
+\n\
+Scene.prototype.intersect = function(origin, dir, near, far) {\n\
+    var closest = null;\n\
+    for (i = 0; i < this.triangles.length; i++) {\n\
+        var triangle = this.triangles[i];   \n\
+        var d = triangle.intersect(origin, dir, near, far);\n\
+        if (d == null || d > far || d < near)\n\
+            continue;\n\
+        far = d;\n\
+        closest = triangle;\n\
+    }\n\
+    \n\
+    if (!closest)\n\
+        return [this.background[0],this.background[1],this.background[2]];\n\
+        \n\
+    var normal = closest.normal;\n\
+    var hit = add(origin, scale(dir, far)); \n\
+    if (dot(dir, normal) > 0)\n\
+        normal = [-normal[0], -normal[1], -normal[2]];\n\
+    \n\
+    var colour = null;\n\
+    if (closest.shader) {\n\
+        colour = closest.shader(closest, hit, dir);\n\
+    } else {\n\
+        colour = closest.material;\n\
+    }\n\
+    \n\
+    // do reflection\n\
+    var reflected = null;\n\
+    if (colour.reflection > 0.001) {\n\
+        var reflection = addVector(scale(normal, -2*dot(dir, normal)), dir);\n\
+        reflected = this.intersect(hit, reflection, 0.0001, 1000000);\n\
+        if (colour.reflection >= 0.999999)\n\
+            return reflected;\n\
+    }\n\
+    \n\
+    var l = [this.ambient[0], this.ambient[1], this.ambient[2]];\n\
+    for (var i = 0; i < this.lights.length; i++) {\n\
+        var light = this.lights[i];\n\
+        var toLight = sub(light, hit);\n\
+        var distance = lengthVector(toLight);\n\
+        scaleVector(toLight, 1.0/distance);\n\
+        distance -= 0.0001;\n\
+        if (this.blocked(hit, toLight, distance))\n\
+            continue;\n\
+        var nl = dot(normal, toLight);\n\
+        if (nl > 0)\n\
+            addVector(l, scale(light.colour, nl));\n\
+    }\n\
+    l = scalev(l, colour);\n\
+    if (reflected) {\n\
+        l = addVector(scaleVector(l, 1 - colour.reflection), scaleVector(reflected, colour.reflection));\n\
+    }\n\
+    return l;\n\
+}\n\
+\n\
+Scene.prototype.blocked = function(O, D, far) {\n\
+    var near = 0.0001;\n\
+    var closest = null;\n\
+    for (i = 0; i < this.triangles.length; i++) {\n\
+        var triangle = this.triangles[i];   \n\
+        var d = triangle.intersect(O, D, near, far);\n\
+        if (d == null || d > far || d < near)\n\
+            continue;\n\
+        return true;\n\
+    }\n\
+    \n\
+    return false;\n\
+}\n\
+\n\
+\n\
+// this camera code is from notes i made ages ago, it is from *somewhere* -- i cannot remember where\n\
+// that somewhere is\n\
+function Camera(origin, lookat, up) {\n\
+    var zaxis = normaliseVector(subVector(lookat, origin));\n\
+    var xaxis = normaliseVector(cross(up, zaxis));\n\
+    var yaxis = normaliseVector(cross(xaxis, subVector([0,0,0], zaxis)));\n\
+    var m = new Array(16);\n\
+    m[0] = xaxis[0]; m[1] = xaxis[1]; m[2] = xaxis[2];\n\
+    m[4] = yaxis[0]; m[5] = yaxis[1]; m[6] = yaxis[2];\n\
+    m[8] = zaxis[0]; m[9] = zaxis[1]; m[10] = zaxis[2];\n\
+    invertMatrix(m);\n\
+    m[3] = 0; m[7] = 0; m[11] = 0;\n\
+    this.origin = origin;\n\
+    this.directions = new Array(4);\n\
+    this.directions[0] = normalise([-0.7,  0.7, 1]);\n\
+    this.directions[1] = normalise([ 0.7,  0.7, 1]);\n\
+    this.directions[2] = normalise([ 0.7, -0.7, 1]);\n\
+    this.directions[3] = normalise([-0.7, -0.7, 1]);\n\
+    this.directions[0] = transformMatrix(m, this.directions[0]);\n\
+    this.directions[1] = transformMatrix(m, this.directions[1]);\n\
+    this.directions[2] = transformMatrix(m, this.directions[2]);\n\
+    this.directions[3] = transformMatrix(m, this.directions[3]);\n\
+}\n\
+\n\
+Camera.prototype.generateRayPair = function(y) {\n\
+    rays = new Array(new Object(), new Object());\n\
+    rays[0].origin = this.origin;\n\
+    rays[1].origin = this.origin;\n\
+    rays[0].dir = addVector(scale(this.directions[0], y), scale(this.directions[3], 1 - y));\n\
+    rays[1].dir = addVector(scale(this.directions[1], y), scale(this.directions[2], 1 - y));\n\
+    return rays;\n\
+}\n\
+\n\
+function renderRows(camera, scene, pixels, width, height, starty, stopy) {\n\
+    for (var y = starty; y < stopy; y++) {\n\
+        var rays = camera.generateRayPair(y / height);\n\
+        for (var x = 0; x < width; x++) {\n\
+            var xp = x / width;\n\
+            var origin = addVector(scale(rays[0].origin, xp), scale(rays[1].origin, 1 - xp));\n\
+            var dir = normaliseVector(addVector(scale(rays[0].dir, xp), scale(rays[1].dir, 1 - xp)));\n\
+            var l = scene.intersect(origin, dir);\n\
+            pixels[y][x] = l;\n\
+        }\n\
+    }\n\
+}\n\
+\n\
+Camera.prototype.render = function(scene, pixels, width, height) {\n\
+    var cam = this;\n\
+    var row = 0;\n\
+    renderRows(cam, scene, pixels, width, height, 0, height);\n\
+}\n\
+\n\
+\n\
+\n\
+function raytraceScene()\n\
+{\n\
+    var startDate = new Date().getTime();\n\
+    var numTriangles = 2 * 6;\n\
+    var triangles = new Array();//numTriangles);\n\
+    var tfl = createVector(-10,  10, -10);\n\
+    var tfr = createVector( 10,  10, -10);\n\
+    var tbl = createVector(-10,  10,  10);\n\
+    var tbr = createVector( 10,  10,  10);\n\
+    var bfl = createVector(-10, -10, -10);\n\
+    var bfr = createVector( 10, -10, -10);\n\
+    var bbl = createVector(-10, -10,  10);\n\
+    var bbr = createVector( 10, -10,  10);\n\
+    \n\
+    // cube!!!\n\
+    // front\n\
+    var i = 0;\n\
+    \n\
+    triangles[i++] = new Triangle(tfl, tfr, bfr);\n\
+    triangles[i++] = new Triangle(tfl, bfr, bfl);\n\
+    // back\n\
+    triangles[i++] = new Triangle(tbl, tbr, bbr);\n\
+    triangles[i++] = new Triangle(tbl, bbr, bbl);\n\
+    //        triangles[i-1].material = [0.7,0.2,0.2];\n\
+    //            triangles[i-1].material.reflection = 0.8;\n\
+    // left\n\
+    triangles[i++] = new Triangle(tbl, tfl, bbl);\n\
+    //            triangles[i-1].reflection = 0.6;\n\
+    triangles[i++] = new Triangle(tfl, bfl, bbl);\n\
+    //            triangles[i-1].reflection = 0.6;\n\
+    // right\n\
+    triangles[i++] = new Triangle(tbr, tfr, bbr);\n\
+    triangles[i++] = new Triangle(tfr, bfr, bbr);\n\
+    // top\n\
+    triangles[i++] = new Triangle(tbl, tbr, tfr);\n\
+    triangles[i++] = new Triangle(tbl, tfr, tfl);\n\
+    // bottom\n\
+    triangles[i++] = new Triangle(bbl, bbr, bfr);\n\
+    triangles[i++] = new Triangle(bbl, bfr, bfl);\n\
+    \n\
+    //Floor!!!!\n\
+    var green = createVector(0.0, 0.4, 0.0);\n\
+    var grey = createVector(0.4, 0.4, 0.4);\n\
+    grey.reflection = 1.0;\n\
+    var floorShader = function(tri, pos, view) {\n\
+        var x = ((pos[0]/32) % 2 + 2) % 2;\n\
+        var z = ((pos[2]/32 + 0.3) % 2 + 2) % 2;\n\
+        if (x < 1 != z < 1) {\n\
+            //in the real world we use the fresnel term...\n\
+            //    var angle = 1-dot(view, tri.normal);\n\
+            //   angle *= angle;\n\
+            //  angle *= angle;\n\
+            // angle *= angle;\n\
+            //grey.reflection = angle;\n\
+            return grey;\n\
+        } else \n\
+            return green;\n\
+    }\n\
+    var ffl = createVector(-1000, -30, -1000);\n\
+    var ffr = createVector( 1000, -30, -1000);\n\
+    var fbl = createVector(-1000, -30,  1000);\n\
+    var fbr = createVector( 1000, -30,  1000);\n\
+    triangles[i++] = new Triangle(fbl, fbr, ffr);\n\
+    triangles[i-1].shader = floorShader;\n\
+    triangles[i++] = new Triangle(fbl, ffr, ffl);\n\
+    triangles[i-1].shader = floorShader;\n\
+    \n\
+    var _scene = new Scene(triangles);\n\
+    _scene.lights[0] = createVector(20, 38, -22);\n\
+    _scene.lights[0].colour = createVector(0.7, 0.3, 0.3);\n\
+    _scene.lights[1] = createVector(-23, 40, 17);\n\
+    _scene.lights[1].colour = createVector(0.7, 0.3, 0.3);\n\
+    _scene.lights[2] = createVector(23, 20, 17);\n\
+    _scene.lights[2].colour = createVector(0.7, 0.7, 0.7);\n\
+    _scene.ambient = createVector(0.1, 0.1, 0.1);\n\
+    //  _scene.background = createVector(0.7, 0.7, 1.0);\n\
+    \n\
+    var size = 30;\n\
+    var pixels = new Array();\n\
+    for (var y = 0; y < size; y++) {\n\
+        pixels[y] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,[0]]\n\
+    }\n\
+\n\
+    var _camera = new Camera(createVector(-40, 40, 40), createVector(0, 0, 0), createVector(0, 1, 0));\n\
+    _camera.render(_scene, pixels, size, size);\n\
+\n\
+    return pixels;\n\
+}\n\
+\n\
+function arrayToCanvasCommands(pixels)\n\
+{\n\
+    var s = '<canvas id=\"renderCanvas\" width=\"30px\" height=\"30px\"></canvas><scr' + 'ipt>\\nvar pixels = [';\n\
+    var size = 30;\n\
+    for (var y = 0; y < size; y++) {\n\
+        s += \"[\";\n\
+        for (var x = 0; x < size; x++) {\n\
+            s += \"[\" + pixels[y][x] + \"],\";\n\
+        }\n\
+        s+= \"],\";\n\
+    }\n\
+    s += '];\\n    var canvas = document.getElementById(\"renderCanvas\").getContext(\"2d\");\\n\\\n\
+\\n\\\n\
+\\n\\\n\
+    var size = 30;\\n\\\n\
+    canvas.fillStyle = \"red\";\\n\\\n\
+    canvas.fillRect(0, 0, size, size);\\n\\\n\
+    canvas.scale(1, -1);\\n\\\n\
+    canvas.translate(0, -size);\\n\\\n\
+\\n\\\n\
+    if (!canvas.setFillColor)\\n\\\n\
+        canvas.setFillColor = function(r, g, b, a) {\\n\\\n\
+            this.fillStyle = \"rgb(\"+[Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)]+\")\";\\n\\\n\
+    }\\n\\\n\
+\\n\\\n\
+for (var y = 0; y < size; y++) {\\n\\\n\
+  for (var x = 0; x < size; x++) {\\n\\\n\
+    var l = pixels[y][x];\\n\\\n\
+    canvas.setFillColor(l[0], l[1], l[2], 1);\\n\\\n\
+    canvas.fillRect(x, y, 1, 1);\\n\\\n\
+  }\\n\\\n\
+}</scr' + 'ipt>';\n\
+\n\
+    return s;\n\
+}\n\
+\n\
+testOutput = arrayToCanvasCommands(raytraceScene());\n\
+testOutput = arrayToCanvasCommands(raytraceScene());\n\
+testOutput = arrayToCanvasCommands(raytraceScene());\n\
+testOutput = arrayToCanvasCommands(raytraceScene());\n\
+testOutput = arrayToCanvasCommands(raytraceScene());\n\
+testOutput = arrayToCanvasCommands(raytraceScene());\n\
+testOutput = arrayToCanvasCommands(raytraceScene());\n\
+testOutput = arrayToCanvasCommands(raytraceScene());\n\
+testOutput = arrayToCanvasCommands(raytraceScene());\n\
+testOutput = arrayToCanvasCommands(raytraceScene());\n\
+testOutput = arrayToCanvasCommands(raytraceScene());\n\
+testOutput = arrayToCanvasCommands(raytraceScene());\n\
 \n\
 \n\
 var _sunSpiderInterval = new Date() - _sunSpiderStartDate;\n\

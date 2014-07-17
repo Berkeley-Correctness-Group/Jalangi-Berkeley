@@ -2,5 +2,5 @@
 //var categories = [ "3d", "access", "bitops", "controlflow", "crypto", "date", "math", "regexp", "string" ];
 
 
-var tests = ["crypto-md5-2", "crypto-sha1-2", "date-format-tofte-2", "3d-cube"];
+var tests = ["crypto-md5-2", "crypto-sha1-2", "date-format-tofte-2", "3d-cube", "3d-raytrace"];
 var categories = [ "3d", "access", "bitops", "controlflow", "crypto", "date", "math", "regexp", "string" ];
