@@ -60,7 +60,8 @@ Then start the Tomcat Server:
 Before running the experiment on Mac OS:
   * close your firefox and chrome instances
   * configure your firefox so that it will dump output to the native console:
-    in the browser url input box type: ```about:config``` set the following configurations:
+    in the browser url input box type: ```about:config``` set the following configurations:  
+    
 	```
 browser.cache.disk.enable = FALSE  
 browser.cache.disk_cache_ssl = FALSE  
