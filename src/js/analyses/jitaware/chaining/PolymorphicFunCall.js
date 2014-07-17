@@ -47,135 +47,214 @@
         var HOP = Constants.HOP;
         var iidToLocation = sandbox.iidToLocation;
         var sort = Array.prototype.sort;
-        var smemory = sandbox.smemory;
 
         var RuntimeDB = sandbox.RuntimeDB;
         var storeDB = new RuntimeDB();
-        var Utils = sandbox.Utils;
 
-        var warning_limit = 30;
+        var warning_num = 0;
+        var MISS_THRESHOLD = 0;
 
-        // ---- JIT library functions start ----
+        // ---- Print functions start ----
 
-        function printPolymorphicFunCall(indexArr) {
+        function printPolyBinary(indexArr) {
             var array = [];
             var db = storeDB.getByIndexArr(indexArr);
             var num = 0;
-            for (var defiid in db) {
-                if (HOP(db, defiid)) {
-                    var total = 0;
-                    var finalscore = 0;
-                    var innerDB = db[defiid];
-                    var set = {};
-                    var uniquetypenum = 0;
-                    for (var invokeiid in innerDB) {
-                        var ninvoke = 0;
-                        if (HOP(innerDB, invokeiid)) {
-                            var innerMostDB = innerDB[invokeiid];
-                            var count;
-                            var signum = 0;
-                            for (var callsig in innerMostDB) {
-                                if (HOP(innerMostDB, callsig)) {
-
-                                    count = innerMostDB[callsig].count
-                                    ninvoke += count;
-                                    total += count;
-                                    signum++;
-
-                                    if (!set[callsig]) {
-                                        set[callsig] = true;
-                                        uniquetypenum++;
-                                    }
-                                }
-                            }
-                            finalscore += (ninvoke / signum);
-                        }
-                    }
-                    if (uniquetypenum > 1 && total > 1000) {
-                        array.push({'iid': defiid, 'score': finalscore, 'total': total});
-                        num++;
+            for (var iid in db) {
+                if (HOP(db, iid)) {
+                    if(db[iid].miss > MISS_THRESHOLD) {
+                        db[iid].iid = iid;
+                        array.push(db[iid]);
                     }
                 }
             }
             array.sort(function compare(a, b) {
-                return b.score - a.score;
+                return b.miss - a.miss;
             });
-            for (var i = 0; i < array.length && i < warning_limit; i++) {
+            for (var i = 0; i < array.length; i++) {
                 var iid = array[i].iid;
-                console.log(' * [location: ' + iidToLocation(array[i].iid) + '] <- No. usages: ' + (array[i].total));
-                var innerDB = db[iid];
-                for (var invokeiid in innerDB) {
-                    if (HOP(innerDB, invokeiid)) {
-                        console.log('\t[invoke location] ' + iidToLocation(invokeiid));
-                        var innerMostDB = innerDB[invokeiid];
-                        for (var callsig in innerMostDB) {
-                            if (HOP(innerMostDB, callsig)) {
-                                console.log('\t\tNo. usages: ' + innerMostDB[callsig].count + ' | type: ' + callsig);
-                            }
-                        }
+                warning_num++;
+                console.log('* Polymorphic binary operation at ' + iidToLocation(iid));
+                console.log('\tHit: ' + array[i].hit + '\tMiss: ' + array[i].miss);
+                var len = array[i].types.length;
+                for (var index =0; index < len; index++) {
+                    if(HOP(array[i].types, index)) {
+                        var left_type_name = getTypeName(array[i].types[index].left_type);
+                        var right_type_name = getTypeName(array[i].types[index].right_type);
+                        console.log('\tCount: ' + array[i].types[index].count + 
+                            '\ttypes: ' + left_type_name + ' ' + array[i].operator + ' ' + right_type_name);
                     }
                 }
             }
-            console.log('Number of polymorphic function call: ' + num);
-            console.log('[****]PolyFun: ' + num);
         }
 
-
-
-        function checkPolymorphicFunCall(args, iid, invokeLocIid) {
-            var callsig = '|'
-            for (var i = 0; i < args.length; i++) {
-                callsig += (typeof (args[i])) + '|';
+        function printPolyUnary(indexArr) {
+            var array = [];
+            var db = storeDB.getByIndexArr(indexArr);
+            var num = 0;
+            for (var iid in db) {
+                if (HOP(db, iid)) {
+                    if(db[iid].miss > MISS_THRESHOLD) {
+                        db[iid].iid = iid;
+                        array.push(db[iid]);
+                    }
+                }
             }
-            storeDB.addCountByIndexArr(['JIT-checker', 'polymorphic-fun-call', iid, cachedInvokeLocation, callsig]);
-        }
 
-        // ---- JIT library functions end ----
-
-        var cachedArgs;
-        var cachedInvokeLocation;
-        var isAnalyzePolymorphicFunCall;
-        this.invokeFunPre = function (iid, f, base, args, isConstructor) {
-            cachedArgs = args;
-            cachedInvokeLocation = iid;
-            if (isConstructor) { // do not analyze polymorphic function call for constructor, as it is difficult to refactor
-                isAnalyzePolymorphicFunCall = false;
-            } else {
-                isAnalyzePolymorphicFunCall = true
-            }
-        }
-
-        var currentFunctionIID;
-        var currentFunctionObtainedFromFe;
-        this.functionEnter = function (iid, val, dis) {
-            currentFunctionIID = iid;
-            currentFunctionObtainedFromFe = val;
-            if (isAnalyzePolymorphicFunCall) {
-                checkPolymorphicFunCall(cachedArgs, iid, cachedInvokeLocation);
+            array.sort(function compare(a, b) {
+                return b.miss - a.miss;
+            });
+            for (var i = 0; i < array.length; i++) {
+                var iid = array[i].iid;
+                warning_num++;
+                console.log('* Polymorphic unary operation at ' + iidToLocation(iid));
+                console.log('\tHit: ' + array[i].hit + '\tMiss: ' + array[i].miss);
+                var len = array[i].types.length;
+                for (var index =0; index < len; index++) {
+                    if(HOP(array[i].types, index)) {
+                        var left_type_name = getTypeName(array[i].types[index].left_type);
+                        console.log('\tCount: ' + array[i].types[index].count + 
+                            '\ttypes: ' + array[i].operator + left_type_name);
+                    }
+                }
             }
         }
-
-        this.invokeFun = function (iid, f, base, args, val, isConstructor) {
-            return val;
-        }
-
-        this.endExecution = function () {
-            this.printResult();
-        }
-
 
         this.printResult = function () {
             try {
                 console.log("---------------------------");
-
-                console.log('Report of polymorphic function call:');
-                printPolymorphicFunCall(['JIT-checker', 'polymorphic-fun-call']);
-
+                console.log('Report of polymorphic Binary Operations:');
+                printPolyBinary(['JIT-checker', 'polymorphic-binary']);
+                console.log('Report of polymorphic Unary Operations:');
+                printPolyUnary(['JIT-checker', 'polymorphic-unary']);
+                console.log('[****]PolyFun: ' + warning_num);
             } catch (e) {
                 console.log("error!!");
                 console.log(e);
             }
         }
+
+        // ---- Print functions end ----
+
+        // ---- Logic starts ----
+
+        var UNDEFINED_TYPE = 0;
+        var INTEGER_TYPE = 1;
+        var FLOAT_TYPE = 2;
+        var STRING_TYPE = 3;
+        var BOOLEAN_TYPE = 4;
+        var OTHER_TYPE = 5;
+
+        function getType(val) {
+            switch(typeof val) {
+                case 'number':
+                    if(parseInt(val) === val) return INTEGER_TYPE;
+                    else return FLOAT_TYPE;
+                case 'undefined':
+                    return UNDEFINED_TYPE;
+                case 'string':
+                    return STRING_TYPE;
+                case 'boolean':
+                    return BOOLEAN_TYPE;
+                default:
+                    return OTHER_TYPE;
+            }
+        }
+
+        function getTypeName(val) {
+            switch(val) {
+                case UNDEFINED_TYPE:
+                    return 'undefined';
+                case INTEGER_TYPE:
+                    return 'integer';
+                case FLOAT_TYPE:
+                    return 'float';
+                case STRING_TYPE:
+                    return 'string';
+                case BOOLEAN_TYPE:
+                    return 'boolean';
+                case OTHER_TYPE:
+                    return 'other';
+            }
+        }
+
+        // check polymorphic binary operation
+        function checkPolyBinaryOp(iid, op, left, right) {
+            var db, left_type, right_type, types_index;
+            left_type = getType(left);
+            right_type = getType(right);
+            db = storeDB.getByIndexArr(['JIT-checker', 'polymorphic-binary', iid]);
+            if(!db) {
+                db = {
+                    last_left: left_type, 
+                    last_right: right_type,
+                    operator: op, hit: 0, miss: 0,
+                    types: []
+                };
+                db.types[types_index] = {left_type: left_type, right_type: right_type, count: 1};
+                storeDB.setByIndexArr(['JIT-checker', 'polymorphic-binary', iid], db);
+            } else {
+                if(db.last_left !== left_type || db.last_right !== right_type) {
+                    db.last_left = left_type;
+                    db.last_right = right_type;
+                    db.miss++;
+                } else {
+                    db.hit++;
+                }
+                types_index = left_type * 10 + right_type;
+                if(db.types[types_index]) {
+                    db.types[types_index].count++;
+                } else {
+                    db.types[types_index] = {left_type: left_type, 
+                        right_type: right_type, count: 1};
+                }
+            }
+        }
+
+        // check polymorphic unary operation
+        function checkPolyUnaryOp(iid, op, left) {
+            var db, left_type, types_index;
+            left_type = getType(left);
+            db = storeDB.getByIndexArr(['JIT-checker', 'polymorphic-unary', iid]);
+            if(!db) {
+                db = {
+                    last_left: left_type,
+                    operator: op,
+                    hit: 0, miss: 0,
+                    types: []
+                };
+                db.types[types_index] = {left_type: left_type, count: 1};
+                storeDB.setByIndexArr(['JIT-checker', 'polymorphic-unary', iid], db);
+            } else {
+                if(db.last_left !== left_type) {
+                    db.last_left = left_type;
+                    db.miss++;
+                } else {
+                    db.hit++;
+                }
+                types_index = left_type;
+                if(db.types[types_index]) {
+                    db.types[types_index].count++;
+                } else {
+                    db.types[types_index] = {left_type: left_type, count: 1};
+                }
+            }
+        }
+
+        // ---- Logic ends ----
+
+
+        this.binaryPre = function (iid, op, left, right) {
+            checkPolyBinaryOp(iid, op, left, right);
+        };
+
+        this.unaryPre = function (iid, op, left) {
+            checkPolyUnaryOp(iid, op, left);
+        };
+
+        this.endExecution = function () {
+            this.printResult();
+        };
     }
 
     sandbox.analysis = new PolymorphicFunCall();

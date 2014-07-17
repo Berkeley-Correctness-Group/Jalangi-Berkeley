@@ -190,26 +190,28 @@ console.log('binary operation on undefined value');
 undefvalue |= 0;
 
 
-// test case 8 checking polymorphic function call
+// test case 8 checking polymorphic binary and unary operation
 console.log('------------------ test case 8 ------------------');
 function f1(v1, v2) {
     return v1 + v2;
 }
 f1(1,2);
-f1(1,2);
-f1(1,2);
+f1(true,2);
+f1(1,f1);
+f1(1,f1);
 f1('1','2');
 f1('2',1)
 
-function f2(v1, v2) {
-    return v1 - v2;
+function f2(v1) {
+    return !v1;
 }
-f2(1,2);
-f2('1','2');
-f2(1,2);
-f2('1','2');
-f2('2',1);
-
+f2(1);
+f2('1');
+f2(2);
+f2(1);
+f2('1');
+f2({});
+f2(f1);
 
 // test case 9 checking arguments leaking
 console.log('------------------ test case 9 ------------------');
