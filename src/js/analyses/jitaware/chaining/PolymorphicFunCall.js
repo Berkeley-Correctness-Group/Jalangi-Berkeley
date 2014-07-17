@@ -17,8 +17,8 @@
 // Author: Liang Gong
 
 /**
- * Check Rule: Try not to use polymorphic call
- * This checker detects polymorphic function call
+ * Check Rule: Try not to use polymorphic binary/unary operations
+ * This checker detects polymorphic binary/unary operations
  *
  * For example:
  *
@@ -27,22 +27,22 @@
  * }
  *
  * f(1, 2);
- * f('a', 'b'); // polymorphic use of function
+ * f('a', 'b'); // make the statement inside the funciton polymorphic
  *
  * It makes the JIT-compiler hard to do optimization as the function
  * has to consider more cases and thus insert more runtime checks
  *
- * This analysis monitors each function call and associate with each
- * function its parameter type combinations.
+ * This analysis monitors each binary/unary operation and associate with each
+ * of those operations its parameter type combinations.
  * for example here after first call
- * f <- {(int, int)}
+ * a + b <- {(int, int)}
  * after second call:
- * f <- {(int, int), (string, string)}
+ * a + b <- {(int, int), (string, string)}
  *
  */
 
 ((function (sandbox) {
-    function PolymorphicFunCall() {
+    function PolymorphicOps() {
         var Constants = sandbox.Constants;
         var HOP = Constants.HOP;
         var iidToLocation = sandbox.iidToLocation;
@@ -257,6 +257,6 @@
         };
     }
 
-    sandbox.analysis = new PolymorphicFunCall();
+    sandbox.analysis = new PolymorphicOps();
 
 })(J$));
