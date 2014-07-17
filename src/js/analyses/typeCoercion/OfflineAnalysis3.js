@@ -18,11 +18,11 @@
 
 (function() {
 
-
     var fs = require('fs');
     var stats = require('numbers').statistic;
     var util = require("./CommonUtil.js");
     var offlineCommon = require('../OfflineAnalysesCommon.js');
+    var plots = require('./Plots.js');
 
     function mergeObs(bmDirs) {
         var allHashToObs = {};
@@ -82,7 +82,7 @@
         }
 
         if (mode === "abstract_classify") {
-            return coercionOfObservation(obs, "abstract") +" ("+coercionOfObservation(obs, "classify")+")";
+            return coercionOfObservation(obs, "abstract") + " (" + coercionOfObservation(obs, "classify") + ")";
         }
 
         var op = obs.operation;
@@ -302,6 +302,9 @@
             printHistogram("Conditionals", conditionalCoercionToFreq);
             printHistogram("Unary", unaryCoercionToFreq);
             printHistogram("Binary", binaryCoercionToFreq);
+            plots.plotHistogram(conditionalCoercionToFreq, caption.replace(/ /g, "_") + "_conditional", "Percentage");
+            plots.plotHistogram(unaryCoercionToFreq, caption.replace(/ /g, "_") + "_unary", "Percentage");
+            plots.plotHistogram(binaryCoercionToFreq, caption.replace(/ /g, "_") + "_binary", "Percentage");
         }
         return new PrevalenceResults(conditionalCoercionToFreq, unaryCoercionToFreq, binaryCoercionToFreq);
     }
@@ -337,6 +340,9 @@
             printHistogram("Conditionals", conditionalCoercionToLocs);
             printHistogram("Unary", unaryCoercionToLocs);
             printHistogram("Binary", binaryCoercionToLocs);
+            plots.plotHistogram(conditionalCoercionToLocs, caption.replace(/ /g, "_") + "_conditional", "Percentage");
+            plots.plotHistogram(unaryCoercionToLocs, caption.replace(/ /g, "_") + "_unary", "Percentage");
+            plots.plotHistogram(binaryCoercionToLocs, caption.replace(/ /g, "_") + "_binary", "Percentage");
         }
         return new PrevalenceResults(conditionalCoercionToLocs, unaryCoercionToLocs, binaryCoercionToLocs);
     }
