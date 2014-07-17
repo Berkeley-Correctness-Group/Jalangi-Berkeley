@@ -1,2 +1,1 @@
-http://www.amazon.com
-http://www.google.com
+alexa_top100_20140716_remaining.txt
