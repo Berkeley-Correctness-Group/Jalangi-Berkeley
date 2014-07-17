@@ -43,12 +43,15 @@ Directory ```tests/jitaware/experiments/benchmarks/octane/octane_files/XXX_2.js`
 First copy the benchmark programs into the server container directory:
 
 ```
-sudo cp -r tests/jitaware/experiments/benchmarks /Library/Tomcat/webapps/
+sudo rm -rf /Library/Tomcat/webapps/octane
+sudo rm -rf /Library/Tomcat/webapps/sunspider*
+sudo cp -r tests/jitaware/experiments/benchmarks/* /Library/Tomcat/webapps/
 ```
 
 Then start the Tomcat Server:
 
 ```
+/Library/Tomcat/bin/shutdown.sh
 /Library/Tomcat/bin/startup.sh
 ```
 
