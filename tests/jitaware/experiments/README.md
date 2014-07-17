@@ -62,14 +62,14 @@ Before running the experiment on Mac OS:
   * configure your firefox so that it will dump output to the native console:
     in the browser url input box type: ```about:config``` set the following configurations:
     ```
-    browser.cache.disk.enable = FALSE
-	browser.cache.disk_cache_ssl = FALSE
-	browser.cache.memory.enable = FALSE
-	browser.cache.offline.capacity = 0
-	browser.cache.offline.enable = FALSE
-	media.cache_size = 0
-	network.http.use-cache = FALSE
-	brwoser.dom.window.dump.enabled = true
+    browser.cache.disk.enable = FALSE 
+	browser.cache.disk_cache_ssl = FALSE 
+	browser.cache.memory.enable = FALSE 
+	browser.cache.offline.capacity = 0 
+	browser.cache.offline.enable = FALSE 
+	media.cache_size = 0 
+	network.http.use-cache = FALSE  
+	brwoser.dom.window.dump.enabled = true 
 	```
   * disable file caches on Chrome, see the article in the following url:
     http://stackoverflow.com/questions/5690269/disabling-chrome-cache-for-website-development
