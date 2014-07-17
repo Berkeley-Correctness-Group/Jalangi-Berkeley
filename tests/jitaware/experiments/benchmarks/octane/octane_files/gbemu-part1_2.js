@@ -73,7 +73,7 @@ function GameBoyContext() {
   this.createImageData = function (w, h) {
     var result = {};
     // The following line was updated since Octane 1.0 to avoid OOB access.
-    result.data = new Uint8Array(w * h * 2);
+    result.data = new Uint8Array(w * h * 4);
     return result;
   }
   this.putImageData = function (buffer, x, y) {

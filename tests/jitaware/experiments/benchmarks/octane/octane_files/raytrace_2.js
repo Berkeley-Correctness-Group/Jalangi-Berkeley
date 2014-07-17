@@ -74,7 +74,7 @@ Object.extend = function(destination, source) {
 if(typeof(Flog) == 'undefined') var Flog = {};
 if(typeof(Flog.RayTracer) == 'undefined') Flog.RayTracer = {};
 
-Flog.RayTracer.Color = Class.create();
+Flog.RayTracer.Color = function() {       this.initialize.apply(this, arguments);     };
 
 Flog.RayTracer.Color.prototype = {
     red : 0.0,
@@ -192,7 +192,7 @@ Flog.RayTracer.Color.prototype = {
 if(typeof(Flog) == 'undefined') var Flog = {};
 if(typeof(Flog.RayTracer) == 'undefined') Flog.RayTracer = {};
 
-Flog.RayTracer.Light = Class.create();
+Flog.RayTracer.Light = function() {       this.initialize.apply(this, arguments);     };
 
 Flog.RayTracer.Light.prototype = {
     position: null,
@@ -213,7 +213,7 @@ Flog.RayTracer.Light.prototype = {
 if(typeof(Flog) == 'undefined') var Flog = {};
 if(typeof(Flog.RayTracer) == 'undefined') Flog.RayTracer = {};
 
-Flog.RayTracer.Vector = Class.create();
+Flog.RayTracer.Vector = function() {       this.initialize.apply(this, arguments);     };
 
 Flog.RayTracer.Vector.prototype = {
     x : 0.0,
@@ -277,7 +277,7 @@ Flog.RayTracer.Vector.prototype = {
 if(typeof(Flog) == 'undefined') var Flog = {};
 if(typeof(Flog.RayTracer) == 'undefined') Flog.RayTracer = {};
 
-Flog.RayTracer.Ray = Class.create();
+Flog.RayTracer.Ray = function() {       this.initialize.apply(this, arguments);     };
 
 Flog.RayTracer.Ray.prototype = {
     position : null,
@@ -295,7 +295,7 @@ Flog.RayTracer.Ray.prototype = {
 if(typeof(Flog) == 'undefined') var Flog = {};
 if(typeof(Flog.RayTracer) == 'undefined') Flog.RayTracer = {};
 
-Flog.RayTracer.Scene = Class.create();
+Flog.RayTracer.Scene = function() {       this.initialize.apply(this, arguments);     };
 
 Flog.RayTracer.Scene.prototype = {
     camera : null,
@@ -319,7 +319,7 @@ if(typeof(Flog) == 'undefined') var Flog = {};
 if(typeof(Flog.RayTracer) == 'undefined') Flog.RayTracer = {};
 if(typeof(Flog.RayTracer.Material) == 'undefined') Flog.RayTracer.Material = {};
 
-Flog.RayTracer.Material.BaseMaterial = Class.create();
+Flog.RayTracer.Material.BaseMaterial = function() {       this.initialize.apply(this, arguments);     };
 
 Flog.RayTracer.Material.BaseMaterial.prototype = {
 
@@ -352,7 +352,7 @@ Flog.RayTracer.Material.BaseMaterial.prototype = {
 if(typeof(Flog) == 'undefined') var Flog = {};
 if(typeof(Flog.RayTracer) == 'undefined') Flog.RayTracer = {};
 
-Flog.RayTracer.Material.Solid = Class.create();
+Flog.RayTracer.Material.Solid = function() {       this.initialize.apply(this, arguments);     };
 
 Flog.RayTracer.Material.Solid.prototype = Object.extend(
     new Flog.RayTracer.Material.BaseMaterial(), {
@@ -377,7 +377,7 @@ Flog.RayTracer.Material.Solid.prototype = Object.extend(
 if(typeof(Flog) == 'undefined') var Flog = {};
 if(typeof(Flog.RayTracer) == 'undefined') Flog.RayTracer = {};
 
-Flog.RayTracer.Material.Chessboard = Class.create();
+Flog.RayTracer.Material.Chessboard = function() {       this.initialize.apply(this, arguments);     };
 
 Flog.RayTracer.Material.Chessboard.prototype = Object.extend(
     new Flog.RayTracer.Material.BaseMaterial(), {
@@ -414,7 +414,7 @@ if(typeof(Flog) == 'undefined') var Flog = {};
 if(typeof(Flog.RayTracer) == 'undefined') Flog.RayTracer = {};
 if(typeof(Flog.RayTracer.Shape) == 'undefined') Flog.RayTracer.Shape = {};
 
-Flog.RayTracer.Shape.Sphere = Class.create();
+Flog.RayTracer.Shape.Sphere = function() {       this.initialize.apply(this, arguments);     };
 
 Flog.RayTracer.Shape.Sphere.prototype = {
     initialize : function(pos, radius, material) {
@@ -469,7 +469,7 @@ if(typeof(Flog) == 'undefined') var Flog = {};
 if(typeof(Flog.RayTracer) == 'undefined') Flog.RayTracer = {};
 if(typeof(Flog.RayTracer.Shape) == 'undefined') Flog.RayTracer.Shape = {};
 
-Flog.RayTracer.Shape.Plane = Class.create();
+Flog.RayTracer.Shape.Plane = function() {       this.initialize.apply(this, arguments);     };
 
 Flog.RayTracer.Shape.Plane.prototype = {
     d: 0.0,
@@ -524,7 +524,7 @@ Flog.RayTracer.Shape.Plane.prototype = {
 if(typeof(Flog) == 'undefined') var Flog = {};
 if(typeof(Flog.RayTracer) == 'undefined') Flog.RayTracer = {};
 
-Flog.RayTracer.IntersectionInfo = Class.create();
+Flog.RayTracer.IntersectionInfo = function() {       this.initialize.apply(this, arguments);     };
 
 Flog.RayTracer.IntersectionInfo.prototype = {
     isHit: false,
@@ -547,7 +547,7 @@ Flog.RayTracer.IntersectionInfo.prototype = {
 if(typeof(Flog) == 'undefined') var Flog = {};
 if(typeof(Flog.RayTracer) == 'undefined') Flog.RayTracer = {};
 
-Flog.RayTracer.Camera = Class.create();
+Flog.RayTracer.Camera = function() {       this.initialize.apply(this, arguments);     };
 
 Flog.RayTracer.Camera.prototype = {
     position: null,
@@ -591,7 +591,7 @@ Flog.RayTracer.Camera.prototype = {
 if(typeof(Flog) == 'undefined') var Flog = {};
 if(typeof(Flog.RayTracer) == 'undefined') Flog.RayTracer = {};
 
-Flog.RayTracer.Background = Class.create();
+Flog.RayTracer.Background = function() {       this.initialize.apply(this, arguments);     };
 
 Flog.RayTracer.Background.prototype = {
     color : null,
@@ -606,7 +606,7 @@ Flog.RayTracer.Background.prototype = {
 if(typeof(Flog) == 'undefined') var Flog = {};
 if(typeof(Flog.RayTracer) == 'undefined') Flog.RayTracer = {};
 
-Flog.RayTracer.Engine = Class.create();
+Flog.RayTracer.Engine = function() {       this.initialize.apply(this, arguments);     };
 
 Flog.RayTracer.Engine.prototype = {
     canvas: null, /* 2d context we can render to */
