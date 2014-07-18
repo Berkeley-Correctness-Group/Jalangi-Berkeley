@@ -184,6 +184,7 @@
             left_type = getType(left);
             right_type = getType(right);
             db = storeDB.getByIndexArr(['JIT-checker', 'polymorphic-binary', iid]);
+            types_index = left_type * 10 + right_type;
             if(!db) {
                 db = {
                     last_left: left_type, 
@@ -201,7 +202,6 @@
                 } else {
                     db.hit++;
                 }
-                types_index = left_type * 10 + right_type;
                 if(db.types[types_index]) {
                     db.types[types_index].count++;
                 } else {
@@ -216,6 +216,7 @@
             var db, left_type, types_index;
             left_type = getType(left);
             db = storeDB.getByIndexArr(['JIT-checker', 'polymorphic-unary', iid]);
+            types_index = left_type;
             if(!db) {
                 db = {
                     last_left: left_type,
@@ -232,7 +233,6 @@
                 } else {
                     db.hit++;
                 }
-                types_index = left_type;
                 if(db.types[types_index]) {
                     db.types[types_index].count++;
                 } else {
