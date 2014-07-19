@@ -248,11 +248,11 @@ function bit_rol(num, cnt)\n\
  */\n\
 function str2binl(str)\n\
 {\n\
-  var len = str.length * chrsz, len1 = len>>5;\n\
-  var bin = []; bin.length = len1;\n\
-  for(var i = 0; i < len; i += chrsz) {bin[i>>5] = 0;}\n\
+  var len = (str.length * chrsz) >> 5;\n\
+  var bin = new Array(len);\n\
+  for(var i = 0; i < len; i++) {bin[i] = 0;}\n\
   var mask = (1 << chrsz) - 1;\n\
-  for(var i = 0; i < len; i += chrsz)\n\
+  for(var i = 0; i < str.length * chrsz; i += chrsz)\n\
     bin[i>>5] |= (str.charCodeAt(i / chrsz) & mask) << (i%32);\n\
   return bin;\n\
 }\n\
@@ -540,11 +540,11 @@ function rol(num, cnt)\n\
  */\n\
 function str2binb(str)\n\
 {\n\
-  var len = str.length * chrsz, len1 = len>>5;\n\
-  var bin = []; bin.length = len1;\n\
-  for(var i = 0; i < len; i += chrsz) { bin[i>>5] = 0; }\n\
+  var len = (str.length * chrsz) >> 5;\n\
+  var bin = new Array(len);\n\
+  for(var i = 0; i < len; i++) {bin[i] = 0;}\n\
   var mask = (1 << chrsz) - 1;\n\
-  for(var i = 0; i < len; i += chrsz)\n\
+  for(var i = 0; i < str.length * chrsz; i += chrsz)\n\
     bin[i>>5] |= (str.charCodeAt(i / chrsz) & mask) << (32 - chrsz - i%32);\n\
   return bin;\n\
 }\n\
@@ -951,6 +951,7 @@ Date.prototype.formatDate = function (input,time) {\n\
     var ia = input.split(\"\");\n\
     var ij = 0, len = ia.length;\n\
     while (ij < len) {\n\
+        ia[ij];\n\
         if (ia[ij] == \"\\\\\") {\n\
             // this is our way of allowing users to escape stuff\n\
             ia.splice(ij,1);\n\
@@ -1149,7 +1150,7 @@ function VMulti(M, V) {\n\
 }\n\
 \n\
 function VMulti2(M, V) {\n\
-  var Vect = new Array(); //var Vect = new Float64Array(2);//\n\
+  var Vect = new Array();\n\
   var i = 0;\n\
   for (;i < 3; i++) Vect[i] = M[i][0] * V[0] + M[i][1] * V[1] + M[i][2] * V[2];\n\
   return Vect;\n\
@@ -1221,10 +1222,10 @@ function RotateZ(M, Phi) {\n\
 \n\
 function DrawQube() {\n\
   // calc current normals\n\
-  var CurN = new Array(5);\n\
+  var CurN = new Array();\n\
   var i = 5;\n\
   Q.LastPx = 0;\n\
-  for (; i > -1; i--) CurN[i] = VMulti2(MQube, Q.Normal[i]);\n\
+  for (i=0; i <6; i++) CurN[i] = VMulti2(MQube, Q.Normal[i]);\n\
   if (CurN[0][2] < 0) {\n\
     if (!Q.Line[0]) { DrawLine(Q[0], Q[1]); Q.Line[0] = true; };\n\
     if (!Q.Line[1]) { DrawLine(Q[1], Q[2]); Q.Line[1] = true; };\n\

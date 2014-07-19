@@ -438,8 +438,6 @@ function WorkerTask(scheduler, v1, v2) {
   this.v2 = v2;
 }
 
-
-
 WorkerTask.prototype.run = function (packet) {
   if (packet == null) {
     return this.scheduler.suspendCurrent();

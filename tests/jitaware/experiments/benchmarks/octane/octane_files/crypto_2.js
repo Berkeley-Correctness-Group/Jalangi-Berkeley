@@ -56,7 +56,7 @@ var j_lm = ((canary&0xffffff)==0xefcafe);
 
 // (public) Constructor
 function BigInteger(a,b,c) {
-  this.array = new Uint32Array(75);//new Array();
+  this.array = new Array(); //fix-array analysis: new Uint32Array(75);
   this.t = 0;
   this.s = 0;
   if(a != null)
