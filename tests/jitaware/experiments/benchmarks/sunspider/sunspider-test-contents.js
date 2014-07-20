@@ -1888,4 +1888,479 @@ record(_sunSpiderInterval);\n\
 \n\
 </body>\n\
 </html>\n\
+", "<!DOCTYPE html>\n\
+<head>\n\
+\n\
+<meta charset=utf8>\n\
+\n\
+<!--\n\
+ Copyright (C) 2007 Apple Inc.  All rights reserved.\n\
+\n\
+ Redistribution and use in source and binary forms, with or without\n\
+ modification, are permitted provided that the following conditions\n\
+ are met:\n\
+ 1. Redistributions of source code must retain the above copyright\n\
+    notice, this list of conditions and the following disclaimer.\n\
+ 2. Redistributions in binary form must reproduce the above copyright\n\
+    notice, this list of conditions and the following disclaimer in the\n\
+    documentation and/or other materials provided with the distribution.\n\
+\n\
+ THIS SOFTWARE IS PROVIDED BY APPLE COMPUTER, INC. ``AS IS'' AND ANY\n\
+ EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n\
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\n\
+ PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE COMPUTER, INC. OR\n\
+ CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,\n\
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,\n\
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n\
+ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY\n\
+ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n\
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n\
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. \n\
+-->\n\
+\n\
+<title>SunSpider date-format-xparb</title>\n\
+<link rel=\"stylesheet\" href=\"../sunspider.css\">\n\
+</head>\n\
+\n\
+<body>\n\
+<h3>date-format-xparb</h3>\n\
+<div id=\"console\">\n\
+</div>\n\
+<script>\n\
+function record(time) {\n\
+    document.getElementById(\"console\").innerHTML = time + \"ms\";\n\
+    if (window.parent) {\n\
+        parent.recordResult(time);\n\
+    }\n\
+}\n\
+\n\
+var _sunSpiderStartDate = new Date();\n\
+\n\
+/*\n\
+ * Copyright (C) 2004 Baron Schwartz <baron at sequent dot org>\n\
+ *\n\
+ * This program is free software; you can redistribute it and/or modify it\n\
+ * under the terms of the GNU Lesser General Public License as published by the\n\
+ * Free Software Foundation, version 2.1.\n\
+ *\n\
+ * This program is distributed in the hope that it will be useful, but WITHOUT\n\
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS\n\
+ * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more\n\
+ * details.\n\
+ */\n\
+\n\
+Date.parseFunctions = {count:0};\n\
+Date.parseRegexes = [];\n\
+Date.formatFunctions = {count:0};\n\
+\n\
+Date.prototype.dateFormat = function(format) {\n\
+    if (Date.formatFunctions[format] == null) {\n\
+        Date.createNewFormat(format);\n\
+    }\n\
+    var func = Date.formatFunctions[format];\n\
+    return this[func]();\n\
+}\n\
+\n\
+Date.createNewFormat = function(format) {\n\
+    var funcName = \"format\" + Date.formatFunctions.count++;\n\
+    Date.formatFunctions[format] = funcName;\n\
+    var code = \"Date.prototype.\" + funcName + \" = function(){return \";\n\
+    var special = false;\n\
+    var ch = '';\n\
+    for (var i = 0; i < format.length; ++i) {\n\
+        ch = format.charAt(i);\n\
+        if (!special && ch == \"\\\\\") {\n\
+            special = true;\n\
+        }\n\
+        else if (special) {\n\
+            special = false;\n\
+            code += \"'\" + String.escape(ch) + \"' + \";\n\
+        }\n\
+        else {\n\
+            code += Date.getFormatCode(ch);\n\
+        }\n\
+    }\n\
+    eval(code.substring(0, code.length - 3) + \";}\");\n\
+}\n\
+\n\
+Date.getFormatCode = function(character) {\n\
+    switch (character) {\n\
+    case \"d\":\n\
+        return \"String.leftPad(this.getDate(), 2, '0') + \";\n\
+    case \"D\":\n\
+        return \"Date.dayNames[this.getDay()].substring(0, 3) + \";\n\
+    case \"j\":\n\
+        return \"this.getDate() + \";\n\
+    case \"l\":\n\
+        return \"Date.dayNames[this.getDay()] + \";\n\
+    case \"S\":\n\
+        return \"this.getSuffix() + \";\n\
+    case \"w\":\n\
+        return \"this.getDay() + \";\n\
+    case \"z\":\n\
+        return \"this.getDayOfYear() + \";\n\
+    case \"W\":\n\
+        return \"this.getWeekOfYear() + \";\n\
+    case \"F\":\n\
+        return \"Date.monthNames[this.getMonth()] + \";\n\
+    case \"m\":\n\
+        return \"String.leftPad(this.getMonth() + 1, 2, '0') + \";\n\
+    case \"M\":\n\
+        return \"Date.monthNames[this.getMonth()].substring(0, 3) + \";\n\
+    case \"n\":\n\
+        return \"(this.getMonth() + 1) + \";\n\
+    case \"t\":\n\
+        return \"this.getDaysInMonth() + \";\n\
+    case \"L\":\n\
+        return \"(this.isLeapYear() ? 1 : 0) + \";\n\
+    case \"Y\":\n\
+        return \"this.getFullYear() + \";\n\
+    case \"y\":\n\
+        return \"('' + this.getFullYear()).substring(2, 4) + \";\n\
+    case \"a\":\n\
+        return \"(this.getHours() < 12 ? 'am' : 'pm') + \";\n\
+    case \"A\":\n\
+        return \"(this.getHours() < 12 ? 'AM' : 'PM') + \";\n\
+    case \"g\":\n\
+        return \"((this.getHours() %12) ? this.getHours() % 12 : 12) + \";\n\
+    case \"G\":\n\
+        return \"this.getHours() + \";\n\
+    case \"h\":\n\
+        return \"String.leftPad((this.getHours() %12) ? this.getHours() % 12 : 12, 2, '0') + \";\n\
+    case \"H\":\n\
+        return \"String.leftPad(this.getHours(), 2, '0') + \";\n\
+    case \"i\":\n\
+        return \"String.leftPad(this.getMinutes(), 2, '0') + \";\n\
+    case \"s\":\n\
+        return \"String.leftPad(this.getSeconds(), 2, '0') + \";\n\
+    case \"O\":\n\
+        return \"this.getGMTOffset() + \";\n\
+    case \"T\":\n\
+        return \"this.getTimezone() + \";\n\
+    case \"Z\":\n\
+        return \"(this.getTimezoneOffset() * -60) + \";\n\
+    default:\n\
+        return \"'\" + String.escape(character) + \"' + \";\n\
+    }\n\
+}\n\
+\n\
+Date.parseDate = function(input, format) {\n\
+    if (Date.parseFunctions[format] == null) {\n\
+        Date.createParser(format);\n\
+    }\n\
+    var func = Date.parseFunctions[format];\n\
+    return Date[func](input);\n\
+}\n\
+\n\
+Date.createParser = function(format) {\n\
+    var funcName = \"parse\" + Date.parseFunctions.count++;\n\
+    var regexNum = Date.parseRegexes.length;\n\
+    var currentGroup = 1;\n\
+    Date.parseFunctions[format] = funcName;\n\
+\n\
+    var code = \"Date.\" + funcName + \" = function(input){\\n\"\n\
+        + \"var y = -1, m = -1, d = -1, h = -1, i = -1, s = -1;\\n\"\n\
+        + \"var d = new Date();\\n\"\n\
+        + \"y = d.getFullYear();\\n\"\n\
+        + \"m = d.getMonth();\\n\"\n\
+        + \"d = d.getDate();\\n\"\n\
+        + \"var results = input.match(Date.parseRegexes[\" + regexNum + \"]);\\n\"\n\
+        + \"if (results && results.length > 0) {\"\n\
+    var regex = \"\";\n\
+\n\
+    var special = false;\n\
+    var ch = '';\n\
+    for (var i = 0; i < format.length; ++i) {\n\
+        ch = format.charAt(i);\n\
+        if (!special && ch == \"\\\\\") {\n\
+            special = true;\n\
+        }\n\
+        else if (special) {\n\
+            special = false;\n\
+            regex += String.escape(ch);\n\
+        }\n\
+        else {\n\
+            obj = Date.formatCodeToRegex(ch, currentGroup);\n\
+            currentGroup += obj.g;\n\
+            regex += obj.s;\n\
+            if (obj.g && obj.c) {\n\
+                code += obj.c;\n\
+            }\n\
+        }\n\
+    }\n\
+\n\
+    code += \"if (y > 0 && m >= 0 && d > 0 && h >= 0 && i >= 0 && s >= 0)\\n\"\n\
+        + \"{return new Date(y, m, d, h, i, s);}\\n\"\n\
+        + \"else if (y > 0 && m >= 0 && d > 0 && h >= 0 && i >= 0)\\n\"\n\
+        + \"{return new Date(y, m, d, h, i);}\\n\"\n\
+        + \"else if (y > 0 && m >= 0 && d > 0 && h >= 0)\\n\"\n\
+        + \"{return new Date(y, m, d, h);}\\n\"\n\
+        + \"else if (y > 0 && m >= 0 && d > 0)\\n\"\n\
+        + \"{return new Date(y, m, d);}\\n\"\n\
+        + \"else if (y > 0 && m >= 0)\\n\"\n\
+        + \"{return new Date(y, m);}\\n\"\n\
+        + \"else if (y > 0)\\n\"\n\
+        + \"{return new Date(y);}\\n\"\n\
+        + \"}return null;}\";\n\
+\n\
+    Date.parseRegexes[regexNum] = new RegExp(\"^\" + regex + \"$\");\n\
+    eval(code);\n\
+}\n\
+\n\
+Date.formatCodeToRegex = function(character, currentGroup) {\n\
+    switch (character) {\n\
+    case \"D\":\n\
+        return {g:0,\n\
+        c:null,\n\
+        s:\"(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat)\"};\n\
+    case \"j\":\n\
+    case \"d\":\n\
+        return {g:1,\n\
+            c:\"d = parseInt(results[\" + currentGroup + \"], 10);\\n\",\n\
+            s:\"(\\\\d{1,2})\"};\n\
+    case \"l\":\n\
+        return {g:0,\n\
+            c:null,\n\
+            s:\"(?:\" + Date.dayNames.join(\"|\") + \")\"};\n\
+    case \"S\":\n\
+        return {g:0,\n\
+            c:null,\n\
+            s:\"(?:st|nd|rd|th)\"};\n\
+    case \"w\":\n\
+        return {g:0,\n\
+            c:null,\n\
+            s:\"\\\\d\"};\n\
+    case \"z\":\n\
+        return {g:0,\n\
+            c:null,\n\
+            s:\"(?:\\\\d{1,3})\"};\n\
+    case \"W\":\n\
+        return {g:0,\n\
+            c:null,\n\
+            s:\"(?:\\\\d{2})\"};\n\
+    case \"F\":\n\
+        return {g:1,\n\
+            c:\"m = parseInt(Date.monthNumbers[results[\" + currentGroup + \"].substring(0, 3)], 10);\\n\",\n\
+            s:\"(\" + Date.monthNames.join(\"|\") + \")\"};\n\
+    case \"M\":\n\
+        return {g:1,\n\
+            c:\"m = parseInt(Date.monthNumbers[results[\" + currentGroup + \"]], 10);\\n\",\n\
+            s:\"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\"};\n\
+    case \"n\":\n\
+    case \"m\":\n\
+        return {g:1,\n\
+            c:\"m = parseInt(results[\" + currentGroup + \"], 10) - 1;\\n\",\n\
+            s:\"(\\\\d{1,2})\"};\n\
+    case \"t\":\n\
+        return {g:0,\n\
+            c:null,\n\
+            s:\"\\\\d{1,2}\"};\n\
+    case \"L\":\n\
+        return {g:0,\n\
+            c:null,\n\
+            s:\"(?:1|0)\"};\n\
+    case \"Y\":\n\
+        return {g:1,\n\
+            c:\"y = parseInt(results[\" + currentGroup + \"], 10);\\n\",\n\
+            s:\"(\\\\d{4})\"};\n\
+    case \"y\":\n\
+        return {g:1,\n\
+            c:\"var ty = parseInt(results[\" + currentGroup + \"], 10);\\n\"\n\
+                + \"y = ty > Date.y2kYear ? 1900 + ty : 2000 + ty;\\n\",\n\
+            s:\"(\\\\d{1,2})\"};\n\
+    case \"a\":\n\
+        return {g:1,\n\
+            c:\"if (results[\" + currentGroup + \"] == 'am') {\\n\"\n\
+                + \"if (h == 12) { h = 0; }\\n\"\n\
+                + \"} else { if (h < 12) { h += 12; }}\",\n\
+            s:\"(am|pm)\"};\n\
+    case \"A\":\n\
+        return {g:1,\n\
+            c:\"if (results[\" + currentGroup + \"] == 'AM') {\\n\"\n\
+                + \"if (h == 12) { h = 0; }\\n\"\n\
+                + \"} else { if (h < 12) { h += 12; }}\",\n\
+            s:\"(AM|PM)\"};\n\
+    case \"g\":\n\
+    case \"G\":\n\
+    case \"h\":\n\
+    case \"H\":\n\
+        return {g:1,\n\
+            c:\"h = parseInt(results[\" + currentGroup + \"], 10);\\n\",\n\
+            s:\"(\\\\d{1,2})\"};\n\
+    case \"i\":\n\
+        return {g:1,\n\
+            c:\"i = parseInt(results[\" + currentGroup + \"], 10);\\n\",\n\
+            s:\"(\\\\d{2})\"};\n\
+    case \"s\":\n\
+        return {g:1,\n\
+            c:\"s = parseInt(results[\" + currentGroup + \"], 10);\\n\",\n\
+            s:\"(\\\\d{2})\"};\n\
+    case \"O\":\n\
+        return {g:0,\n\
+            c:null,\n\
+            s:\"[+-]\\\\d{4}\"};\n\
+    case \"T\":\n\
+        return {g:0,\n\
+            c:null,\n\
+            s:\"[A-Z]{3}\"};\n\
+    case \"Z\":\n\
+        return {g:0,\n\
+            c:null,\n\
+            s:\"[+-]\\\\d{1,5}\"};\n\
+    default:\n\
+        return {g:0,\n\
+            c:null,\n\
+            s:String.escape(character)};\n\
+    }\n\
+}\n\
+\n\
+Date.prototype.getTimezone = function() {\n\
+    return this.toString().replace(\n\
+        /^.*? ([A-Z]{3}) [0-9]{4}.*$/, \"$1\").replace(\n\
+        /^.*?\\(([A-Z])[a-z]+ ([A-Z])[a-z]+ ([A-Z])[a-z]+\\)$/, \"$1$2$3\");\n\
+}\n\
+\n\
+Date.prototype.getGMTOffset = function() {\n\
+    return (this.getTimezoneOffset() > 0 ? \"-\" : \"+\")\n\
+        + String.leftPad(Math.floor(this.getTimezoneOffset() / 60), 2, \"0\")\n\
+        + String.leftPad(this.getTimezoneOffset() % 60, 2, \"0\");\n\
+}\n\
+\n\
+Date.prototype.getDayOfYear = function() {\n\
+    var num = 0;\n\
+    Date.daysInMonth[1] = this.isLeapYear() ? 29 : 28;\n\
+    for (var i = 0; i < this.getMonth(); ++i) {\n\
+        num += Date.daysInMonth[i];\n\
+    }\n\
+    return num + this.getDate() - 1;\n\
+}\n\
+\n\
+Date.prototype.getWeekOfYear = function() {\n\
+    // Skip to Thursday of this week\n\
+    var now = this.getDayOfYear() + (4 - this.getDay());\n\
+    // Find the first Thursday of the year\n\
+    var jan1 = new Date(this.getFullYear(), 0, 1);\n\
+    var then = (7 - jan1.getDay() + 4);\n\
+    document.write(then);\n\
+    return String.leftPad(((now - then) / 7) + 1, 2, \"0\");\n\
+}\n\
+\n\
+Date.prototype.isLeapYear = function() {\n\
+    var year = this.getFullYear();\n\
+    return ((year & 3) == 0 && (year % 100 || (year % 400 == 0 && year)));\n\
+}\n\
+\n\
+Date.prototype.getFirstDayOfMonth = function() {\n\
+    var day = (this.getDay() - (this.getDate() - 1)) % 7;\n\
+    return (day < 0) ? (day + 7) : day;\n\
+}\n\
+\n\
+Date.prototype.getLastDayOfMonth = function() {\n\
+    var day = (this.getDay() + (Date.daysInMonth[this.getMonth()] - this.getDate())) % 7;\n\
+    return (day < 0) ? (day + 7) : day;\n\
+}\n\
+\n\
+Date.prototype.getDaysInMonth = function() {\n\
+    Date.daysInMonth[1] = this.isLeapYear() ? 29 : 28;\n\
+    return Date.daysInMonth[this.getMonth()];\n\
+}\n\
+\n\
+Date.prototype.getSuffix = function() {\n\
+    switch (this.getDate()) {\n\
+        case 1:\n\
+        case 21:\n\
+        case 31:\n\
+            return \"st\";\n\
+        case 2:\n\
+        case 22:\n\
+            return \"nd\";\n\
+        case 3:\n\
+        case 23:\n\
+            return \"rd\";\n\
+        default:\n\
+            return \"th\";\n\
+    }\n\
+}\n\
+\n\
+String.escape = function(string) {\n\
+    return string.replace(/('|\\\\)/g, \"\\\\$1\");\n\
+}\n\
+\n\
+String.leftPad = function (val, size, ch) {\n\
+    var result = new String(val);\n\
+    if (ch == null) {\n\
+        ch = \" \";\n\
+    }\n\
+    while (result.length < size) {\n\
+        result = ch + result;\n\
+    }\n\
+    return result;\n\
+}\n\
+\n\
+Date.daysInMonth = [31,28,31,30,31,30,31,31,30,31,30,31];\n\
+Date.monthNames =\n\
+   [\"January\",\n\
+    \"February\",\n\
+    \"March\",\n\
+    \"April\",\n\
+    \"May\",\n\
+    \"June\",\n\
+    \"July\",\n\
+    \"August\",\n\
+    \"September\",\n\
+    \"October\",\n\
+    \"November\",\n\
+    \"December\"];\n\
+Date.dayNames =\n\
+   [\"Sunday\",\n\
+    \"Monday\",\n\
+    \"Tuesday\",\n\
+    \"Wednesday\",\n\
+    \"Thursday\",\n\
+    \"Friday\",\n\
+    \"Saturday\"];\n\
+Date.y2kYear = 50;\n\
+Date.monthNumbers = {\n\
+    Jan:0,\n\
+    Feb:1,\n\
+    Mar:2,\n\
+    Apr:3,\n\
+    May:4,\n\
+    Jun:5,\n\
+    Jul:6,\n\
+    Aug:7,\n\
+    Sep:8,\n\
+    Oct:9,\n\
+    Nov:10,\n\
+    Dec:11};\n\
+Date.patterns = {\n\
+    ISO8601LongPattern:\"Y-m-d H:i:s\",\n\
+    ISO8601ShortPattern:\"Y-m-d\",\n\
+    ShortDatePattern: \"n/j/Y\",\n\
+    LongDatePattern: \"l, F d, Y\",\n\
+    FullDateTimePattern: \"l, F d, Y g:i:s A\",\n\
+    MonthDayPattern: \"F d\",\n\
+    ShortTimePattern: \"g:i A\",\n\
+    LongTimePattern: \"g:i:s A\",\n\
+    SortableDateTimePattern: \"Y-m-d\\\\TH:i:s\",\n\
+    UniversalSortableDateTimePattern: \"Y-m-d H:i:sO\",\n\
+    YearMonthPattern: \"F, Y\"};\n\
+\n\
+var date = new Date(\"1/1/2007 1:11:11\");\n\
+\n\
+for (i = 0; i < 400000; ++i) {\n\
+    var shortFormat = date.dateFormat(\"Y-m-d\");\n\
+    var longFormat = date.dateFormat(\"l, F d, Y g:i:s A\");\n\
+    date.setTime(date.getTime() + 84266956);\n\
+}\n\
+\n\
+\n\
+var _sunSpiderInterval = new Date() - _sunSpiderStartDate;\n\
+\n\
+record(_sunSpiderInterval);\n\
+</script>\n\
+\n\
+\n\
+</body>\n\
+</html>\n\
 "];
