@@ -1817,11 +1817,10 @@ function raytraceScene()\n\
     var size = 30;\n\
     var pixels = new Array();\n\
     for (var y = 0; y < size; y++) {\n\
-        //pixels[y] = new Array();\n\
-        //for (var x = 0; x < size; x++) {\n\
-        //    pixels[y][x] = 0;\n\
-        //}\n\
-        pixels[y] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]\n\
+        pixels[y] = new Array();\n\
+        for (var x = 0; x < size; x++) {\n\
+            pixels[y][x] = 0;\n\
+        }\n\
     }\n\
 \n\
     var _camera = new Camera(createVector(-40, 40, 40), createVector(0, 0, 0), createVector(0, 1, 0));\n\
