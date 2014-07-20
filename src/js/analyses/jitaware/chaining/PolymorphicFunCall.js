@@ -52,7 +52,7 @@
         var storeDB = new RuntimeDB();
 
         var warning_num = 0;
-        var MISS_THRESHOLD = 0;
+        var MISS_THRESHOLD = 999;
 
         // ---- Print functions start ----
 
@@ -114,7 +114,7 @@
                     if(HOP(array[i].types, index)) {
                         var left_type_name = getTypeName(array[i].types[index].left_type);
                         console.log('\tCount: ' + array[i].types[index].count + 
-                            '\ttypes: ' + array[i].operator + left_type_name);
+                            '\ttypes:   ' + array[i].operator + ' ' + left_type_name);
                     }
                 }
             }
@@ -123,9 +123,9 @@
         this.printResult = function () {
             try {
                 console.log("---------------------------");
-                console.log('Report of polymorphic Binary Operations:');
+                console.log('Report of Polymorphic Binary Operations:');
                 printPolyBinary(['JIT-checker', 'polymorphic-binary']);
-                console.log('Report of polymorphic Unary Operations:');
+                console.log('Report of Polymorphic Unary Operations:');
                 printPolyUnary(['JIT-checker', 'polymorphic-unary']);
                 console.log('[****]PolyFun: ' + warning_num);
             } catch (e) {
@@ -148,8 +148,9 @@
         function getType(val) {
             switch(typeof val) {
                 case 'number':
-                    if(parseInt(val) === val) return INTEGER_TYPE;
-                    else return FLOAT_TYPE;
+                    //if(parseInt(val) === val) return INTEGER_TYPE;
+                    //else return FLOAT_TYPE;
+                    return FLOAT_TYPE;
                 case 'undefined':
                     return UNDEFINED_TYPE;
                 case 'string':
@@ -166,7 +167,7 @@
                 case UNDEFINED_TYPE:
                     return 'undefined';
                 case INTEGER_TYPE:
-                    return 'integer';
+                    //return 'integer';
                 case FLOAT_TYPE:
                     return 'float';
                 case STRING_TYPE:
@@ -178,11 +179,28 @@
             }
         }
 
+        function isPolyBinary(iid, op, left, left_type, right, right_type) {
+            if(op === 'instanceof' || op === 'typeof' || op === '==' || op === '!=' || op === '===' || op === '!=') {
+                return false;
+            }
+
+            if(op === '<' || op === '>' || op === '<=' || op === '>=') {
+                return false;
+            }
+
+            return true;
+        }
+
         // check polymorphic binary operation
         function checkPolyBinaryOp(iid, op, left, right) {
             var db, left_type, right_type, types_index;
             left_type = getType(left);
             right_type = getType(right);
+
+            if(!isPolyBinary(iid, op, left, left_type, right, right_type)) {
+                return ;
+            }
+
             db = storeDB.getByIndexArr(['JIT-checker', 'polymorphic-binary', iid]);
             types_index = left_type * 10 + right_type;
             if(!db) {
@@ -209,6 +227,14 @@
                         right_type: right_type, count: 1};
                 }
             }
+        }
+
+        function isUnaryOp(iid, op, left, left_type) {
+            if(op === 'typeof') {
+                return false;
+            }
+
+            return true;
         }
 
         // check polymorphic unary operation

@@ -45,6 +45,7 @@
         var Utils = sandbox.Utils;
 
         var warning_limit = 30;
+        var ACCESS_THRESHOLD = 900;
 
         // ---- JIT library functions start ----
 
@@ -82,8 +83,10 @@
                 var jitUninitArr = [];
                 for (var prop in uninitArrDB) {
                     if (HOP(uninitArrDB, prop)) {
-                        jitUninitArr.push({'iid': prop, 'count': uninitArrDB[prop].count});
-                        num++;
+                        if(uninitArrDB[prop].count > ACCESS_THRESHOLD) {
+                            jitUninitArr.push({'iid': prop, 'count': uninitArrDB[prop].count});
+                            num++;
+                        }
                     }
                 }
                 sort.call(jitUninitArr, function compare(a, b) {

@@ -79,6 +79,14 @@
             return false;
         }
 
+        function isString(obj) {
+            if(obj && (obj instanceof String || typeof obj === 'string')) {
+                return true;
+            }
+
+            return false;
+        }
+
         function getMetaInfo(iid) {
             var ret;
             if (!HOP(info, iid)) {
@@ -237,7 +245,7 @@
         };
 
         this.getFieldPre = function (iid, base, offset) {
-            if (!isArray(base)) {
+            if (!isArray(base) && !isString(base)) {
                 var hidden = getHiddenClass(base);
                 if (hidden) {
                     var meta = getMetaInfo(iid);
@@ -249,7 +257,7 @@
         };
 
         this.putFieldPre = function (iid, base, offset, val) {
-            if (!isArray(base))
+            if (!isArray(base) && !isString(base))
                 updateHiddenClass(base, offset, val);
             return val;
         };
