@@ -42,6 +42,7 @@
         var Utils = sandbox.Utils;
 
         var warning_limit = 30;
+        var ACCESS_THRESHOLD = 999;
 
         // ---- JIT library functions start ----
         function checkIfWritingOutsideArrayBound(base, offset, iid) {
@@ -74,8 +75,10 @@
                 var num = 0;
                 for (var prop in incontArrDB) {
                     if (HOP(incontArrDB, prop)) {
-                        incontArrDBArr.push({'iid': prop, 'count': incontArrDB[prop].count});
-                        num++;
+                        if(incontArrDB[prop].count > ACCESS_THRESHOLD) {
+                            incontArrDBArr.push({'iid': prop, 'count': incontArrDB[prop].count});
+                            num++;
+                        }
                     }
                 }
                 incontArrDBArr.sort(function compare(a, b) {

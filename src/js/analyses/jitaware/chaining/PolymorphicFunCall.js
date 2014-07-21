@@ -180,7 +180,7 @@
         }
 
         function isPolyBinary(iid, op, left, left_type, right, right_type) {
-            if(op === 'instanceof' || op === 'typeof' || op === '==' || op === '!=' || op === '===' || op === '!=') {
+            if(op === 'instanceof' || op === 'typeof' || op === '==' || op === '!=' || op === '===' || op === '!==') {
                 return false;
             }
 
@@ -229,7 +229,7 @@
             }
         }
 
-        function isUnaryOp(iid, op, left, left_type) {
+        function isPolyUnary(iid, op, left, left_type) {
             if(op === 'typeof') {
                 return false;
             }
@@ -241,6 +241,11 @@
         function checkPolyUnaryOp(iid, op, left) {
             var db, left_type, types_index;
             left_type = getType(left);
+
+            if(!isPolyUnary(iid, op, left, left_type)) {
+                return ;
+            }
+
             db = storeDB.getByIndexArr(['JIT-checker', 'polymorphic-unary', iid]);
             types_index = left_type;
             if(!db) {
