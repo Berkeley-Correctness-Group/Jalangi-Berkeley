@@ -16505,7 +16505,7 @@ var Font = (function FontClosure() {
           fontCharCode = this.toFontChar[charcode] || charcode;
           break;
           case 'Type1':
-          var glyphName = (charcode in this.differences)? this.differences[charcode]) : this.encoding[charcode];
+          var glyphName = (charcode in this.differences)? this.differences[charcode] : this.encoding[charcode];
           if (!isNum(width))
             width = this.widths[glyphName];
           if (this.noUnicodeAdaptation) {
@@ -27240,7 +27240,8 @@ var Stream = (function StreamClosure() {
     this.bytes = new Uint8Array(arrayBuffer);
     this.start = start || 0;
     this.pos = this.start;
-    this.end = (start + length) || this.bytes.length;
+    if(length === undefined) this.end = this.bytes.length;
+    else this.end = (start + length) || this.bytes.length;
     this.dict = dict;
   }
 
