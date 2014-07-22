@@ -1,0 +1,114 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Micro-example test</title>
+</head>
+<body>
+
+<style>
+    p {
+        font-size: 11px;
+        font-family: Verdana;
+        line-height:110%;
+        margin: 0px;
+    }
+</style>
+<div id="content">
+    <p>pattern-1: inconsistent object layout <p>
+    <br>
+    <p>pattern-2: polymorphic operations <p>
+    <br>
+    <p>pattern-3: create non-contiguous arrays <p>
+    <br>
+    <p>pattern-4: accessing uninitialized or deleted array elements <p>
+    <br>
+    <p>pattern-5: storing non-numeric values in numeric arrays <p>
+    <br>
+    <p>pattern-6: binary operation on undefined<p>
+    <br>
+    <b><p>Test results:</p></b>
+</div>
+
+<div id="jit_final_result"></div>
+
+<script src="js/patterns.js"></script>
+
+<script>
+
+    //////////////////// pattern-1 ////////////////////
+    // inconsistent object layout
+
+    var index = 0;
+    var tests = [[pattern1_orig, pattern1_fix],
+        [pattern2_orig, pattern2_fix],
+        [pattern3_orig, pattern3_fix],
+        [pattern4_orig, pattern4_fix],
+        [pattern5_orig, pattern5_fix],
+        [pattern6_orig, pattern6_fix]];
+
+    var result_str = '===micro===';
+
+    function runtest(f1, f2) {
+        var startTime, endTime,
+                print_index = index + 1;
+        var time1 = 0, time2 = 0;
+        if (index >= tests.length) return;
+
+        //console.time prints result in console,
+        // but we need to get the result and return it as a string
+        for(var j=0;j<5;j++) {
+            startTime = new Date();
+             tests[index][1](); // run fixed code
+             endTime = new Date();
+             time2 += (endTime - startTime);
+
+
+        }
+
+        show('time: ' + time2);
+        result_str += '\npattern-' + (print_index) + ',' + time2;
+
+        /*
+         show('orignal code: ' + time1 + 'ms');
+         show('fixed code: ' + time2 + 'ms');
+
+         show('execution time reduction: ' + parseInt(10000 * (time1 - time2) / time1) / 100 + '%')
+         show('speedup: ' + parseInt(100 * (time1) / time2) / 100 + 'X');
+         */
+        if ((++index) < tests.length) {
+            show('-------------------------------------');
+            show('running pattern-' + (print_index + 1) + '...');
+            setTimeout(runtest, 100);
+        } else {
+            show_final(result_str + '\n===experiment done===');
+        }
+
+    }
+
+    var content = document.getElementById('content');
+    function show(str) {
+        var text = document.createElement("p");
+        var t = document.createTextNode(str);
+        text.appendChild(t);
+        content.appendChild(text);
+    }
+
+    var final_content = document.getElementById('jit_final_result');
+    function show_final(str) {
+        final_content.innerHTML = str;
+        if(window.dump){
+            window.dump(str);
+        }
+    }
+
+    // start test
+    show('running pattern-1...');
+    setTimeout(runtest, 100);
+
+</script>
+</body>
+</html>
+
+
+
