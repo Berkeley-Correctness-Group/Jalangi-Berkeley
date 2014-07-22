@@ -87,6 +87,19 @@ If the auto-experiment is terminated before gracefully complete, use the followi
 node src/js/commands/convert_csv.js
 ```
 
+### Run Browser Experiments on Micro-Benchmarks
+
+In the Jalangi-Berkeley directory type the following command:
+```
+node src/js/commands/microbench_exp.js
+```
+finally after the experiment finished, open the file ```Jalangi-Berkeley/tests/jitaware/experiments/exp_output/micro_result.csv``` using Excel.
+
+If the auto-experiment is terminated before gracefully complete, use the following command to generate the table with the dump data.
+```
+node src/js/commands/convert_micro_csv.js
+```
+
 ### Automatically Collect Benchmark and Warning Statistics
 
 To collect warning statistics from all analsis on SunSpider and Google Octane:
