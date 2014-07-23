@@ -103,7 +103,7 @@ function install_jalangi(){
 
 function download_chromedriver() {
     fs.writeFileSync('chromedriver_mac32.zip', '');
-    var child = spawn('curl', ['http://chromedriver.storage.googleapis.com/2.9/chromedriver_mac32.zip']);
+    var child = spawn('curl', ['http://chromedriver.storage.googleapis.com/2.10/chromedriver_mac32.zip']);
 
     child.stdout.on('data', function (data) {
        fs.appendFileSync('chromedriver_mac32.zip', data);
