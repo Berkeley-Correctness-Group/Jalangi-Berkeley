@@ -114,6 +114,8 @@ if (fs.existsSync('./tests/jitaware/experiments/exp_output')) {
 }
 
 function start_experiment(){
+    child_process.exec('rm -r ./tests/jitaware/experiments/exp_output/console.txt', function (error, stdout, stderr) {
+    });
     getNextLabel();
     if(!current_label) { // undefined label indicates all experiments are done
         console.log('experiment complete, converting results into csv file...');
@@ -134,11 +136,18 @@ function start_experiment(){
 
 function terminate_firefox(){
     // either kill('SIGKILL') or kill('SIGINT') will brutally kill firefox which leads to a warning dialog prompted next time starting firefox
-    console.log('start terminating firefox');
+    //console.log('start terminating firefox');
     child_process.exec('osascript -e \'tell application "Crash Reporter" \n quit \n end tell\'');
     child_process.exec('osascript -e \'tell application "Firefox" \n quit \n end tell\'');
     child_process.exec('osascript -e \'tell application "Crash Reporter" \n quit \n end tell\'');
-    console.log('end terminating firefox');
+    //console.log('end terminating firefox');
+}
+
+function terminate_chrome(){
+    // either kill('SIGKILL') or kill('SIGINT') will brutally kill firefox which leads to a warning dialog prompted next time starting firefox
+    //console.log('start terminating chrome');
+    child_process.exec('osascript -e \'tell application "Chrome" \n quit \n end tell\'');
+    //console.log('end terminating chrome');
 }
 
 function test_on_firefox() {
@@ -173,20 +182,34 @@ function test_on_chrome(){
         withCapabilities(webdriver.Capabilities.chrome()).build();
 
     driver.get(config['url'][current_label]);
+    var chrome_stop_check = false;
 
     var interval_handler = setInterval(function() {
+        if(chrome_stop_check) return ;
         try {
             console.log('checking result in web page...');
             var elem = driver.findElement(webdriver.By.id("jit_final_result"))
             if(elem){
                 elem.getInnerHtml().then(function (data){
+                    if(chrome_stop_check) return;
+                    if(!data) {
+                        return ;
+                    }
                     if(data.indexOf('===experiment done===')>=0) {
-                        process_record_console_output(data); // record final output to db
+                        chrome_stop_check = true;
                         clearInterval(interval_handler); // stop this interval checking
-                        driver.quit(); // quit the automated web testing
-                        setTimeout(function () {
-                            start_experiment(); // start next round of experiment
-                        }, 1000);
+                        console.log('inside test_on_chrome: process_record_console_output');
+                        process_record_console_output(data); // record final output to db
+                        //terminate_chrome();
+                        setTimeout(function () { // must quit the driver a little bit later.
+                            driver.quit();
+                            setTimeout(function () {
+                                start_experiment(); // start next round of experiment
+                            }, 1000);
+                        }, 6000);
+                        
+                    } else {
+                        console.log('empty');
                     }
                 });
             } else {
@@ -196,7 +219,7 @@ function test_on_chrome(){
             console.log(e);
             console.log('empty');
         }
-    }, 3000);
+    }, 2500);
 }
 
 //start another process to monitor the console.txt output, kill firefox at the right time and start the next round of experiment
@@ -208,6 +231,7 @@ function check_console_output() {
         var content = fs.readFileSync(process.cwd() + '/tests/jitaware/experiments/exp_output/console.txt', 'utf8');
         if(typeof content === 'string' && content.length>0){
             if(content.indexOf('===experiment done===') >=0 ){
+                stop = true;
                 // first close the browser
                 if(browser_process) {
                     console.log('kill process');
@@ -216,13 +240,13 @@ function check_console_output() {
                 } else {
                     console.log('process is undefined');
                 }
+                console.log('inside check_console_output: process_record_console_output');
                 process_record_console_output(content);
                 fs.unlink(process.cwd() + '/tests/jitaware/experiments/exp_output/console.txt');
-
-                stop = true
                 setTimeout(function () {
+                    console.log('check console output start experiment in 2.3s');
                     start_experiment(); // start next round of experiment
-                }, 3000);
+                }, 2300);
             }
         } else {
             //console.log(JSON.stringify(content));
@@ -233,7 +257,7 @@ function check_console_output() {
         // do nothing
     }
     if(!stop) { // stop checking
-        setTimeout(check_console_output, 6000); // check it 1s later
+        setTimeout(check_console_output, 2500); // check it 1s later
     }
 }
 
