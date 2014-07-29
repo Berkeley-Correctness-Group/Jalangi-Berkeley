@@ -19,7 +19,8 @@
 (function() {
 
     var fs = require('fs');
-    var stats = require('numbers').statistic;
+    var nbBasic = require('numbers').basics;
+    var nbStats = require('numbers').statistic;
     var util = require("./CommonUtil.js");
     var offlineCommon = require('../OfflineAnalysesCommon.js');
     var plots = require('./Plots.js');
@@ -32,6 +33,7 @@
             var analysisResults = JSON.parse(analysisResultsRaw);
             var iids = offlineCommon.loadIIDs(bmDir + "/sourcemaps/");
             var bm = bmDir.split("/")[bmDir.split("/").length - 1];
+            var bmGroup = bmDir.split("/")[bmDir.split("/").length - 2];
             analysisResults.forEach(function(analysisResult) {
                 var hashToObs = analysisResult.value.hashToObservations;
                 var hashToFreq = analysisResult.value.hashToFrequency;
@@ -39,6 +41,7 @@
                     var obs = hashToObs[hash];
                     obs.location = obs.operation + " at " + iids[obs.iid] + "(" + obs.iid + ") of " + bm;  // unique identifier of source code location
                     obs.benchmark = bm;
+                    obs.benchmarkGroup = bmGroup;
                     if (util.HOP(allHashToObs, hash)) {
                         // have already seen this observation: add frequency to total frequency
                         allHashToFreq[hash] = allHashToFreq[hash] + hashToFreq[hash];
@@ -281,7 +284,18 @@
         this.binaryHisto = binaryHisto;
     }
 
-    function prevalenceOfCoercionsDynamic(obsAndFreq, mode, caption) {
+    PrevalenceResults.prototype.percentageOfType = function(type) {
+        var totalOps = 0;
+        var coercionOps = 0;
+        ["conditionalHisto", "unaryHisto", "binaryHisto"].forEach(function(histoProp) {
+            var histo = this[histoProp];
+            totalOps += totalOfHisto(histo);
+            coercionOps += (totalOfHisto(histo) - (histo.none !== undefined ? histo.none : 0));
+        });
+        return totalOps > 0 ? coercionOps / totalOps : 0;
+    };
+
+    function prevalenceOfCoercionsDynamic(obsAndFreq, mode, caption, plot, toIgnore) {
         if (caption)
             console.log("\n====== " + caption + " ======\n");
         var hashToObservations = obsAndFreq[0];
@@ -298,18 +312,26 @@
                 map[coercion] = oldFreq + hashToFrequency[hash];
             }
         });
+        if (toIgnore) {
+            Object.keys(toIgnore).forEach(function(ignored) {
+                delete conditionalCoercionToFreq[ignored];
+                delete unaryCoercionToFreq[ignored];
+                delete binaryCoercionToFreq[ignored];
+            });
+        }
         if (caption) {
             printHistogram("Conditionals", conditionalCoercionToFreq);
             printHistogram("Unary", unaryCoercionToFreq);
             printHistogram("Binary", binaryCoercionToFreq);
-            plots.plotHistogram(conditionalCoercionToFreq, caption.replace(/ /g, "_") + "_conditional", "Percentage");
-            plots.plotHistogram(unaryCoercionToFreq, caption.replace(/ /g, "_") + "_unary", "Percentage");
-            plots.plotHistogram(binaryCoercionToFreq, caption.replace(/ /g, "_") + "_binary", "Percentage");
+        }
+        if (plot) {
+            var mergedHisto = util.mergeToLeft(util.mergeToLeft(util.mergeToLeft({}, conditionalCoercionToFreq), unaryCoercionToFreq), binaryCoercionToFreq);
+            plots.plotHistogram(mergedHisto, caption.replace(/ /g, "_"), "Percentage", {wide:true});
         }
         return new PrevalenceResults(conditionalCoercionToFreq, unaryCoercionToFreq, binaryCoercionToFreq);
     }
 
-    function prevalenceOfCoercionsStatic(obsAndFreq, mode, caption) {
+    function prevalenceOfCoercionsStatic(obsAndFreq, mode, caption, plot, toIgnore) {
         function countLocs(coercionToLocs) {
             Object.keys(coercionToLocs).forEach(function(coercion) {
                 var nbLocs = Object.keys(coercionToLocs[coercion]).length;
@@ -336,13 +358,21 @@
         countLocs(conditionalCoercionToLocs);
         countLocs(unaryCoercionToLocs);
         countLocs(binaryCoercionToLocs);
+        if (toIgnore) {
+            Object.keys(toIgnore).forEach(function(ignored) {
+                delete conditionalCoercionToLocs[ignored];
+                delete unaryCoercionToLocs[ignored];
+                delete binaryCoercionToLocs[ignored];
+            });
+        }
         if (caption) {
             printHistogram("Conditionals", conditionalCoercionToLocs);
             printHistogram("Unary", unaryCoercionToLocs);
             printHistogram("Binary", binaryCoercionToLocs);
-            plots.plotHistogram(conditionalCoercionToLocs, caption.replace(/ /g, "_") + "_conditional", "Percentage");
-            plots.plotHistogram(unaryCoercionToLocs, caption.replace(/ /g, "_") + "_unary", "Percentage");
-            plots.plotHistogram(binaryCoercionToLocs, caption.replace(/ /g, "_") + "_binary", "Percentage");
+        }
+        if (plot) {
+            var mergedHisto = util.mergeToLeft(util.mergeToLeft(util.mergeToLeft({}, conditionalCoercionToLocs), unaryCoercionToLocs), binaryCoercionToLocs);
+            plots.plotHistogram(mergedHisto, caption.replace(/ /g, "_"), "Percentage", {wide:true});
         }
         return new PrevalenceResults(conditionalCoercionToLocs, unaryCoercionToLocs, binaryCoercionToLocs);
     }
@@ -512,24 +542,61 @@
         });
     }
 
+    function plotPrevalenceSummary(allObsAndFreq) {
+        ["dynamic", "static"].forEach(function(dynOrStat) {
+            var prevalenceAnalysis = dynOrStat === "dynamic" ? prevalenceOfCoercionsDynamic : prevalenceOfCoercionsStatic;
+            var bmGroupToObsAndFreq = groupObservations(allObsAndFreq, byBenchmarkGroup);
+            var groupToPercentages = {};
+            Object.keys(bmGroupToObsAndFreq).forEach(function(bmGroup) {
+                var bmToObsAndFreq = groupObservations(bmGroupToObsAndFreq[bmGroup], byBenchmark);
+                var coercionPercentages = []; // one entry per benchmark in this group
+                Object.keys(bmToObsAndFreq).forEach(function(bm) {
+                    var obsAndFreq = bmToObsAndFreq[bm];
+                    var prevalenceResults = prevalenceAnalysis(obsAndFreq, "abstract");
+                    var perc = 1 - prevalenceResults.percentageOfType("none");
+                    coercionPercentages.push(perc);
+                });
+                groupToPercentages[bmGroup] = coercionPercentages;
+            });
+            plots.plotBoxAndWhisker(groupToPercentages, "prevalence_summary_" + dynOrStat, "Coercions among all operations (%)");
+        });
+    }
+
+    function prevalenceLibs(allObsAndFreqs) {
+        var compToObsAndFreq = groupObservations(allObsAndFreqs, byComponent);
+        Object.keys(compToObsAndFreq).forEach(function(comp) {
+            if (comp !== "other") {
+                ["dynamic", "static"].forEach(function(dynOrStat) {
+                    var prevalenceAnalysis = dynOrStat === "dynamic" ? prevalenceOfCoercionsDynamic : prevalenceOfCoercionsStatic;
+                    var prevalenceResults = prevalenceAnalysis(compToObsAndFreq[comp], "abstract");
+
+                });
+            }
+        });
+    }
+
     function groupObservations(obsAndFreq, groupForObservationFct) {
-        var bmToObsAndFreq = {};
+        var groupToObsAndFreq = {};
         var hashToObservations = obsAndFreq[0];
         var hashToFreq = obsAndFreq[1];
         Object.keys(hashToObservations).forEach(function(hash) {
             var obs = hashToObservations[hash];
             var group = groupForObservationFct(obs);
-            var obsAndFreqOfBenchmark = bmToObsAndFreq[group] || [{}, {}];
+            var obsAndFreqOfBenchmark = groupToObsAndFreq[group] || [{}, {}];
             obsAndFreqOfBenchmark[0][hash] = obs;
             var oldFreq = obsAndFreqOfBenchmark[1][hash] || 0;
             obsAndFreqOfBenchmark[1][hash] = oldFreq + hashToFreq[hash];
-            bmToObsAndFreq[group] = obsAndFreqOfBenchmark;
+            groupToObsAndFreq[group] = obsAndFreqOfBenchmark;
         });
-        return bmToObsAndFreq;
+        return groupToObsAndFreq;
     }
 
     function byBenchmark(obs) {
         return obs.benchmark;
+    }
+
+    function byBenchmarkGroup(obs) {
+        return obs.benchmarkGroup;
     }
 
     function byLibOrNonLib(obs) {
@@ -540,7 +607,7 @@
         return componentOfLocation(obs.location);
     }
 
-    function summarizeHistosPercentages(caption, groupToHisto) {
+    function printHistosPercentages(caption, groupToHisto) {
         var xToPercentages = {}; // string --> array of number
         var allX = {};
         Object.keys(groupToHisto).forEach(function(group) {
@@ -565,7 +632,7 @@
         // sort and print
         var entries = [];
         Object.keys(xToPercentages).forEach(function(x) {
-            var avgPercentage = stats.mean(xToPercentages[x]);
+            var avgPercentage = nbStats.mean(xToPercentages[x]);
             entries.push({x:x, percentages:xToPercentages[x], mean:avgPercentage});
         });
         entries.sort(function(a, b) {
@@ -618,7 +685,7 @@
         return part + " (" + Math.round((part / total) * 10000) / 100 + "%)";
     }
 
-    var libraryPatterns = ['jquery', 'mootools', 'bootstrap', 'peg-0.6.2', 'date.js', 'less-1.2.0', 'interactions.js', 'yui', 'tinymce'];
+    var libraryPatterns = ['jquery', 'mootools', 'bootstrap'];
     function isLibrary(location) {
         for (var i = 0; i < libraryPatterns.length; i++) {
             if (location.indexOf(libraryPatterns[i]) !== -1)
@@ -632,7 +699,7 @@
             if (location.indexOf(libraryPatterns[i]) !== -1)
                 return libraryPatterns[i];
         }
-        return "non-lib";
+        return "other";
     }
 
     var bmGroupDirs = process.argv.slice(2); // directories that contain benchmark directories (e.g., "sunspider" contains "3d-cube")
@@ -643,31 +710,44 @@
         });
     });
     var obsAndFreq = mergeObs(bmDirs);
-    typesAndOperators(obsAndFreq);
+//    typesAndOperators(obsAndFreq);
 
     // over all benchmarks
-    prevalenceOfCoercionsDynamic(obsAndFreq, "abstract_classify", "Prevalence of type coercions (dynamic)");
-    prevalenceOfCoercionsStatic(obsAndFreq, "abstract_classify", "Prevalence of type coercions (static)");
-    polymorphicCodeLocations(obsAndFreq);
-    equalityOperationsDynamic(obsAndFreq);
-    equalityOperationsStatic(obsAndFreq);
+//    prevalenceOfCoercionsDynamic(obsAndFreq, "abstract_classify", "Prevalence of type coercions (dynamic)", false, {});
+//    prevalenceOfCoercionsStatic(obsAndFreq, "abstract_classify", "Prevalence of type coercions (static)"), false, {};
+    prevalenceOfCoercionsDynamic(obsAndFreq, "abstract", "prevalence_by_type_dynamic", true, {"none":true});
+    prevalenceOfCoercionsStatic(obsAndFreq, "abstract", "prevalence_by_type_static", true, {"none":true});
+
+//    polymorphicCodeLocations(obsAndFreq);
+//    equalityOperationsDynamic(obsAndFreq);
+//    equalityOperationsStatic(obsAndFreq);
+
+    // prevalence summary
+    plotPrevalenceSummary(obsAndFreq);
+
+    // prevalence summary for particular libs
+    prevalenceLibs(obsAndFreq);
 
     // per benchmark
-    prevalenceOfCoercionsMultiple("Prevalence of type coercions by benchmark (dynamic)", true, "abstract", groupObservations(obsAndFreq, byBenchmark), summarizeHistosPercentages);
-    prevalenceOfCoercionsMultiple("Prevalence of type coercions by benchmark (static)", false, "abstract", groupObservations(obsAndFreq, byBenchmark), summarizeHistosPercentages);
-
-    // lib vs non-lib
-    prevalenceOfCoercionsMultiple("Prevalence of type coercions by lib/non-lib (dynamic)", true, "abstract", groupObservations(obsAndFreq, byLibOrNonLib), printHistosAll);
-    prevalenceOfCoercionsMultiple("Prevalence of type coercions by lib/non-lib (static)", false, "abstract", groupObservations(obsAndFreq, byLibOrNonLib), printHistosAll);
-
-    // specific libs
-    prevalenceOfCoercionsMultiple("Prevalence of type coercions for specific libs (dynamic)", true, "abstract", groupObservations(obsAndFreq, byComponent), printHistosAll);
-    prevalenceOfCoercionsMultiple("Prevalence of type coercions for specific libs (static)", false, "abstract", groupObservations(obsAndFreq, byComponent), printHistosAll);
+//    prevalenceOfCoercionsMultiple("Prevalence of type coercions by benchmark (dynamic)", true, "abstract", groupObservations(obsAndFreq, byBenchmark), printHistosPercentages);
+//    prevalenceOfCoercionsMultiple("Prevalence of type coercions by benchmark (static)", false, "abstract", groupObservations(obsAndFreq, byBenchmark), printHistosPercentages);
+//
+//    // per benchmark group
+//    prevalenceOfCoercionsMultiple("Prevalence of type coercions by benchmark group (dynamic)", true, "abstract", groupObservations(obsAndFreq, byBenchmarkGroup), printHistosPercentages);
+//    prevalenceOfCoercionsMultiple("Prevalence of type coercions by benchmark group (static)", false, "abstract", groupObservations(obsAndFreq, byBenchmarkGroup), printHistosPercentages);
+//
+//    // lib vs non-lib
+//    prevalenceOfCoercionsMultiple("Prevalence of type coercions by lib/non-lib (dynamic)", true, "abstract", groupObservations(obsAndFreq, byLibOrNonLib), printHistosAll);
+//    prevalenceOfCoercionsMultiple("Prevalence of type coercions by lib/non-lib (static)", false, "abstract", groupObservations(obsAndFreq, byLibOrNonLib), printHistosAll);
+//
+//    // specific libs
+//    prevalenceOfCoercionsMultiple("Prevalence of type coercions for specific libs (dynamic)", true, "abstract", groupObservations(obsAndFreq, byComponent), printHistosAll);
+//    prevalenceOfCoercionsMultiple("Prevalence of type coercions for specific libs (static)", false, "abstract", groupObservations(obsAndFreq, byComponent), printHistosAll);
 
     // harmful vs harmless coercions
-    prevalenceOfCoercionsDynamic(obsAndFreq, "classify", "Classification of type coercions (dynamic)");
-    prevalenceOfCoercionsStatic(obsAndFreq, "classify", "Classification of type coercions (static)");
+//    prevalenceOfCoercionsDynamic(obsAndFreq, "classify", "Classification of type coercions (dynamic)");
+//    prevalenceOfCoercionsStatic(obsAndFreq, "classify", "Classification of type coercions (static)");
 
-    explicitConversions(obsAndFreq);
+//    explicitConversions(obsAndFreq);
 
 })();
