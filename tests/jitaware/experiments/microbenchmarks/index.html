@@ -66,12 +66,12 @@ function pattern1_orig() {
       this.a = Math.random();
     } 	
   }
-	function getSum(base, prop1, prop2) {
-		return base[prop1] + base[prop2];
+	function getSum(base, prop1, prop2, prop3) {
+		return base[prop1] + base[prop2] + base[prop3];
 	}
 	sum = 0;
 	for (var i = 0; i < 3000000; i++) {
-		sum += getSum(new Thing(i), 'a', 'b');
+		sum += getSum(new Thing(i), 'a', 'b', 'c');
 	}
 }
 
@@ -236,26 +236,26 @@ function pattern5_fix() {
 
 function pattern6_orig() {
 	var x, y;
-	for(var i=0;i<300000000;i++){
-		y = x - 2;
+	for(var i=0;i<30000000;i++){
+		y = x + 2;
 	}
 }
 
 function pattern6_fix() {
 	var x = 0, y;
-	for(var i=0;i<300000000;i++){
-		y = x - 2;
+	for(var i=0;i<30000000;i++){
+		y = x + 2;
 	}
 }
 
 var index = 0;
 var tests = [
   [pattern1_orig, pattern1_fix],
-	[pattern2_orig, pattern2_fix],
-	[pattern3_orig, pattern3_fix],
-	[pattern4_orig, pattern4_fix],
-	[pattern5_orig, pattern5_fix],
-  [pattern6_orig, pattern6_fix]
+	//[pattern2_orig, pattern2_fix],
+	//[pattern3_orig, pattern3_fix],
+	//[pattern4_orig, pattern4_fix],
+	//[pattern5_orig, pattern5_fix],
+  //[pattern6_orig, pattern6_fix]
   ];
 
 function runtest(f1, f2) {
