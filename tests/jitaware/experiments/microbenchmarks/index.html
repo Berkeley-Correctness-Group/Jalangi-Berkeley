@@ -68,6 +68,7 @@ function pattern1_orig() {
   }
 	function getSum(base, prop1, prop2, prop3) {
 		return base[prop1] + base[prop2] + base[prop3];
+		//return base['a'] + base['b'] + base['c'];
 	}
 	sum = 0;
 	for (var i = 0; i < 3000000; i++) {
@@ -159,17 +160,21 @@ function pattern2_fix() {
 // create non-contiguous arrays
 
 function pattern3_orig() {
-	var array = [];
-	for (var i = 100000000 - 1; i >= 0; i--) { // initializing array in reverse order makes the array non-contiguous 
-		array[i % 50000] = i;
-	}
+  for (var j = 0; j < 40; j++) {
+  	var array = [];
+  	for (var i = 100000 - 1; i >= 0; i--) { // initializing array in reverse order makes the array non-contiguous 
+  		array[i] = i;
+    }
+  }
 }
 
 function pattern3_fix() {
-	var array = [];
-	for (var i = 0; i < 100000000; i++) {
-		array[i % 50000] = i;
-	}
+  for (var j = 0; j < 40; j++) {
+	  var array = [];
+	  for (var i = 0; i < 100000; i++) {
+	  	array[i] = i;
+    }
+  }
 }
 
 //////////////////// pattern-4 ////////////////////
@@ -250,9 +255,9 @@ function pattern6_fix() {
 
 var index = 0;
 var tests = [
-  [pattern1_orig, pattern1_fix],
+  //[pattern1_orig, pattern1_fix],
 	//[pattern2_orig, pattern2_fix],
-	//[pattern3_orig, pattern3_fix],
+	[pattern3_orig, pattern3_fix],
 	//[pattern4_orig, pattern4_fix],
 	//[pattern5_orig, pattern5_fix],
   //[pattern6_orig, pattern6_fix]
