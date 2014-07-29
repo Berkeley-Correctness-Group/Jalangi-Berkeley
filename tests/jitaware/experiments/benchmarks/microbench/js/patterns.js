@@ -29,12 +29,12 @@ function pattern1_orig() {
       this.a = Math.random();
     }   
   }
-    function getSum(base, prop1, prop2) {
-        return base[prop1] + base[prop2];
+    function getSum(base, prop1, prop2, prop3) {
+        return base[prop1] + base[prop2] + base[prop3];
     }
     sum = 0;
     for (var i = 0; i < 3000000; i++) {
-        sum += getSum(new Thing(i), 'a', 'b');
+        sum += getSum(new Thing(i), 'a', 'b', 'c');
     }
 }
 
@@ -67,12 +67,12 @@ function pattern1_fix() {
       this.c = Math.random();
     }   
     }
-    function getSum(base, prop1, prop2) {
-        return base[prop1] + base[prop2];
+    function getSum(base, prop1, prop2, prop3) {
+        return base[prop1] + base[prop2] + base[prop3];
     }
     sum = 0;
     for (var i = 0; i < 3000000; i++) {
-        sum += getSum(new Thing(i), 'a', 'b');
+        sum += getSum(new Thing(i), 'a', 'b', 'c');
     }
 }
 
@@ -122,17 +122,21 @@ function pattern2_fix() {
 // create non-contiguous arrays
 
 function pattern3_orig() {
+  for (var j = 0; j < 40; j++) {
     var array = [];
-    for (var i = 100000000 - 1; i >= 0; i--) { // initializing array in reverse order makes the array non-contiguous
-        array[i % 50000] = i;
+    for (var i = 100000 - 1; i >= 0; i--) { // initializing array in reverse order makes the array non-contiguous 
+      array[i] = i;
     }
+  }
 }
 
 function pattern3_fix() {
+  for (var j = 0; j < 40; j++) {
     var array = [];
-    for (var i = 0; i < 100000000; i++) {
-        array[i % 50000] = i;
+    for (var i = 0; i < 100000; i++) {
+      array[i] = i;
     }
+  }
 }
 
 //////////////////// pattern-4 ////////////////////
