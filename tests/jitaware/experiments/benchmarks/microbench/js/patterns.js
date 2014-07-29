@@ -4,29 +4,29 @@ function pattern1_orig() {
   function Thing(i) {
     var m = i%6;
     if (m === 0) {
-      this.a = 1;
-      this.b = 2;
-      this.c = 3;
+      this.a = Math.random();
+      this.b = Math.random();
+      this.c = Math.random();
     } else if (m === 1) {
-      this.a = 1;
-      this.c = 3;
-      this.b = 2;
+      this.a = Math.random();
+      this.c = Math.random();
+      this.b = Math.random();
     } else if (m === 2) {
-      this.b = 2;
-      this.a = 1;
-      this.c = 3;
+      this.b = Math.random();
+      this.a = Math.random();
+      this.c = Math.random();
     } else if (m === 3) {
-      this.b = 2;
-      this.c = 3;
-      this.a = 1;
+      this.b = Math.random();
+      this.c = Math.random();
+      this.a = Math.random();
     } else if (m === 4) {
-      this.c = 3;
-      this.a = 1;
-      this.b = 2;
+      this.c = Math.random();
+      this.a = Math.random();
+      this.b = Math.random();
     } else {
-      this.c = 3;
-      this.b = 2;
-      this.a = 1;
+      this.c = Math.random();
+      this.b = Math.random();
+      this.a = Math.random();
     }   
   }
     function getSum(base, prop1, prop2) {
@@ -42,29 +42,29 @@ function pattern1_fix() {
     function Thing(i) {
     var m = i%6;
     if (m === 0) {
-      this.a = 1;
-      this.b = 2;
-      this.c = 3;
+      this.a = Math.random();
+      this.b = Math.random();
+      this.c = Math.random();
     } else if (m === 1) {
-      this.a = 1;
-      this.b = 2;
-      this.c = 3;
+      this.a = Math.random();
+      this.b = Math.random();
+      this.c = Math.random();
     } else if (m === 2) {
-      this.a = 1;
-      this.b = 2;
-      this.c = 3;
+      this.a = Math.random();
+      this.b = Math.random();
+      this.c = Math.random();
     } else if (m === 3) {
-      this.a = 1;
-      this.b = 2;
-      this.c = 3;
+      this.a = Math.random();
+      this.b = Math.random();
+      this.c = Math.random();
     } else if (m === 4) {
-      this.a = 1;
-      this.b = 2;
-      this.c = 3;
+      this.a = Math.random();
+      this.b = Math.random();
+      this.c = Math.random();
     } else {
-      this.a = 1;
-      this.b = 2;
-      this.c = 3;
+      this.a = Math.random();
+      this.b = Math.random();
+      this.c = Math.random();
     }   
     }
     function getSum(base, prop1, prop2) {
