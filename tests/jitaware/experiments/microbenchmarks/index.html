@@ -160,19 +160,21 @@ function pattern2_fix() {
 // create non-contiguous arrays
 
 function pattern3_orig() {
-  for (var j = 0; j < 40; j++) {
+  for (var j = 0; j < 100; j++) {
   	var array = [];
-  	for (var i = 100000 - 1; i >= 0; i--) { // initializing array in reverse order makes the array non-contiguous 
-  		array[i] = i;
+  	for (var i = 0; i < 100000; i+=2) { 
+      array[i+1] = i;
+      array[i] = i;
     }
   }
 }
 
 function pattern3_fix() {
-  for (var j = 0; j < 40; j++) {
-	  var array = [];
-	  for (var i = 0; i < 100000; i++) {
-	  	array[i] = i;
+  for (var j = 0; j < 100; j++) {
+  	var array = [];
+  	for (var i = 0; i < 100000; i+=2) { 
+      array[i] = i;
+      array[i+1] = i;
     }
   }
 }
