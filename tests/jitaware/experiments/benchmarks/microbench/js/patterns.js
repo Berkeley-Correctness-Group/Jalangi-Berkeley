@@ -254,9 +254,9 @@ function pattern4_fix() {
 
 var globalarray1, globalarray2;
 function pattern5_orig() {
-    for (var j = 0; j < 2; j++) {
+    for (var j = 0; j < 200; j++) {
         var array = [];
-        for (var i = 0; i < 10000000; i++)
+        for (var i = 0; i < 100000; i++)
             array[i] = i;
         array[4] = 2.4; // array data structure switched to accommodate double value
         array[15] = true; // array data structure switched again to accommodate boolean value
@@ -267,9 +267,9 @@ function pattern5_orig() {
 }
 
 function pattern5_fix() {
-    for (var j = 0; j < 2; j++) {
+    for (var j = 0; j < 200; j++) {
         var array = [];
-        for (var i = 0; i < 10000000; i++)
+        for (var i = 0; i < 100000; i++)
             array[i] = i;
         array[4] = 3;
         array[15] = 4;
