@@ -8,9 +8,9 @@ This readme is for running experiment on micro-benchmark for JITProf.
 
 First download all files in this directory (i.e., the ```js``` folder and ```compare.html``` etc.)
 
-Next Open the ```compare.html``` file with the browser you would like to test (e.g., Firefox or Chrome).
+Next open the ```compare.html``` file using the browser you would like to test (e.g., Firefox or Chrome).
 
-The Slowdown will be calculated and shown in the webpage opened.
+The performance difference between the JIT-unfriendly code and JIT-friendly code will be calculated and shown in the web page opened.
 
 ### A Systematic Experiment
 
