@@ -257,11 +257,9 @@ function pattern5_orig() {
     for (var j = 0; j < 200; j++) {
         var array = [];
         for (var i = 0; i < 100000; i++)
-            array[i] = i;
-        array[4] = 2.4; // array data structure switched to accommodate double value
-        array[15] = true; // array data structure switched again to accommodate boolean value
-        array[4] = 2;
-        array[15] = 1;
+            array[i] = i/10;
+        array[4] = "aaa"; // array data structure switched to accommodate double value
+        array[4] = 1.23;
         globalarray1 = array;
     }
 }
@@ -270,11 +268,9 @@ function pattern5_fix() {
     for (var j = 0; j < 200; j++) {
         var array = [];
         for (var i = 0; i < 100000; i++)
-            array[i] = i;
+            array[i] = i/10;
         array[4] = 3;
-        array[15] = 4;
-        array[4] = 2;
-        array[15] = 1;
+        array[4] = 1.23;
         globalarray2 = array;
     }
 }
