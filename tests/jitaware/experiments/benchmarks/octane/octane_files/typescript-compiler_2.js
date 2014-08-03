@@ -10307,6 +10307,7 @@ var TypeScript;
     TypeScript.LexCodeASCIIChars = 128;
     TypeScript.LexKeywordTable = undefined;
     var autoToken = new Array(TypeScript.LexCodeASCIIChars);
+    for(var i=0;i<autoToken.length;i++) autoToken[i] = 0;
     var lexIdStartTable = new Array(TypeScript.LexCodeASCIIChars);
     var unicodeES3IdStart = [
         170, 
@@ -13311,7 +13312,7 @@ while(this.pos < this.len) {
                                 if((this.ch == TypeScript.LexCodeAPO) || (this.ch == TypeScript.LexCodeQUO)) {
                                     return this.scanStringConstant();
                                 } else {
-                                    if(this.ch in autoToken && autoToken[this.ch]) {
+                                    if(autoToken[this.ch]) {
                                         var atok = autoToken[this.ch];
                                         if(atok.tokenId == TypeScript.TokenID.OpenBrace) {
                                             this.leftCurlyCount++;
@@ -15902,7 +15903,7 @@ var TypeScript;
     var TokenID = TypeScript.TokenID;
     TypeScript.tokenTable = new Array();
     TypeScript.nodeTypeTable = new Array();
-    TypeScript.nodeTypeToTokTable = new Array();
+    TypeScript.nodeTypeToTokTable = new Array(); //[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
     TypeScript.noRegexTable = new Array();
     TypeScript.noRegexTable[TokenID.Identifier] = true;
     TypeScript.noRegexTable[TokenID.StringLiteral] = true;

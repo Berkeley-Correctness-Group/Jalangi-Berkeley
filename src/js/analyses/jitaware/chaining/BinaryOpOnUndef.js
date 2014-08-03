@@ -36,6 +36,7 @@
         var Utils = sandbox.Utils;
 
         var warning_limit = 30;
+        var ACCESS_THRESHOLD = 999;
 
         // ---- JIT library functions start ----
 
@@ -67,8 +68,10 @@
                 var num = 0;
                 for (var prop in binaryUndefinedDB) {
                     if (HOP(binaryUndefinedDB, prop)) {
-                        binaryUndefinedArr.push({'iid': prop, 'count': binaryUndefinedDB[prop].count});
-                        num++;
+                        if(binaryUndefinedDB[prop].count > ACCESS_THRESHOLD) {
+                            binaryUndefinedArr.push({'iid': prop, 'count': binaryUndefinedDB[prop].count});
+                            num++;
+                        }
                     }
                 }
                 binaryUndefinedArr.sort(function compare(a, b) {

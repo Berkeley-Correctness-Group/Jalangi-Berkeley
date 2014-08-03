@@ -1360,6 +1360,7 @@ function Init(CubeSize) {\n\
   Loop();\n\
 }\n\
 \n\
+for ( var j=0;j<100;j++)\n\
 for ( var i = 20; i <= 1600; i *= 2 ) {\n\
   Init(i);\n\
 }\n\
@@ -1821,8 +1822,12 @@ function raytraceScene()\n\
     \n\
     var size = 30;\n\
     var pixels = new Array();\n\
+    var arr = [0,0,0];\n\
     for (var y = 0; y < size; y++) {\n\
-        pixels[y] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,[0]]\n\
+        pixels[y] = new Array();\n\
+        for (var x = 0; x < size; x++) {\n\
+            pixels[y][x] = arr;\n\
+        }\n\
     }\n\
 \n\
     var _camera = new Camera(createVector(-40, 40, 40), createVector(0, 0, 0), createVector(0, 1, 0));\n\
@@ -1867,18 +1872,9 @@ for (var y = 0; y < size; y++) {\\n\\\n\
     return s;\n\
 }\n\
 \n\
+for(var rpt=0;rpt<100;rpt++) {\n\
 testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
+}\n\
 \n\
 \n\
 var _sunSpiderInterval = new Date() - _sunSpiderStartDate;\n\
@@ -2288,7 +2284,7 @@ String.escape = function(string) {\n\
 }\n\
 \n\
 String.leftPad = function (val, size, ch) {\n\
-    var result = val + ''; var tmp = new String(val) + ch;\n\
+    var result = val + ''; var tmp = new String(val)+'';\n\
     if (ch == null) {\n\
         ch = \" \";\n\
     }\n\
@@ -2687,7 +2683,10 @@ function makeTagCloud(tagInfo)\n\
     return output;\n\
 }\n\
 \n\
-var tagcloud = makeTagCloud(tagInfo);\n\
+var tagcloud;\n\
+for (var i=0;i<100;i++) {\n\
+    tagcloud = makeTagCloud(tagInfo);\n\
+}\n\
 tagInfo = null;\n\
 \n\
 \n\

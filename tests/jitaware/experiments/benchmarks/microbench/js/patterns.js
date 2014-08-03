@@ -136,68 +136,6 @@ function pattern2_fix() {
     }
 }
 
-//////////////////// pattern-3 ////////////////////
-// create non-contiguous arrays
-
-/*
-function pattern3_orig() {
-  for (var j = 0; j < 40; j++) {
-    var array = [];
-    for (var i = 100000 - 1; i >= 0; i--) { // initializing array in reverse order makes the array non-contiguous 
-      array[i] = i;
-    }
-  }
-}
-
-function pattern3_fix() {
-  for (var j = 0; j < 40; j++) {
-    var array = [];
-    for (var i = 0; i < 100000; i++) {
-      array[i] = i;
-    }
-  }
-}
-*/
-
-/*
-function pattern3_orig() {
-  for (var j = 0; j < 400; j++) {
-    var array = [];
-    for (var i = 0; i < 100000; i+=10) { // initializing array in reverse order makes the array non-contiguous 
-      array[i+10] = i
-      array[i+9] = i
-      array[i+8] = i
-      array[i+7] = i
-      array[i+6] = i
-      array[i+5] = i
-      array[i+4] = i
-      array[i+3] = i
-      array[i+2] = i
-      array[i+1] = i;
-      array[i] = i;
-    }
-  }
-}
-
-function pattern3_fix() {
-  for (var j = 0; j < 400; j++) {
-    var array = [];
-    for (var i = 0; i < 100000; i+=10) {
-      array[i] = i;
-      array[i+1] = i;
-      array[i+2] = i;
-      array[i+3] = i;
-      array[i+4] = i;
-      array[i+5] = i;
-      array[i+6] = i;
-      array[i+7] = i;
-      array[i+8] = i;
-      array[i+9] = i;
-      array[i+10] = i;
-    }
-  }
-}
-*/
 
 function pattern3_orig() {
   for (var j = 0; j < 400; j++) {

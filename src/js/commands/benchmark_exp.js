@@ -153,8 +153,11 @@ function start_experiment(){
 
 function terminate_firefox(){
     // either kill('SIGKILL') or kill('SIGINT') will brutally kill firefox which leads to a warning dialog prompted next time starting firefox
+    console.log('start terminating firefox');
     child_process.exec('osascript -e \'tell application "Crash Reporter" \n quit \n end tell\'');
     child_process.exec('osascript -e \'tell application "Firefox" \n quit \n end tell\'');
+    child_process.exec('osascript -e \'tell application "Crash Reporter" \n quit \n end tell\'');
+    console.log('end terminating firefox');
 }
 
 function test_on_firefox() {
@@ -164,7 +167,10 @@ function test_on_firefox() {
             //browser_process.kill('SIGKILL');
             terminate_firefox();
         }
-        setTimeout(function () {
+        
+
+        setTimeout(function () {    
+            child_process.exec('osascript -e \'tell application "Crash Reporter" \n quit \n end tell\'');
             browser_process = child_process.spawn(config['browser_cmd'][current_label], config['browser_arg'][current_label]);
             fs.writeFileSync(process.cwd() + '/tests/jitaware/experiments/exp_output/console.txt', '');
             browser_process.stdout.on('data', function (data) {
@@ -261,6 +267,7 @@ function test_on_chrome_octane(){
 //start another process to monitor the console.txt output, kill firefox at the right time and start the next round of experiment
 function check_console_output() {
     var stop = false;
+    child_process.exec('osascript -e \'tell application "Crash Reporter" \n quit \n end tell\'');
     console.log('checking console.txt ...');
     try{
         var content = fs.readFileSync(process.cwd() + '/tests/jitaware/experiments/exp_output/console.txt', 'utf8');
@@ -286,6 +293,7 @@ function check_console_output() {
             //console.log(JSON.stringify(content));
         }
     } catch(e) {
+        console.log('fail to check console output');
         console.log(e);
         // do nothing
     }

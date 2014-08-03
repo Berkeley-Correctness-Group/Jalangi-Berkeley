@@ -57,8 +57,6 @@ var j_lm = ((canary&0xffffff)==0xefcafe);
 // (public) Constructor
 function BigInteger(a,b,c) {
   this.array = new Array(); //fix-array analysis: new Uint32Array(75);
-  this.t = 0;
-  this.s = 0;
   if(a != null)
     if("number" == typeof a) this.fromNumber(a,b,c);
     else if(b == null && "string" != typeof a) this.fromString(a,256);
@@ -360,7 +358,6 @@ function bnpLShiftTo(n,r) {
 function bnpRShiftTo(n,r) {
   var this_array = this.array;
   var r_array = r.array;
-  r.s = this.s;
   var ds = Math.floor(n/BI_DB);
   if(ds >= this.t) { r.t = 0; return; }
   var bs = n%BI_DB;
@@ -373,6 +370,7 @@ function bnpRShiftTo(n,r) {
   }
   if(bs > 0) r_array[this.t-ds-1] |= (this.s&bm)<<cbs;
   r.t = this.t-ds;
+  r.s = this.s;
   r.clamp();
 }
 
@@ -405,10 +403,10 @@ function bnpSubTo(a,r) {
     }
     c -= a.s;
   }
-  r.s = (c<0)?-1:0;
   if(c < -1) r_array[i++] = BI_DV+c;
   else if(c > 0) r_array[i++] = c;
   r.t = i;
+  r.s = (c<0)?-1:0;
   r.clamp();
 }
 
@@ -962,10 +960,10 @@ function bnpAddTo(a,r) {
     }
     c += a.s;
   }
-  r.s = (c<0)?-1:0;
   if(c > 0) r_array[i++] = c;
   else if(c < -1) r_array[i++] = BI_DV+c;
   r.t = i;
+  r.s = (c<0)?-1:0;
   r.clamp();
 }
 
@@ -1031,8 +1029,8 @@ function bnpMultiplyLowerTo(a,n,r) {
   var r_array = r.array;
   var a_array = a.array;
   var i = Math.min(this.t+a.t,n);
-  r.s = 0; // assumes a,this >= 0
   r.t = i;
+  r.s = 0; // assumes a,this >= 0
   while(i > 0) r_array[--i] = 0;
   var j;
   for(j = r.t-this.t; i < j; ++i) r_array[i+this.t] = this.am(0,a_array[i],r,i,0,this.t);

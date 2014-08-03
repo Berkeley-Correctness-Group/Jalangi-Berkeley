@@ -1355,6 +1355,7 @@ function Init(CubeSize) {\n\
   Loop();\n\
 }\n\
 \n\
+for ( var j=0;j<100;j++)\n\
 for ( var i = 20; i <= 1600; i *= 2 ) {\n\
   Init(i);\n\
 }\n\
@@ -1865,18 +1866,9 @@ for (var y = 0; y < size; y++) {\\n\\\n\
     return s;\n\
 }\n\
 \n\
+for(var rpt=0;rpt<100;rpt++) {\n\
 testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
-testOutput = arrayToCanvasCommands(raytraceScene());\n\
+}\n\
 \n\
 \n\
 var _sunSpiderInterval = new Date() - _sunSpiderStartDate;\n\
@@ -2286,7 +2278,7 @@ String.escape = function(string) {\n\
 }\n\
 \n\
 String.leftPad = function (val, size, ch) {\n\
-    var result = new String(val);\n\
+    var result = val + '';\n\
     if (ch == null) {\n\
         ch = \" \";\n\
     }\n\
@@ -2673,7 +2665,10 @@ function makeTagCloud(tagInfo)\n\
     return output;\n\
 }\n\
 \n\
-var tagcloud = makeTagCloud(tagInfo);\n\
+var tagcloud;\n\
+for (var i=0;i<100;i++) {\n\
+    tagcloud = makeTagCloud(tagInfo);\n\
+}\n\
 tagInfo = null;\n\
 \n\
 \n\
