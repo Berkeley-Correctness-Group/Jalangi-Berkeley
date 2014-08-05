@@ -2278,7 +2278,7 @@ String.escape = function(string) {\n\
 }\n\
 \n\
 String.leftPad = function (val, size, ch) {\n\
-    var result = val + '';\n\
+    var result = new String(val);\n\
     if (ch == null) {\n\
         ch = \" \";\n\
     }\n\
