@@ -126,3 +126,12 @@ As an alternative to instrumenting JavaScript files on the file system, you can 
 
 Firefox will write the uninstrumented .js files and the instrumented .js files to ```instrumentFF_tmp```, along with the sourcemaps produced by the Jalangi instrumenter. ```instrumentFF``` caches instrumented files to avoid unnecessarily re-instrumenting files. If you modify your analysis, empty the cache by removing all files in ```instrumentFF_tmp``` and by restarting Firefox.
 
+### JITProf: Pinpointing JIT-unfriendly JavaScript Code
+
+The JITProf source code and project README is available at:
+
+https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/tree/master/src/js/analyses/jitaware
+
+The technical report is available at:
+
+http://www.eecs.berkeley.edu/Pubs/TechRpts/2014/EECS-2014-144.html
