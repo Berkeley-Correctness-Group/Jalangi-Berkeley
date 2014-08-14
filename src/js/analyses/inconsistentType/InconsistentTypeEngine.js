@@ -27,7 +27,7 @@
         var callGraph = importModule("CallGraph");
         var beliefPrefix = "ITA_Belief: ";
         var beliefInfix = " has type ";
-        var online = true//sandbox.Constants.isBrowser ? false : true;
+        var online = false;//sandbox.Constants.isBrowser ? false : true;
         var printWarnings = true;
         var visualizeAllTypes = false; // only for node.js execution (i.e., not in browser)
         var visualizeWarningTypes = sandbox.Constants.isBrowser ? false : true; // only for node.js execution (i.e., not in browser)

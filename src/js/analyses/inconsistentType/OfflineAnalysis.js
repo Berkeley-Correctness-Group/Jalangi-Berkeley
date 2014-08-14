@@ -42,7 +42,8 @@
     }
 
     ResultSummary.prototype.toString = function() {
-        return this.name + "," + this.typesAll + "," + this.typesMerged + "," + this.inconsistentTypes + "," + this.warnings + "," + this.bugs;
+//        return this.name + "," + this.typesAll + "," + this.typesMerged + "," + this.inconsistentTypes + "," + this.warnings + "," + this.bugs;
+        return this.name + "," + this.typesAll + "," + this.typesMerged + "," + this.warnings + "," + this.bugs;
     };
 
     function analyze(loggedResults, sourcemapDir, filterMergeConfig) {

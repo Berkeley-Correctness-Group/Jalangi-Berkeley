@@ -73,7 +73,7 @@
             filterByBeliefs:false,
             filterNullRelated:false,
             filterByNbTypes:false,
-            filterByNbTypeDiffEntries:false,
+            filterByNbTypeDiffEntries:true,
             mergeViaDataflow:false,
             mergeByTypeDiff:false,
             mergeSameArray:false
@@ -129,17 +129,17 @@
         allButMergeSameArray:{
             mergeSameArray:false
         },
-        allNbTypes3:{
-            filterByNbTypes:3
-        },
         allNbTypes4:{
             filterByNbTypes:4
         },
-        allNbTypeDiffEntries3:{
-            filterByNbTypeDiffEntries:3
+        allNbTypes6:{
+            filterByNbTypes:6
         },
         allNbTypeDiffEntries4:{
             filterByNbTypeDiffEntries:4
+        },
+        allNbTypeDiffEntries6:{
+            filterByNbTypeDiffEntries:6
         },
         all:{}
     };

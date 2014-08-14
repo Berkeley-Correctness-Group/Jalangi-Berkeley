@@ -24,7 +24,8 @@ setTimeout(bar, 0);
 var x = { n: Number.NaN};
 console.log(x.n);
 
-eval("console.log('evaled code is running'); y = x.n;");
+//eval("console.log('evaled code is running'); y = x.n;");
 
 
 //console.log("hi there");
+
