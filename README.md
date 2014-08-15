@@ -115,7 +115,10 @@ finally after the experiment finished, open the file ```Jalangi-Berkeley/exp_out
 
 As an alternative to instrumenting JavaScript files on the file system, you can instrument JavaScript on the fly in the Firefox browser, using ```instrumentFF```. This setup enables you to easily analyze arbitrary web applications. ```instrumentFF``` will instrument all JavaScript code executed by Firefox, including code given to ```eval()```.
 
-  * Install our custom version of Firefox: [Linux (64 bit)](http://mp.binaervarianz.de/jalangi/firefox-27.0a1.en-US.linux-x86_64.tar.bz2), [Mac OS (64 bit)](http://mp.binaervarianz.de/jalangi/firefox-27.0a1.en-US.mac64.dmg)
+  * Install our custom version of Firefox:
+    * [Linux (64 bit)](http://mp.binaervarianz.de/jalangi/firefox-jalangi-27.0a1.en-US.linux-x86_64_20140815.tar.bz2) (recommended)
+    * [Mac OS (64 bit)](http://mp.binaervarianz.de/jalangi/firefox-jalangi-27.0a1.en-US.mac64_20140520.dmg) (has [this bug](https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/issues/3) related to script-inserted scripts)
+    * Build it yourself by applying [this patch](http://mp.binaervarianz.de/jalangi/firefox_jalangi_20140815.diff) against revision c6fc35c53c37 of the (Mozilla code base)[https://hg.mozilla.org/mozilla-central]
   * Add instrumentFF to your PATH environment variable:
     ```export PATH="/Your/path/to/Jalangi-Berkeley/scripts/path_unix":$PATH```
   * Edit ```scripts/instrumentFF.py```:
