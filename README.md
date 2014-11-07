@@ -1,5 +1,9 @@
 Jalangi
 =======
+
+*Quick link: [JITProf](https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/tree/master/src/js/analyses/jitaware)*
+
+
 ### Introduction
 
 This repository is set up for doing researching on top of Jalangi, which is a dynamic analysis framework for JavaScript.
