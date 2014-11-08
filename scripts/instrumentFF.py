@@ -34,6 +34,7 @@ print("instrumentFF.py called with: %s " % str(sys.argv))
 jalangiBerkeleyBaseDir = os.getcwd()+"/";
 jalangiBaseDir = jalangiBerkeleyBaseDir+"/../jalangi/"
 workingDirName = jalangiBerkeleyBaseDir+"instrumentFF_tmp/"
+urlsFile = workingDirName+"urlsMap.jsonLike"
 
 ## URLs to include
 included = [ r'127.0.0.1', r'^http' ]
@@ -72,9 +73,21 @@ excluded = [ ]
 #   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/DLintPost.js",
 #]
 jalangiAnalysisFiles = [ 
-   jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine3.js",
+   jalangiBaseDir+"src/js/analyses/ChainedAnalyses.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/utils/Utils.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/utils/RuntimeDB.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/TrackHiddenClass.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/PolymorphicFunCall.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/BinaryOpOnUndef.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/NonContiguousArray.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/AccessUndefArrayElem.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/SwitchArrayType.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/TypedArray.js"
 ]
+#jalangiAnalysisFiles = [ 
+#   jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine3.js",
+#]
 #jalangiAnalysis = jalangiBaseDir+"src/js/analyses/logundefinedread/logUndefinedRead.js"
 
 # whether to preprocess code before giving it to the Jalangi instrumenter
@@ -206,7 +219,10 @@ def instrument():
   # add instrumented code  
   f.write(open(instr).read()+"\n\n") 
   f.close()
-    
+  
+  # write original and sanitized URL to file
+  writeURLsToFile(rawRealFileName, uniqueFileName)
+
   if firstTime:
     shutil.copyfile(tmpInstr, instr+"_withJalangiLibs")
   
@@ -245,6 +261,10 @@ def addJalangiLibs(f):
     f.write(open(jalangiAnalysisFile).read())
   f.write("\n\n// END OF JALANGI LIBS\n\n")
 
+def writeURLsToFile(realName, processedName):
+  f = open(urlsFile, 'a')
+  f.write(processedName+": \""+realName+"\",\n") 
+  f.close()
 
 ## main part
 checkUsage()
