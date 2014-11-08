@@ -160,7 +160,7 @@ PdfJS_windowInstall("btoa", function(data) {
           result += PdfJS_window.__to64__[(b2 & 0xF) << 2] + "=";
         } else {
           result += PdfJS_window.__to64__[((b2 & 0xF) << 2) | (b3 >> 6)] +
-          PdfJS_window.__to64__[b3 & 0x3F];
+        PdfJS_window.__to64__[b3 & 0x3F];
         }
       }
     }
@@ -2143,15 +2143,23 @@ function addContextCurrentTransform(ctx) {
 
     ctx.transform = function ctxTransform(a, b, c, d, e, f) {
       var m = this._transformMatrix;
-      this._transformMatrix = [
+      /*this._transformMatrix = [
         m[0] * a + m[2] * b,
         m[1] * a + m[3] * b,
         m[0] * c + m[2] * d,
         m[1] * c + m[3] * d,
         m[0] * e + m[2] * f + m[4],
         m[1] * e + m[3] * f + m[5]
-      ];
-
+      ];*/
+      
+      this._transformMatrix = new Float64Array(6);
+      this._transformMatrix[0] = m[0] * a + m[2] * b;
+      this._transformMatrix[1] = m[1] * a + m[3] * b;
+      this._transformMatrix[2] = m[0] * c + m[2] * d;
+      this._transformMatrix[3] = m[1] * c + m[3] * d;
+      this._transformMatrix[4] = m[0] * e + m[2] * f + m[4];
+      this._transformMatrix[5] = m[1] * e + m[3] * f + m[5];
+      
       ctx._originalTransform(a, b, c, d, e, f);
     };
 
@@ -16504,8 +16512,8 @@ var Font = (function FontClosure() {
           }
           fontCharCode = this.toFontChar[charcode] || charcode;
           break;
-          case 'Type1':
-          var glyphName = (charcode in this.differences)? this.differences[charcode] : this.encoding[charcode];
+        case 'Type1':
+          var glyphName = this.differences[charcode] || this.encoding[charcode];
           if (!isNum(width))
             width = this.widths[glyphName];
           if (this.noUnicodeAdaptation) {
@@ -27240,8 +27248,7 @@ var Stream = (function StreamClosure() {
     this.bytes = new Uint8Array(arrayBuffer);
     this.start = start || 0;
     this.pos = this.start;
-    if(length === undefined) this.end = this.bytes.length;
-    else this.end = (start + length) || this.bytes.length;
+    this.end = (start + length) || this.bytes.length;
     this.dict = dict;
   }
 

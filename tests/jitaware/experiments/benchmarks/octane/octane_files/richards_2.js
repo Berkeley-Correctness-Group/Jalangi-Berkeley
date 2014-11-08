@@ -124,7 +124,7 @@ var KIND_WORK     = 1;
  * @param {int} count the number of times to schedule the task
  */
 Scheduler.prototype.addIdleTask = function (id, priority, queue, count) {
-  this.addRunningTask(id, priority, queue, new IdleTask(this, 1, count),4);
+  this.addRunningTask(id, priority, queue, new IdleTask(this, 1, count));
 };
 
 /**
@@ -134,7 +134,7 @@ Scheduler.prototype.addIdleTask = function (id, priority, queue, count) {
  * @param {Packet} queue the queue of work to be processed by the task
  */
 Scheduler.prototype.addWorkerTask = function (id, priority, queue) {
-  this.addTask(id, priority, queue, new WorkerTask(this, ID_HANDLER_A, 0),2);
+  this.addTask(id, priority, queue, new WorkerTask(this, ID_HANDLER_A, 0));
 };
 
 /**
@@ -144,7 +144,7 @@ Scheduler.prototype.addWorkerTask = function (id, priority, queue) {
  * @param {Packet} queue the queue of work to be processed by the task
  */
 Scheduler.prototype.addHandlerTask = function (id, priority, queue) {
-  this.addTask(id, priority, queue, new HandlerTask(this),3);
+  this.addTask(id, priority, queue, new HandlerTask(this));
 };
 
 /**
@@ -154,7 +154,7 @@ Scheduler.prototype.addHandlerTask = function (id, priority, queue) {
  * @param {Packet} queue the queue of work to be processed by the task
  */
 Scheduler.prototype.addDeviceTask = function (id, priority, queue) {
-  this.addTask(id, priority, queue, new DeviceTask(this),1)
+  this.addTask(id, priority, queue, new DeviceTask(this))
 };
 
 /**
@@ -164,8 +164,8 @@ Scheduler.prototype.addDeviceTask = function (id, priority, queue) {
  * @param {Packet} queue the queue of work to be processed by the task
  * @param {Task} task the task to add
  */
-Scheduler.prototype.addRunningTask = function (id, priority, queue, task, taskType) {
-  this.addTask(id, priority, queue, task, taskType);
+Scheduler.prototype.addRunningTask = function (id, priority, queue, task) {
+  this.addTask(id, priority, queue, task);
   this.currentTcb.setRunning();
 };
 
@@ -176,8 +176,8 @@ Scheduler.prototype.addRunningTask = function (id, priority, queue, task, taskTy
  * @param {Packet} queue the queue of work to be processed by the task
  * @param {Task} task the task to add
  */
-Scheduler.prototype.addTask = function (id, priority, queue, task, taskType) {
-  this.currentTcb = new TaskControlBlock(this.list, id, priority, queue, task, taskType);
+Scheduler.prototype.addTask = function (id, priority, queue, task) {
+  this.currentTcb = new TaskControlBlock(this.list, id, priority, queue, task);
   this.list = this.currentTcb;
   this.blocks[id] = this.currentTcb;
 };
@@ -257,13 +257,12 @@ Scheduler.prototype.queue = function (packet) {
  * @param {Task} task the task
  * @constructor
  */
-function TaskControlBlock(link, id, priority, queue, task, taskType) {
+function TaskControlBlock(link, id, priority, queue, task) {
   this.link = link;
   this.id = id;
   this.priority = priority;
   this.queue = queue;
   this.task = task;
-  this.taskType = taskType;
   if (queue == null) {
     this.state = STATE_SUSPENDED;
   } else {
@@ -335,14 +334,6 @@ TaskControlBlock.prototype.run = function () {
   } else {
     packet = null;
   }
-  /*
-  switch(this.taskType) {
-    case 1: return this.task.run(packet);
-    case 2: return this.task.run(packet);
-    case 3: return this.task.run(packet);
-    case 4: return this.task.run(packet);
-    default: return this.task.run(packet);
-  }*/
   return this.task.run(packet);
 };
 
@@ -526,7 +517,7 @@ function Packet(link, id, kind) {
   this.id = id;
   this.kind = kind;
   this.a1 = 0;
-  this.a2 = new Array(DATA_SIZE);
+  this.a2 = new Uint8Array(DATA_SIZE);
 }
 
 /**

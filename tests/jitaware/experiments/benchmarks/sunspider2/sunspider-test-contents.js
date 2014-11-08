@@ -1,4 +1,4 @@
-var testContents = [ "<!DOCTYPE html>\n\
+var testContents = ["<!DOCTYPE html>\n\
 <head>\n\
 \n\
 <meta charset=utf8>\n\
@@ -2688,6 +2688,960 @@ for (var i=0;i<100;i++) {\n\
     tagcloud = makeTagCloud(tagInfo);\n\
 }\n\
 tagInfo = null;\n\
+\n\
+\n\
+var _sunSpiderInterval = new Date() - _sunSpiderStartDate;\n\
+\n\
+record(_sunSpiderInterval);\n\
+</script>\n\
+\n\
+\n\
+</body>\n\
+</html>\n\
+", "<!DOCTYPE html>\n\
+<head>\n\
+\n\
+<meta charset=utf8>\n\
+\n\
+<!--\n\
+ Copyright (C) 2007 Apple Inc.  All rights reserved.\n\
+\n\
+ Redistribution and use in source and binary forms, with or without\n\
+ modification, are permitted provided that the following conditions\n\
+ are met:\n\
+ 1. Redistributions of source code must retain the above copyright\n\
+    notice, this list of conditions and the following disclaimer.\n\
+ 2. Redistributions in binary form must reproduce the above copyright\n\
+    notice, this list of conditions and the following disclaimer in the\n\
+    documentation and/or other materials provided with the distribution.\n\
+\n\
+ THIS SOFTWARE IS PROVIDED BY APPLE COMPUTER, INC. ``AS IS'' AND ANY\n\
+ EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n\
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\n\
+ PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE COMPUTER, INC. OR\n\
+ CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,\n\
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,\n\
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n\
+ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY\n\
+ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n\
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n\
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. \n\
+-->\n\
+\n\
+<title>SunSpider access-fannkuch</title>\n\
+<link rel=\"stylesheet\" href=\"../sunspider.css\">\n\
+</head>\n\
+\n\
+<body>\n\
+<h3>access-fannkuch</h3>\n\
+<div id=\"console\">\n\
+</div>\n\
+<script>\n\
+function record(time) {\n\
+    document.getElementById(\"console\").innerHTML = time + \"ms\";\n\
+    if (window.parent) {\n\
+        parent.recordResult(time);\n\
+    }\n\
+}\n\
+\n\
+var _sunSpiderStartDate = new Date();\n\
+\n\
+/* The Great Computer Language Shootout\n\
+   http://shootout.alioth.debian.org/\n\
+   contributed by Isaac Gouy */\n\
+\n\
+function fannkuch(n) {\n\
+   var check = 0;\n\
+   var perm = new Uint8Array(n);\n\
+   var perm1 = new Uint8Array(n);\n\
+   var count = new Uint8Array(n);\n\
+   var maxPerm = Array(n);\n\
+   var maxFlipsCount = 0;\n\
+   var m = n - 1;\n\
+\n\
+   for (var i = 0; i < n; i++) perm1[i] = i;\n\
+   var r = n;\n\
+\n\
+   while (true) {\n\
+      // write-out the first 30 permutations\n\
+      if (check < 30){\n\
+         var s = \"\";\n\
+         for(var i=0; i<n; i++) s += (perm1[i]+1).toString();\n\
+         check++;\n\
+      }\n\
+\n\
+      while (r != 1) { count[r - 1] = r; r--; }\n\
+      if (!(perm1[0] == 0 || perm1[m] == m)) {\n\
+         for (var i = 0; i < n; i++) perm[i] = perm1[i];\n\
+\n\
+         var flipsCount = 0;\n\
+         var k;\n\
+\n\
+         while (!((k = perm[0]) == 0)) {\n\
+            var k2 = (k + 1) >> 1;\n\
+            for (var i = 0; i < k2; i++) {\n\
+               var temp = perm[i]; perm[i] = perm[k - i]; perm[k - i] = temp;\n\
+            }\n\
+            flipsCount++;\n\
+         }\n\
+\n\
+         if (flipsCount > maxFlipsCount) {\n\
+            maxFlipsCount = flipsCount;\n\
+            for (var i = 0; i < n; i++) maxPerm[i] = perm1[i];\n\
+         }\n\
+      }\n\
+\n\
+      while (true) {\n\
+         if (r == n) return maxFlipsCount;\n\
+         var perm0 = perm1[0];\n\
+         var i = 0;\n\
+         while (i < r) {\n\
+            var j = i + 1;\n\
+            perm1[i] = perm1[j];\n\
+            i = j;\n\
+         }\n\
+         perm1[r] = perm0;\n\
+\n\
+         count[r] = count[r] - 1;\n\
+         if (count[r] > 0) break;\n\
+         r++;\n\
+      }\n\
+   }\n\
+}\n\
+\n\
+var n = 9;\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+var ret = fannkuch(n);\n\
+\n\
+\n\
+\n\
+var _sunSpiderInterval = new Date() - _sunSpiderStartDate;\n\
+\n\
+record(_sunSpiderInterval);\n\
+</script>\n\
+\n\
+\n\
+</body>\n\
+</html>\n\
+", "<!DOCTYPE html>\n\
+<head>\n\
+\n\
+<meta charset=utf8>\n\
+\n\
+<!--\n\
+ Copyright (C) 2007 Apple Inc.  All rights reserved.\n\
+\n\
+ Redistribution and use in source and binary forms, with or without\n\
+ modification, are permitted provided that the following conditions\n\
+ are met:\n\
+ 1. Redistributions of source code must retain the above copyright\n\
+    notice, this list of conditions and the following disclaimer.\n\
+ 2. Redistributions in binary form must reproduce the above copyright\n\
+    notice, this list of conditions and the following disclaimer in the\n\
+    documentation and/or other materials provided with the distribution.\n\
+\n\
+ THIS SOFTWARE IS PROVIDED BY APPLE COMPUTER, INC. ``AS IS'' AND ANY\n\
+ EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n\
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\n\
+ PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE COMPUTER, INC. OR\n\
+ CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,\n\
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,\n\
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n\
+ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY\n\
+ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n\
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n\
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. \n\
+-->\n\
+\n\
+<title>SunSpider 3d-morph</title>\n\
+<link rel=\"stylesheet\" href=\"../sunspider.css\">\n\
+</head>\n\
+\n\
+<body>\n\
+<h3>3d-morph</h3>\n\
+<div id=\"console\">\n\
+</div>\n\
+<script>\n\
+function record(time) {\n\
+    document.getElementById(\"console\").innerHTML = time + \"ms\";\n\
+    if (window.parent) {\n\
+        parent.recordResult(time);\n\
+    }\n\
+}\n\
+\n\
+var _sunSpiderStartDate = new Date();\n\
+\n\
+/*\n\
+ * Copyright (C) 2007 Apple Inc.  All rights reserved.\n\
+ *\n\
+ * Redistribution and use in source and binary forms, with or without\n\
+ * modification, are permitted provided that the following conditions\n\
+ * are met:\n\
+ * 1. Redistributions of source code must retain the above copyright\n\
+ *    notice, this list of conditions and the following disclaimer.\n\
+ * 2. Redistributions in binary form must reproduce the above copyright\n\
+ *    notice, this list of conditions and the following disclaimer in the\n\
+ *    documentation and/or other materials provided with the distribution.\n\
+ *\n\
+ * THIS SOFTWARE IS PROVIDED BY APPLE COMPUTER, INC. ``AS IS'' AND ANY\n\
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n\
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\n\
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE COMPUTER, INC. OR\n\
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,\n\
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,\n\
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n\
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY\n\
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n\
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n\
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. \n\
+ */\n\
+\n\
+var loops = 100000\n\
+var nx = 12\n\
+var nz = 12\n\
+\n\
+function morph(a, f) {\n\
+    var PI2nx = Math.PI * 8/nx\n\
+    var sin = Math.sin\n\
+    var f30 = -(50 * sin(f*Math.PI*2))\n\
+    \n\
+    for (var i = 0; i < nz; ++i) {\n\
+        for (var j = 0; j < nx; ++j) {\n\
+            a[3*(i*nx+j)+1]    = sin((j-1) * PI2nx ) * -f30\n\
+        }\n\
+    }\n\
+}\n\
+\n\
+    \n\
+var a = new Float64Array(nx*nz*3);\n\
+for (var i=0; i < nx*nz*3; ++i) \n\
+    a[i] = 0\n\
+\n\
+for (var i = 0; i < loops; ++i) {\n\
+    morph(a, i/loops)\n\
+}\n\
+\n\
+testOutput = 0;\n\
+for (var i = 0; i < nx; i++)\n\
+    testOutput += a[3*(i*nx+i)+1];\n\
+a = null;\n\
+\n\
+\n\
+var _sunSpiderInterval = new Date() - _sunSpiderStartDate;\n\
+\n\
+record(_sunSpiderInterval);\n\
+</script>\n\
+\n\
+\n\
+</body>\n\
+</html>\n\
+", "<!DOCTYPE html>\n\
+<head>\n\
+\n\
+<meta charset=utf8>\n\
+\n\
+<!--\n\
+ Copyright (C) 2007 Apple Inc.  All rights reserved.\n\
+\n\
+ Redistribution and use in source and binary forms, with or without\n\
+ modification, are permitted provided that the following conditions\n\
+ are met:\n\
+ 1. Redistributions of source code must retain the above copyright\n\
+    notice, this list of conditions and the following disclaimer.\n\
+ 2. Redistributions in binary form must reproduce the above copyright\n\
+    notice, this list of conditions and the following disclaimer in the\n\
+    documentation and/or other materials provided with the distribution.\n\
+\n\
+ THIS SOFTWARE IS PROVIDED BY APPLE COMPUTER, INC. ``AS IS'' AND ANY\n\
+ EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n\
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\n\
+ PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE COMPUTER, INC. OR\n\
+ CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,\n\
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,\n\
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n\
+ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY\n\
+ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n\
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n\
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. \n\
+-->\n\
+\n\
+<title>SunSpider crypto-aes</title>\n\
+<link rel=\"stylesheet\" href=\"../sunspider.css\">\n\
+</head>\n\
+\n\
+<body>\n\
+<h3>crypto-aes</h3>\n\
+<div id=\"console\">\n\
+</div>\n\
+<script>\n\
+function record(time) {\n\
+    document.getElementById(\"console\").innerHTML = time + \"ms\";\n\
+    if (window.parent) {\n\
+        parent.recordResult(time);\n\
+    }\n\
+}\n\
+\n\
+var _sunSpiderStartDate = new Date();\n\
+\n\
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */\n\
+\n\
+/*\n\
+ * AES Cipher function: encrypt 'input' with Rijndael algorithm\n\
+ *\n\
+ *   takes   byte-array 'input' (16 bytes)\n\
+ *           2D byte-array key schedule 'w' (Nr+1 x Nb bytes)\n\
+ *\n\
+ *   applies Nr rounds (10/12/14) using key schedule w for 'add round key' stage\n\
+ *\n\
+ *   returns byte-array encrypted value (16 bytes)\n\
+ */\n\
+function Cipher(input, w) {    // main Cipher function [Â§5.1]\n\
+  var Nb = 4;               // block size (in words): no of columns in state (fixed at 4 for AES)\n\
+  var Nr = w.length/Nb - 1; // no of rounds: 10/12/14 for 128/192/256-bit keys\n\
+\n\
+  var state = [new Int16Array(4),new Int16Array(4),new Int16Array(4),new Int16Array(4)];  // initialise 4xNb byte-array 'state' with input [Â§3.4]\n\
+  for (var i=0; i<4*Nb; i++) state[i%4][Math.floor(i/4)] = input[i];\n\
+\n\
+  state = AddRoundKey(state, w, 0, Nb);\n\
+\n\
+  for (var round=1; round<Nr; round++) {\n\
+    state = SubBytes(state, Nb);\n\
+    state = ShiftRows(state, Nb);\n\
+    state = MixColumns(state, Nb);\n\
+    state = AddRoundKey(state, w, round, Nb);\n\
+  }\n\
+\n\
+  state = SubBytes(state, Nb);\n\
+  state = ShiftRows(state, Nb);\n\
+  state = AddRoundKey(state, w, Nr, Nb);\n\
+\n\
+  var output = new Array(4*Nb);  // convert state to 1-d array before returning [Â§3.4]\n\
+  for (var i=0; i<4*Nb; i++) output[i] = state[i%4][Math.floor(i/4)];\n\
+  return output;\n\
+}\n\
+\n\
+\n\
+function SubBytes(s, Nb) {    // apply SBox to state S [Â§5.1.1]\n\
+  for (var r=0; r<4; r++) {\n\
+    for (var c=0; c<Nb; c++) s[r][c] = Sbox[s[r][c]];\n\
+  }\n\
+  return s;\n\
+}\n\
+\n\
+\n\
+function ShiftRows(s, Nb) {    // shift row r of state S left by r bytes [Â§5.1.2]\n\
+  var t = new Int16Array(4);\n\
+  for (var r=1; r<4; r++) {\n\
+    for (var c=0; c<4; c++) t[c] = s[r][(c+r)%Nb];  // shift into temp copy\n\
+    for (var c=0; c<4; c++) s[r][c] = t[c];         // and copy back\n\
+  }          // note that this will work for Nb=4,5,6, but not 7,8 (always 4 for AES):\n\
+  return s;  // see fp.gladman.plus.com/cryptography_technology/rijndael/aes.spec.311.pdf \n\
+}\n\
+\n\
+\n\
+function MixColumns(s, Nb) {   // combine bytes of each col of state S [Â§5.1.3]\n\
+  for (var c=0; c<4; c++) {\n\
+    var a = new Int16Array(4);  // 'a' is a copy of the current column from 's'\n\
+    var b = new Int16Array(4);  // 'b' is aâ€¢{02} in GF(2^8)\n\
+    for (var i=0; i<4; i++) {\n\
+      a[i] = s[i][c];\n\
+      b[i] = s[i][c]&0x80 ? s[i][c]<<1 ^ 0x011b : s[i][c]<<1;\n\
+    }\n\
+    // a[n] ^ b[n] is aâ€¢{03} in GF(2^8)\n\
+    s[0][c] = b[0] ^ a[1] ^ b[1] ^ a[2] ^ a[3]; // 2*a0 + 3*a1 + a2 + a3\n\
+    s[1][c] = a[0] ^ b[1] ^ a[2] ^ b[2] ^ a[3]; // a0 * 2*a1 + 3*a2 + a3\n\
+    s[2][c] = a[0] ^ a[1] ^ b[2] ^ a[3] ^ b[3]; // a0 + a1 + 2*a2 + 3*a3\n\
+    s[3][c] = a[0] ^ b[0] ^ a[1] ^ a[2] ^ b[3]; // 3*a0 + a1 + a2 + 2*a3\n\
+  }\n\
+  return s;\n\
+}\n\
+\n\
+\n\
+function AddRoundKey(state, w, rnd, Nb) {  // xor Round Key into state S [Â§5.1.4]\n\
+  for (var r=0; r<4; r++) {\n\
+    for (var c=0; c<Nb; c++) state[r][c] ^= w[rnd*4+c][r];\n\
+  }\n\
+  return state;\n\
+}\n\
+\n\
+\n\
+function KeyExpansion(key) {  // generate Key Schedule (byte-array Nr+1 x Nb) from Key [Â§5.2]\n\
+  var Nb = 4;            // block size (in words): no of columns in state (fixed at 4 for AES)\n\
+  var Nk = key.length/4  // key length (in words): 4/6/8 for 128/192/256-bit keys\n\
+  var Nr = Nk + 6;       // no of rounds: 10/12/14 for 128/192/256-bit keys\n\
+\n\
+  var w = new Array(Nb*(Nr+1));\n\
+  var temp = new Int16Array(4);\n\
+\n\
+  for (var i=0; i<Nk; i++) {\n\
+    var r = [key[4*i], key[4*i+1], key[4*i+2], key[4*i+3]];\n\
+    w[i] = r;\n\
+  }\n\
+\n\
+  for (var i=Nk; i<(Nb*(Nr+1)); i++) {\n\
+    w[i] = new Int16Array(4);\n\
+    for (var t=0; t<4; t++) temp[t] = w[i-1][t];\n\
+    if (i % Nk == 0) {\n\
+      temp = SubWord(RotWord(temp));\n\
+      for (var t=0; t<4; t++) temp[t] ^= Rcon[i/Nk][t];\n\
+    } else if (Nk > 6 && i%Nk == 4) {\n\
+      temp = SubWord(temp);\n\
+    }\n\
+    for (var t=0; t<4; t++) w[i][t] = w[i-Nk][t] ^ temp[t];\n\
+  }\n\
+\n\
+  return w;\n\
+}\n\
+\n\
+function SubWord(w) {    // apply SBox to 4-byte word w\n\
+  for (var i=0; i<4; i++) w[i] = Sbox[w[i]];\n\
+  return w;\n\
+}\n\
+\n\
+function RotWord(w) {    // rotate 4-byte word w left by one byte\n\
+  w[4] = w[0];\n\
+  for (var i=0; i<4; i++) w[i] = w[i+1];\n\
+  return w;\n\
+}\n\
+\n\
+\n\
+// Sbox is pre-computed multiplicative inverse in GF(2^8) used in SubBytes and KeyExpansion [Â§5.1.1]\n\
+var Sbox =  [0x63,0x7c,0x77,0x7b,0xf2,0x6b,0x6f,0xc5,0x30,0x01,0x67,0x2b,0xfe,0xd7,0xab,0x76,\n\
+             0xca,0x82,0xc9,0x7d,0xfa,0x59,0x47,0xf0,0xad,0xd4,0xa2,0xaf,0x9c,0xa4,0x72,0xc0,\n\
+             0xb7,0xfd,0x93,0x26,0x36,0x3f,0xf7,0xcc,0x34,0xa5,0xe5,0xf1,0x71,0xd8,0x31,0x15,\n\
+             0x04,0xc7,0x23,0xc3,0x18,0x96,0x05,0x9a,0x07,0x12,0x80,0xe2,0xeb,0x27,0xb2,0x75,\n\
+             0x09,0x83,0x2c,0x1a,0x1b,0x6e,0x5a,0xa0,0x52,0x3b,0xd6,0xb3,0x29,0xe3,0x2f,0x84,\n\
+             0x53,0xd1,0x00,0xed,0x20,0xfc,0xb1,0x5b,0x6a,0xcb,0xbe,0x39,0x4a,0x4c,0x58,0xcf,\n\
+             0xd0,0xef,0xaa,0xfb,0x43,0x4d,0x33,0x85,0x45,0xf9,0x02,0x7f,0x50,0x3c,0x9f,0xa8,\n\
+             0x51,0xa3,0x40,0x8f,0x92,0x9d,0x38,0xf5,0xbc,0xb6,0xda,0x21,0x10,0xff,0xf3,0xd2,\n\
+             0xcd,0x0c,0x13,0xec,0x5f,0x97,0x44,0x17,0xc4,0xa7,0x7e,0x3d,0x64,0x5d,0x19,0x73,\n\
+             0x60,0x81,0x4f,0xdc,0x22,0x2a,0x90,0x88,0x46,0xee,0xb8,0x14,0xde,0x5e,0x0b,0xdb,\n\
+             0xe0,0x32,0x3a,0x0a,0x49,0x06,0x24,0x5c,0xc2,0xd3,0xac,0x62,0x91,0x95,0xe4,0x79,\n\
+             0xe7,0xc8,0x37,0x6d,0x8d,0xd5,0x4e,0xa9,0x6c,0x56,0xf4,0xea,0x65,0x7a,0xae,0x08,\n\
+             0xba,0x78,0x25,0x2e,0x1c,0xa6,0xb4,0xc6,0xe8,0xdd,0x74,0x1f,0x4b,0xbd,0x8b,0x8a,\n\
+             0x70,0x3e,0xb5,0x66,0x48,0x03,0xf6,0x0e,0x61,0x35,0x57,0xb9,0x86,0xc1,0x1d,0x9e,\n\
+             0xe1,0xf8,0x98,0x11,0x69,0xd9,0x8e,0x94,0x9b,0x1e,0x87,0xe9,0xce,0x55,0x28,0xdf,\n\
+             0x8c,0xa1,0x89,0x0d,0xbf,0xe6,0x42,0x68,0x41,0x99,0x2d,0x0f,0xb0,0x54,0xbb,0x16];\n\
+\n\
+// Rcon is Round Constant used for the Key Expansion [1st col is 2^(r-1) in GF(2^8)] [Â§5.2]\n\
+var Rcon = [ [0x00, 0x00, 0x00, 0x00],\n\
+             [0x01, 0x00, 0x00, 0x00],\n\
+             [0x02, 0x00, 0x00, 0x00],\n\
+             [0x04, 0x00, 0x00, 0x00],\n\
+             [0x08, 0x00, 0x00, 0x00],\n\
+             [0x10, 0x00, 0x00, 0x00],\n\
+             [0x20, 0x00, 0x00, 0x00],\n\
+             [0x40, 0x00, 0x00, 0x00],\n\
+             [0x80, 0x00, 0x00, 0x00],\n\
+             [0x1b, 0x00, 0x00, 0x00],\n\
+             [0x36, 0x00, 0x00, 0x00] ]; \n\
+\n\
+\n\
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */\n\
+\n\
+/* \n\
+ * Use AES to encrypt 'plaintext' with 'password' using 'nBits' key, in 'Counter' mode of operation\n\
+ *                           - see http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf\n\
+ *   for each block\n\
+ *   - outputblock = cipher(counter, key)\n\
+ *   - cipherblock = plaintext xor outputblock\n\
+ */\n\
+function AESEncryptCtr(plaintext, password, nBits) {\n\
+  if (!(nBits==128 || nBits==192 || nBits==256)) return '';  // standard allows 128/192/256 bit keys\n\
+\n\
+  // for this example script, generate the key by applying Cipher to 1st 16/24/32 chars of password; \n\
+  // for real-world applications, a more secure approach would be to hash the password e.g. with SHA-1\n\
+  var nBytes = nBits/8;  // no bytes in key\n\
+  var pwBytes = new Array(nBytes);\n\
+  for (var i=0; i<nBytes; i++) pwBytes[i] = password.charCodeAt(i) & 0xff;\n\
+  var key = Cipher(pwBytes, KeyExpansion(pwBytes));\n\
+  key = key.concat(key.slice(0, nBytes-16));  // key is now 16/24/32 bytes long\n\
+\n\
+  // initialise counter block (NIST SP800-38A Â§B.2): millisecond time-stamp for nonce in 1st 8 bytes,\n\
+  // block counter in 2nd 8 bytes\n\
+  var blockSize = 16;  // block size fixed at 16 bytes / 128 bits (Nb=4) for AES\n\
+  var counterBlock = new Int16Array(blockSize);  // block size fixed at 16 bytes / 128 bits (Nb=4) for AES\n\
+  var nonce = (new Date()).getTime();  // milliseconds since 1-Jan-1970\n\
+\n\
+  // encode nonce in two stages to cater for JavaScript 32-bit limit on bitwise ops\n\
+  for (var i=0; i<4; i++) counterBlock[i] = (nonce >>> i*8) & 0xff;\n\
+  for (var i=0; i<4; i++) counterBlock[i+4] = (nonce/0x100000000 >>> i*8) & 0xff; \n\
+\n\
+  // generate key schedule - an expansion of the key into distinct Key Rounds for each round\n\
+  var keySchedule = KeyExpansion(key);\n\
+\n\
+  var blockCount = Math.ceil(plaintext.length/blockSize);\n\
+  var ciphertext = new Array(blockCount);  // ciphertext as array of strings\n\
+  \n\
+  for (var b=0; b<blockCount; b++) {\n\
+    // set counter (block #) in last 8 bytes of counter block (leaving nonce in 1st 8 bytes)\n\
+    // again done in two stages for 32-bit ops\n\
+    for (var c=0; c<4; c++) counterBlock[15-c] = (b >>> c*8) & 0xff;\n\
+    for (var c=0; c<4; c++) counterBlock[15-c-4] = (b/0x100000000 >>> c*8)\n\
+\n\
+    var cipherCntr = Cipher(counterBlock, keySchedule);  // -- encrypt counter block --\n\
+    \n\
+    // calculate length of final block:\n\
+    var blockLength = b<blockCount-1 ? blockSize : (plaintext.length-1)%blockSize+1;\n\
+\n\
+    var ct = '';\n\
+    for (var i=0; i<blockLength; i++) {  // -- xor plaintext with ciphered counter byte-by-byte --\n\
+      var plaintextByte = plaintext.charCodeAt(b*blockSize+i);\n\
+      var cipherByte = plaintextByte ^ cipherCntr[i];\n\
+      ct += String.fromCharCode(cipherByte);\n\
+    }\n\
+    // ct is now ciphertext for this block\n\
+\n\
+    ciphertext[b] = escCtrlChars(ct);  // escape troublesome characters in ciphertext\n\
+  }\n\
+\n\
+  // convert the nonce to a string to go on the front of the ciphertext\n\
+  var ctrTxt = '';\n\
+  for (var i=0; i<8; i++) ctrTxt += String.fromCharCode(counterBlock[i]);\n\
+  ctrTxt = escCtrlChars(ctrTxt);\n\
+\n\
+  // use '-' to separate blocks, use Array.join to concatenate arrays of strings for efficiency\n\
+  return ctrTxt + '-' + ciphertext.join('-');\n\
+}\n\
+\n\
+\n\
+/* \n\
+ * Use AES to decrypt 'ciphertext' with 'password' using 'nBits' key, in Counter mode of operation\n\
+ *\n\
+ *   for each block\n\
+ *   - outputblock = cipher(counter, key)\n\
+ *   - cipherblock = plaintext xor outputblock\n\
+ */\n\
+function AESDecryptCtr(ciphertext, password, nBits) {\n\
+  if (!(nBits==128 || nBits==192 || nBits==256)) return '';  // standard allows 128/192/256 bit keys\n\
+\n\
+  var nBytes = nBits/8;  // no bytes in key\n\
+  var pwBytes = new Array(nBytes);\n\
+  for (var i=0; i<nBytes; i++) pwBytes[i] = password.charCodeAt(i) & 0xff;\n\
+  var pwKeySchedule = KeyExpansion(pwBytes);\n\
+  var key = Cipher(pwBytes, pwKeySchedule);\n\
+  key = key.concat(key.slice(0, nBytes-16));  // key is now 16/24/32 bytes long\n\
+\n\
+  var keySchedule = KeyExpansion(key);\n\
+\n\
+  ciphertext = ciphertext.split('-');  // split ciphertext into array of block-length strings \n\
+\n\
+  // recover nonce from 1st element of ciphertext\n\
+  var blockSize = 16;  // block size fixed at 16 bytes / 128 bits (Nb=4) for AES\n\
+  var counterBlock = new Int16Array(blockSize);\n\
+  var ctrTxt = unescCtrlChars(ciphertext[0]);\n\
+  for (var i=0; i<8; i++) counterBlock[i] = ctrTxt.charCodeAt(i);\n\
+\n\
+  var plaintext = new Array(ciphertext.length-1);\n\
+\n\
+  for (var b=1; b<ciphertext.length; b++) {\n\
+    // set counter (block #) in last 8 bytes of counter block (leaving nonce in 1st 8 bytes)\n\
+    for (var c=0; c<4; c++) counterBlock[15-c] = ((b-1) >>> c*8) & 0xff;\n\
+    for (var c=0; c<4; c++) counterBlock[15-c-4] = ((b/0x100000000-1) >>> c*8) & 0xff;\n\
+\n\
+    var cipherCntr = Cipher(counterBlock, keySchedule);  // encrypt counter block\n\
+\n\
+    ciphertext[b] = unescCtrlChars(ciphertext[b]);\n\
+\n\
+    var pt = '';\n\
+    for (var i=0; i<ciphertext[b].length; i++) {\n\
+      // -- xor plaintext with ciphered counter byte-by-byte --\n\
+      var ciphertextByte = ciphertext[b].charCodeAt(i);\n\
+      var plaintextByte = ciphertextByte ^ cipherCntr[i];\n\
+      pt += String.fromCharCode(plaintextByte);\n\
+    }\n\
+    // pt is now plaintext for this block\n\
+\n\
+    plaintext[b-1] = pt;  // b-1 'cos no initial nonce block in plaintext\n\
+  }\n\
+\n\
+  return plaintext.join('');\n\
+}\n\
+\n\
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */\n\
+\n\
+function escCtrlChars(str) {  // escape control chars which might cause problems handling ciphertext\n\
+  return str.replace(/[\\0\\t\\n\\v\\f\\r\\xa0'\"!-]/g, function(c) { return '!' + c.charCodeAt(0) + '!'; });\n\
+}  // \\xa0 to cater for bug in Firefox; include '-' to leave it free for use as a block marker\n\
+\n\
+function unescCtrlChars(str) {  // unescape potentially problematic control characters\n\
+  return str.replace(/!\\d\\d?\\d?!/g, function(c) { return String.fromCharCode(c.slice(1,-1)); });\n\
+}\n\
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */\n\
+\n\
+/*\n\
+ * if escCtrlChars()/unescCtrlChars() still gives problems, use encodeBase64()/decodeBase64() instead\n\
+ */\n\
+var b64 = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=\";\n\
+\n\
+function encodeBase64(str) {  // http://tools.ietf.org/html/rfc4648\n\
+   var o1, o2, o3, h1, h2, h3, h4, bits, i=0, enc='';\n\
+   \n\
+   str = encodeUTF8(str);  // encode multi-byte chars into UTF-8 for byte-array\n\
+\n\
+   do {  // pack three octets into four hexets\n\
+      o1 = str.charCodeAt(i++);\n\
+      o2 = str.charCodeAt(i++);\n\
+      o3 = str.charCodeAt(i++);\n\
+      \n\
+      bits = o1<<16 | o2<<8 | o3;\n\
+      \n\
+      h1 = bits>>18 & 0x3f;\n\
+      h2 = bits>>12 & 0x3f;\n\
+      h3 = bits>>6 & 0x3f;\n\
+      h4 = bits & 0x3f;\n\
+      \n\
+      // end of string? index to '=' in b64\n\
+      if (isNaN(o3)) h4 = 64;\n\
+      if (isNaN(o2)) h3 = 64;\n\
+      \n\
+      // use hexets to index into b64, and append result to encoded string\n\
+      enc += b64.charAt(h1) + b64.charAt(h2) + b64.charAt(h3) + b64.charAt(h4);\n\
+   } while (i < str.length);\n\
+   \n\
+   return enc;\n\
+}\n\
+\n\
+function decodeBase64(str) {\n\
+   var o1, o2, o3, h1, h2, h3, h4, bits, i=0, enc='';\n\
+\n\
+   do {  // unpack four hexets into three octets using index points in b64\n\
+      h1 = b64.indexOf(str.charAt(i++));\n\
+      h2 = b64.indexOf(str.charAt(i++));\n\
+      h3 = b64.indexOf(str.charAt(i++));\n\
+      h4 = b64.indexOf(str.charAt(i++));\n\
+      \n\
+      bits = h1<<18 | h2<<12 | h3<<6 | h4;\n\
+      \n\
+      o1 = bits>>16 & 0xff;\n\
+      o2 = bits>>8 & 0xff;\n\
+      o3 = bits & 0xff;\n\
+      \n\
+      if (h3 == 64)      enc += String.fromCharCode(o1);\n\
+      else if (h4 == 64) enc += String.fromCharCode(o1, o2);\n\
+      else               enc += String.fromCharCode(o1, o2, o3);\n\
+   } while (i < str.length);\n\
+\n\
+   return decodeUTF8(enc);  // decode UTF-8 byte-array back to Unicode\n\
+}\n\
+\n\
+function encodeUTF8(str) {  // encode multi-byte string into utf-8 multiple single-byte characters \n\
+  str = str.replace(\n\
+      /[\\u0080-\\u07ff]/g,  // U+0080 - U+07FF = 2-byte chars\n\
+      function(c) { \n\
+        var cc = c.charCodeAt(0);\n\
+        return String.fromCharCode(0xc0 | cc>>6, 0x80 | cc&0x3f); }\n\
+    );\n\
+  str = str.replace(\n\
+      /[\\u0800-\\uffff]/g,  // U+0800 - U+FFFF = 3-byte chars\n\
+      function(c) { \n\
+        var cc = c.charCodeAt(0); \n\
+        return String.fromCharCode(0xe0 | cc>>12, 0x80 | cc>>6&0x3F, 0x80 | cc&0x3f); }\n\
+    );\n\
+  return str;\n\
+}\n\
+\n\
+function decodeUTF8(str) {  // decode utf-8 encoded string back into multi-byte characters\n\
+  str = str.replace(\n\
+      /[\\u00c0-\\u00df][\\u0080-\\u00bf]/g,                 // 2-byte chars\n\
+      function(c) { \n\
+        var cc = (c.charCodeAt(0)&0x1f)<<6 | c.charCodeAt(1)&0x3f;\n\
+        return String.fromCharCode(cc); }\n\
+    );\n\
+  str = str.replace(\n\
+      /[\\u00e0-\\u00ef][\\u0080-\\u00bf][\\u0080-\\u00bf]/g,  // 3-byte chars\n\
+      function(c) { \n\
+        var cc = (c.charCodeAt(0)&0x0f)<<12 | (c.charCodeAt(1)&0x3f<<6) | c.charCodeAt(2)&0x3f; \n\
+        return String.fromCharCode(cc); }\n\
+    );\n\
+  return str;\n\
+}\n\
+\n\
+\n\
+function byteArrayToHexStr(b) {  // convert byte array to hex string for displaying test vectors\n\
+  var s = '';\n\
+  for (var i=0; i<b.length; i++) s += b[i].toString(16) + ' ';\n\
+  return s;\n\
+}\n\
+\n\
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */\n\
+\n\
+\n\
+var plainText = '';\n\
+for(var round=0;round<5;round++)\n\
+plainText += \"ROMEO: But, soft! what light through yonder window breaks?\\n\\\n\
+It is the east, and Juliet is the sun.\\n\\\n\
+Arise, fair sun, and kill the envious moon,\\n\\\n\
+Who is already sick and pale with grief,\\n\\\n\
+That thou her maid art far more fair than she:\\n\\\n\
+Be not her maid, since she is envious;\\n\\\n\
+Her vestal livery is but sick and green\\n\\\n\
+And none but fools do wear it; cast it off.\\n\\\n\
+It is my lady, O, it is my love!\\n\\\n\
+O, that she knew she were!\\n\\\n\
+She speaks yet she says nothing: what of that?\\n\\\n\
+Her eye discourses; I will answer it.\\n\\\n\
+I am too bold, 'tis not to me she speaks:\\n\\\n\
+Two of the fairest stars in all the heaven,\\n\\\n\
+Having some business, do entreat her eyes\\n\\\n\
+To twinkle in their spheres till they return.\\n\\\n\
+What if her eyes were there, they in her head?\\n\\\n\
+The brightness of her cheek would shame those stars,\\n\\\n\
+As daylight doth a lamp; her eyes in heaven\\n\\\n\
+Would through the airy region stream so bright\\n\\\n\
+That birds would sing and think it were not night.\\n\\\n\
+See, how she leans her cheek upon her hand!\\n\\\n\
+O, that I were a glove upon that hand,\\n\\\n\
+That I might touch that cheek!\\n\\\n\
+JULIET: Ay me!\\n\\\n\
+ROMEO: She speaks:\\n\\\n\
+O, speak again, bright angel! for thou art\\n\\\n\
+As glorious to this night, being o'er my head\\n\\\n\
+As is a winged messenger of heaven\\n\\\n\
+Unto the white-upturned wondering eyes\\n\\\n\
+Of mortals that fall back to gaze on him\\n\\\n\
+When he bestrides the lazy-pacing clouds\\n\\\n\
+And sails upon the bosom of the air.\";\n\
+\n\
+var password = \"O Romeo, Romeo! wherefore art thou Romeo?\";\n\
+\n\
+var cipherText = AESEncryptCtr(plainText, password, 256);\n\
+var decryptedText = AESDecryptCtr(cipherText, password, 256);\n\
+\n\
+var password = \"O Romeo, Romeo! wherefore art thou?\";\n\
+\n\
+var cipherText = AESEncryptCtr(plainText, password, 256);\n\
+var decryptedText = AESDecryptCtr(cipherText, password, 256);\n\
+\n\
+var password = \"O Romeo! wherefore art thou?\";\n\
+\n\
+var cipherText = AESEncryptCtr(plainText, password, 256);\n\
+var decryptedText = AESDecryptCtr(cipherText, password, 256);\n\
+\n\
+\n\
+var _sunSpiderInterval = new Date() - _sunSpiderStartDate;\n\
+\n\
+record(_sunSpiderInterval);\n\
+</script>\n\
+\n\
+\n\
+</body>\n\
+</html>\n\
+", "<!DOCTYPE html>\n\
+<head>\n\
+\n\
+<meta charset=utf8>\n\
+\n\
+<!--\n\
+ Copyright (C) 2007 Apple Inc.  All rights reserved.\n\
+\n\
+ Redistribution and use in source and binary forms, with or without\n\
+ modification, are permitted provided that the following conditions\n\
+ are met:\n\
+ 1. Redistributions of source code must retain the above copyright\n\
+    notice, this list of conditions and the following disclaimer.\n\
+ 2. Redistributions in binary form must reproduce the above copyright\n\
+    notice, this list of conditions and the following disclaimer in the\n\
+    documentation and/or other materials provided with the distribution.\n\
+\n\
+ THIS SOFTWARE IS PROVIDED BY APPLE COMPUTER, INC. ``AS IS'' AND ANY\n\
+ EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n\
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\n\
+ PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE COMPUTER, INC. OR\n\
+ CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,\n\
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,\n\
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n\
+ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY\n\
+ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n\
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n\
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. \n\
+-->\n\
+\n\
+<title>SunSpider bitops-nsieve-bits</title>\n\
+<link rel=\"stylesheet\" href=\"../sunspider.css\">\n\
+</head>\n\
+\n\
+<body>\n\
+<h3>bitops-nsieve-bits</h3>\n\
+<div id=\"console\">\n\
+</div>\n\
+<script>\n\
+function record(time) {\n\
+    document.getElementById(\"console\").innerHTML = time + \"ms\";\n\
+    if (window.parent) {\n\
+        parent.recordResult(time);\n\
+    }\n\
+}\n\
+\n\
+var _sunSpiderStartDate = new Date();\n\
+\n\
+// The Great Computer Language Shootout\n\
+//  http://shootout.alioth.debian.org\n\
+//\n\
+//  Contributed by Ian Osgood\n\
+\n\
+function pad(n,width) {\n\
+  var s = n.toString();\n\
+  while (s.length < width) s = ' ' + s;\n\
+  return s;\n\
+}\n\
+\n\
+function primes(isPrime, n) {\n\
+  var i, count = 0, m = 10000<<n, size = m+31>>5;\n\
+\n\
+  for (i=0; i<size; i++) isPrime[i] = 0xffffffff;\n\
+\n\
+  for (i=2; i<m; i++)\n\
+    if (isPrime[i>>5] & 1<<(i&31)) {\n\
+      for (var j=i+i; j<m; j+=i)\n\
+        isPrime[j>>5] &= ~(1<<(j&31));\n\
+      count++;\n\
+    }\n\
+}\n\
+\n\
+function sieve() {\n\
+    for (var i = 4; i <= 4; i++) {\n\
+        var isPrime = new Float64Array((10000<<i)+31>>5);\n\
+        for (var round = 0; round < 50; round++) {\n\
+          for (var x = 0; x < isPrime.length; x++)\n\
+            isPrime[x] = 0;\n\
+          primes(isPrime, i);\n\
+        }\n\
+    }\n\
+}\n\
+\n\
+sieve();\n\
+\n\
+\n\
+var _sunSpiderInterval = new Date() - _sunSpiderStartDate;\n\
+\n\
+record(_sunSpiderInterval);\n\
+</script>\n\
+\n\
+\n\
+</body>\n\
+</html>\n\
+", "<!DOCTYPE html>\n\
+<head>\n\
+\n\
+<meta charset=utf8>\n\
+\n\
+<!--\n\
+ Copyright (C) 2007 Apple Inc.  All rights reserved.\n\
+\n\
+ Redistribution and use in source and binary forms, with or without\n\
+ modification, are permitted provided that the following conditions\n\
+ are met:\n\
+ 1. Redistributions of source code must retain the above copyright\n\
+    notice, this list of conditions and the following disclaimer.\n\
+ 2. Redistributions in binary form must reproduce the above copyright\n\
+    notice, this list of conditions and the following disclaimer in the\n\
+    documentation and/or other materials provided with the distribution.\n\
+\n\
+ THIS SOFTWARE IS PROVIDED BY APPLE INC. ``AS IS'' AND ANY\n\
+ EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n\
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\n\
+ PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE INC. OR\n\
+ CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,\n\
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,\n\
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n\
+ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY\n\
+ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n\
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n\
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. \n\
+-->\n\
+\n\
+<title>SunSpider math-spectral-norm</title>\n\
+<link rel=\"stylesheet\" href=\"../sunspider.css\">\n\
+</head>\n\
+\n\
+<body>\n\
+<h3>math-spectral-norm</h3>\n\
+<div id=\"console\">\n\
+</div>\n\
+<script>\n\
+function record(time) {\n\
+    document.getElementById(\"console\").innerHTML = time + \"ms\";\n\
+    if (window.parent) {\n\
+        parent.recordResult(time);\n\
+    }\n\
+}\n\
+\n\
+var _sunSpiderStartDate = new Date();\n\
+\n\
+// The Great Computer Language Shootout\n\
+// http://shootout.alioth.debian.org/\n\
+//\n\
+// contributed by Ian Osgood\n\
+\n\
+function A(i,j) {\n\
+  return 1/((i+j)*(i+j+1)/2+i+1);\n\
+}\n\
+\n\
+function Au(u,v) {\n\
+  for (var i=0; i<u.length; ++i) {\n\
+    var t = 0;\n\
+    for (var j=0; j<u.length; ++j)\n\
+      t += A(i,j) * u[j];\n\
+    v[i] = t;\n\
+  }\n\
+}\n\
+\n\
+function Atu(u,v) {\n\
+  for (var i=0; i<u.length; ++i) {\n\
+    var t = 0;\n\
+    for (var j=0; j<u.length; ++j)\n\
+      t += A(j,i) * u[j];\n\
+    v[i] = t;\n\
+  }\n\
+}\n\
+\n\
+function AtAu(u,v,w) {\n\
+  Au(u,w);\n\
+  Atu(w,v);\n\
+}\n\
+\n\
+function spectralnorm(n) {\n\
+  var i, u=new Float64Array(n), v=new Float64Array(n), w=new Float64Array(n), vv=0, vBv=0;\n\
+  for (i=0; i<n; ++i) {\n\
+    u[i] = 1; v[i] = w[i] = 0;\n\
+  }\n\
+  for (i=0; i<10; ++i) {\n\
+    AtAu(u,v,w);\n\
+    AtAu(v,u,w);\n\
+  }\n\
+  for (i=0; i<n; ++i) {\n\
+    vBv += u[i]*v[i];\n\
+    vv  += v[i]*v[i];\n\
+  }\n\
+  return Math.sqrt(vBv/vv);\n\
+}\n\
+\n\
+for (var i = 6; i <= 48*16; i *= 2) {\n\
+    spectralnorm(i);\n\
+}\n\
 \n\
 \n\
 var _sunSpiderInterval = new Date() - _sunSpiderStartDate;\n\

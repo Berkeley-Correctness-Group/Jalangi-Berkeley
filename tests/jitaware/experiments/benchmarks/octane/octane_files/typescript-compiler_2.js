@@ -10307,7 +10307,6 @@ var TypeScript;
     TypeScript.LexCodeASCIIChars = 128;
     TypeScript.LexKeywordTable = undefined;
     var autoToken = new Array(TypeScript.LexCodeASCIIChars);
-    for(var i=0;i<autoToken.length;i++) autoToken[i] = 0;
     var lexIdStartTable = new Array(TypeScript.LexCodeASCIIChars);
     var unicodeES3IdStart = [
         170, 
@@ -15903,7 +15902,7 @@ var TypeScript;
     var TokenID = TypeScript.TokenID;
     TypeScript.tokenTable = new Array();
     TypeScript.nodeTypeTable = new Array();
-    TypeScript.nodeTypeToTokTable = new Array(); //[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+    TypeScript.nodeTypeToTokTable = new Uint8Array(64);
     TypeScript.noRegexTable = new Array();
     TypeScript.noRegexTable[TokenID.Identifier] = true;
     TypeScript.noRegexTable[TokenID.StringLiteral] = true;
