@@ -230,3 +230,71 @@ function pattern6_fix() {
         y = x | 2;
     }
 }
+
+/*
+
+//////////////////// pattern-8 ////////////////////
+// Array.prototype.push
+
+function pattern8_orig() {
+  for (var i = 0; i < 500000; i++) {
+    var test = [1,2,3,4,5,6,7,8,9,10];
+    var test2 = test.forEach(function (val) {
+      return val + 1;
+    });
+  }
+  
+}
+
+function pattern8_fix() {
+  for (var i = 0; i < 500000; i++) {
+    var test = [1,2,3,4,5,6,7,8,9,10];
+    var test2 = [];
+    var len = test.length;
+    var j=0;
+    while(j<len) {
+      test2[j++] = test[j] + 1;
+    }
+  }
+}
+
+//////////////////// pattern-7 ////////////////////
+// unnecessary use of generic array
+
+function pattern7_orig() {
+  var size = 5000000;
+  var array = new Array(size);
+  for (var i = 0; i < size; i++)
+    array[i % size] = i % 255;
+}
+
+function pattern7_fix() {
+  var size = 5000000;
+  var array = new Uint8Array(size);
+  for (var i = 0; i < size; i++)
+    array[i % size] = i % 255;
+}
+
+
+//////////////////// pattern-9 ////////////////////
+// Array.prototype.slice
+
+function pattern9_orig() {
+  for (var i = 0; i < 500000; i++) {
+    var test = [1,2,3,4,5,6,7,8,9,10];
+    var args = Array.prototype.slice.call(test,0)
+  }
+  
+}
+
+function pattern9_fix() {
+  for (var i = 0; i < 500000; i++) {
+    var test = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    var args = [];
+    for (var x = 0; x < test.length; x++) {
+      args[x] = test[x];
+    }
+  }
+}
+
+*/
