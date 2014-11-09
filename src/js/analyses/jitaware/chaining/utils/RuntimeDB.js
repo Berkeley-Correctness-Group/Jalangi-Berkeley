@@ -16,7 +16,6 @@
 
 // Author: Liang Gong
 
-
 ((function (sandbox) {
     function RuntimeDB() {
         // ---- DB library functions start ----

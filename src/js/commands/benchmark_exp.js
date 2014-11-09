@@ -157,6 +157,8 @@ function terminate_firefox(){
     child_process.exec('osascript -e \'tell application "Crash Reporter" \n quit \n end tell\'');
     child_process.exec('osascript -e \'tell application "Firefox" \n quit \n end tell\'');
     child_process.exec('osascript -e \'tell application "Crash Reporter" \n quit \n end tell\'');
+    child_process.exec('osascript -e \'tell application "Firefox" \n quit \n end tell\'');
+    child_process.exec('osascript -e \'tell application "Crash Reporter" \n quit \n end tell\'');
     console.log('end terminating firefox');
 }
 

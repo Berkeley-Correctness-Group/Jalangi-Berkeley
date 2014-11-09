@@ -27,7 +27,7 @@
  * retrieve properties from objects that can have different hidden classes.
  */
 
-(function (sandbox) {
+(function(sandbox) {
     function TrackHiddenClass() {
         var MIN_CACHE_HITS = 1;
         var iidToLocation = sandbox.iidToLocation;
@@ -44,43 +44,45 @@
         var idToHiddenClass = [];
         var warning_limit = 5;
 
-        function annotateObjectWithCreationLocation(obj, iid) {
-            var sobj = smemory.getShadowObject(obj);
+        function annotateObjectWithCreationLocation(obj, iid, sobj) {
             if (sobj && !sobj.loc) {
                 sobj.loc = iid;
             }
         }
 
-        function getCreationLocation(obj) {
-            var sobj = smemory.getShadowObject(obj);
+        function getCreationLocation(obj, sobj) {
             if (sobj && sobj.loc) {
                 return sobj.loc;
             }
             return -1;
         }
 
-        function isArray (obj) {
-            var isNormalArray =  Array.isArray(obj) || (obj && obj.constructor && (obj instanceof Uint8Array || obj instanceof Uint16Array ||
+        // check if obj is an Array and if false
+        // and if false, return obj's shadow object.
+        // the purpose is to reduce the query of shadow
+        // objects to obtain performance improvement
+        function isArray_getShadow(obj) {
+            var isNormalArray = Array.isArray(obj) || (obj && obj.constructor && (obj instanceof Uint8Array || obj instanceof Uint16Array ||
                 obj instanceof Uint32Array || obj instanceof Uint8ClampedArray ||
                 obj instanceof ArrayBuffer || obj instanceof Int8Array || obj instanceof Int16Array ||
                 obj instanceof Int32Array || obj instanceof Float32Array || obj instanceof Float64Array));
 
-            if(isNormalArray) {
-                return true;
+            if (isNormalArray) {
+                return {isArray: true};
             }
 
-            var shadowObj = smemory.getShadowObject(obj);
-            if(shadowObj) {
-                if(shadowObj.isArgumentsObj) {
-                    return true; // if is arguments object
+            var sobj = smemory.getShadowObject(obj);
+            if (sobj) {
+                if (sobj.isArgumentsObj) {
+                    return {isArray: true}; // if is arguments object
                 }
             }
 
-            return false;
+            return {isArray: false, sobj: sobj};
         }
 
         function isString(obj) {
-            if(obj && (obj instanceof String || typeof obj === 'string')) {
+            if (obj && (obj instanceof String || typeof obj === 'string')) {
                 return true;
             }
 
@@ -89,8 +91,15 @@
 
         function getMetaInfo(iid) {
             var ret;
-            if (!HOP(info, iid)) {
-                ret = info[iid] = {hit:0, miss:0, lastKey:null, keysToCount:{}, objectLocs:{}};
+            //if (!HOP(info, iid)) {
+            if(!(iid in info)) {
+                ret = info[iid] = {
+                    hit: 0,
+                    miss: 0,
+                    lastKey: null,
+                    keysToCount: {},
+                    objectLocs: {}
+                };
             } else {
                 ret = info[iid];
             }
@@ -111,18 +120,17 @@
 
         function getHiddenClassId(hidden) {
             var ret;
-            if ((ret = hidden.id)!==undefined) {
+            if ((ret = hidden.id) !== undefined) {
                 return ret;
             } else {
-                hidden.id = idToHiddenClass.length;
+                ret = hidden.id = idToHiddenClass.length;
                 idToHiddenClass.push(hidden);
-                return hidden.id;
+                return ret;
             }
         }
 
         function getUniqueId(obj) {
             var sobj = smemory.getShadowObject(obj);
-
             if (sobj) {
                 if (sobj.id) {
                     return sobj.id;
@@ -136,14 +144,13 @@
 
         function getKey(obj, fld) {
             var val = obj[fld];
-            if (fld==='__proto__') {
-                return fld+":f"+getUniqueId(val);
+            if (fld === '__proto__') {
+                return fld + ":f" + getUniqueId(val);
             } else if (typeof val === 'function') {
-                return fld+":f"+getUniqueId(val);
+                return fld + ":f" + getUniqueId(val);
             } else {
-                return fld+":n";
+                return fld + ":n";
             }
-
         }
 
         var count = 0;
@@ -153,35 +160,38 @@
                 return node[key];
             } else {
                 count++;
-                return node[key] = {"parent":node, "field":key};
+                return node[key] = {
+                    "parent": node,
+                    "field": key
+                };
             }
         }
 
         function getLayout(hidden) {
             var ret = "";
-            while(hidden) {
+            while (hidden) {
                 if (hidden.field !== undefined)
-                    ret = hidden.field + "|"+ret;
+                    ret = hidden.field + "|" + ret;
                 hidden = hidden.parent;
             }
             return ret;
         }
 
-
-        function getHiddenClass(obj, noCache) {
-            var sobj = smemory.getShadowObject(obj);
+        var f_count = 0;
+        function getHiddenClass(obj, sobj, noCache) {
+            //var sobj = smemory.getShadowObject(obj);
             var ret, key, fld, node;
-
 
             if (sobj) {
                 if (!noCache && (ret = sobj.hiddenClass)) {
                     return ret;
-                }  else {
+                } else {
                     node = root;
                     key = getKey(obj, "__proto__");
                     node = getNextNode(node, key);
                     for (fld in obj) {
                         if (HOP(obj, fld) && !hasGetterSetter(obj, fld)) {
+                            f_count++;
                             key = getKey(obj, fld);
                             node = getNextNode(node, key);
                         }
@@ -193,82 +203,98 @@
             return null;
         }
 
-        function setHiddenClass(obj, hiddenClass) {
-            var sobj = smemory.getShadowObject(obj);
+        function setHiddenClass(obj, hiddenClass, sobj) {
             if (sobj) {
                 sobj.hiddenClass = hiddenClass;
             }
         }
 
-        function possibleHiddenClassReset(obj, fld, val) {
+        function possibleHiddenClassReset(obj, fld, val, sobj) {
             var tmp;
 
             tmp = obj[fld];
             if (tmp !== val) {
                 obj[fld] = val;
-                getHiddenClass(obj, true);
+                getHiddenClass(obj, sobj, true); // true means create a new hidden class
                 obj[fld] = tmp;
             }
         }
 
-        function updateHiddenClass(obj, fld, val) {
+        function updateHiddenClass(obj, fld, val, obj_sobj) {
             if (!hasGetterSetter(obj, fld)) {
-                var hiddenClass = getHiddenClass(obj);
+                var hiddenClass = getHiddenClass(obj, obj_sobj);
                 fld = "" + fld;
                 if (hiddenClass) {
                     if (HOP(obj, fld)) {
                         if (typeof val === 'function') {
-                            possibleHiddenClassReset(obj, fld, val);
+                            possibleHiddenClassReset(obj, fld, val, obj_sobj);
                         } else if (typeof obj[fld] === 'function') {
-                            possibleHiddenClassReset(obj, fld, val);
+                            possibleHiddenClassReset(obj, fld, val, obj_sobj);
                         }
-                    } else if (fld === '_proto__') {
-                        possibleHiddenClassReset(obj, fld, val);
+                    } else if (fld === '__proto__') {
+                        possibleHiddenClassReset(obj, fld, val, obj_sobj);
                     } else {
                         hiddenClass = getNextNode(hiddenClass, getKey(obj, fld));
-                        setHiddenClass(obj, hiddenClass);
+                        setHiddenClass(obj, hiddenClass, obj_sobj);
                     }
                 }
             }
         }
 
-        this.literal = function (iid, val) {
-            annotateObjectWithCreationLocation(val, iid);
-            return val;
-        };
-
-        this.invokeFun = function (iid, f, base, args, val, isConstructor) {
-            if (isConstructor) {
-                annotateObjectWithCreationLocation(val, iid);
+        this.literal = function(iid, val) {
+            var typeof_val = typeof val;
+            if(typeof_val === 'object' || typeof_val === 'function') {
+                var sobj = smemory.getShadowObject(val);
+                annotateObjectWithCreationLocation(val, iid, sobj);
             }
             return val;
         };
 
-        this.getFieldPre = function (iid, base, offset) {
-            if (!isArray(base) && !isString(base)) {
-                var hidden = getHiddenClass(base);
+        this.invokeFun = function(iid, f, base, args, val, isConstructor) {
+            if (isConstructor && f.name !== 'Array') {
+                var sobj = smemory.getShadowObject(val);
+                annotateObjectWithCreationLocation(val, iid, sobj);
+            }
+            return val;
+        };
+
+        
+        this.getFieldPre = function(iid, base, offset) {
+            var isStr = isString(base);
+            if(isStr) return;
+            var result = isArray_getShadow(base);
+            if (!result.isArray) {
+                //var sobj = smemory.getShadowObject(base);
+                var sobj = result.sobj;
+                var hidden = getHiddenClass(base, sobj);
                 if (hidden) {
                     var meta = getMetaInfo(iid);
                     var id = getHiddenClassId(hidden);
                     var key = id + ":" + offset;
-                    updateMetaInfo(meta, key, getCreationLocation(base));
+                    updateMetaInfo(meta, key, getCreationLocation(base, sobj));
                 }
             }
         };
 
-        this.putFieldPre = function (iid, base, offset, val) {
-            if (!isArray(base) && !isString(base))
-                updateHiddenClass(base, offset, val);
+        this.putFieldPre = function(iid, base, offset, val) {
+            var isStr = isString(base);
+            if(isStr) return val;
+            var result = isArray_getShadow(base);
+            if (!result.isArray) {
+                //var sobj = smemory.getShadowObject(base);
+                var sobj = result.sobj;
+                updateHiddenClass(base, offset, val, sobj);
+            }
             return val;
         };
-
-        this.read = function (iid, name, val, isGlobal) {
-            if(name === 'arguments') {
+        
+        this.read = function(iid, name, val, isGlobal) {
+            if (name === 'arguments') {
                 var shadow_obj = smemory.getShadowObject(val);
                 shadow_obj.isArgumentsObj = true;
             }
             return val;
-        }
+        };
 
 
         function getRank(meta) {
@@ -278,10 +304,10 @@
             for (var hiddenKey in meta.keysToCount) {
                 if (HOP(meta.keysToCount, hiddenKey)) {
                     var count = meta.keysToCount[hiddenKey];
-                    if(maxCount<count){
+                    if (maxCount < count) {
                         secondMaxCount = maxCount;
                         maxCount = count;
-                    } else if(secondMaxCount<count){
+                    } else if (secondMaxCount < count) {
                         secondMaxCount = count;
                     }
                 }
@@ -289,24 +315,31 @@
             return rank + secondMaxCount;
         }
 
-        this.endExecution = function () {
+        this.endExecution = function() {
             console.log('\n\n');
             console.log("---------------------------");
-            console.log("Created "+count+" hidden classes.");
+            console.log("Created " + count + " hidden classes.");
+            console.log('f_count: ' + f_count);
+            
             console.log();
             var tmp = [];
             for (var iid in info) {
                 if (HOP(info, iid)) {
                     var tmpRank = getRank(info[iid]);
-                    tmp.push({iid:iid, count:info[iid].miss, meta:info[iid], rank: tmpRank});
+                    tmp.push({
+                        iid: iid,
+                        count: info[iid].miss,
+                        meta: info[iid],
+                        rank: tmpRank
+                    });
                 }
             }
-            sort.call(tmp, function(a,b) {
+            sort.call(tmp, function(a, b) {
                 return b.rank - a.rank;
             });
             var len = tmp.length;
             var num = 0;
-            for (var i=0; i<len && i<warning_limit; i++) {
+            for (var i = 0; i < len && i < warning_limit; i++) {
                 var x = tmp[i];
                 if (x.count > MIN_CACHE_HITS) {
                     var meta = x.meta;
@@ -314,7 +347,7 @@
                     console.log("property access at " + iidToLocation(x.iid) + " has missed cache " + x.count + " time(s).");
                     for (var loc in meta.objectLocs) {
                         if (HOP(meta.objectLocs, loc)) {
-                            console.log("  accessed property \""+meta.lastKey.substring(meta.lastKey.indexOf(":")+1)+"\" of object created at "+iidToLocation(loc)+" "+meta.objectLocs[loc]+" time(s) ")
+                            console.log("  accessed property \"" + meta.lastKey.substring(meta.lastKey.indexOf(":") + 1) + "\" of object created at " + iidToLocation(loc) + " " + meta.objectLocs[loc] + " time(s) ");
                         }
                     }
                     var mergeDB = {};
@@ -324,13 +357,13 @@
                             var hidden = idToHiddenClass[hiddenIdx];
                             var layout = getLayout(hidden);
                             var fieldName = hiddenKey.substring(hiddenKey.indexOf(":") + 1, hiddenKey.length);
-                            if(!mergeDB[layout]) {
+                            if (!mergeDB[layout]) {
                                 mergeDB[layout] = "  layout [" + getLayout(hidden) + "]:";
                             }
                             mergeDB[layout] += '\n' + '\tput field: ' + fieldName + ' observed ' + meta.keysToCount[hiddenKey] + " time(s)";
                         }
                     }
-                    for(var layout in mergeDB) {
+                    for (var layout in mergeDB) {
                         if (HOP(mergeDB, layout)) {
                             console.log(mergeDB[layout]);
                         }
