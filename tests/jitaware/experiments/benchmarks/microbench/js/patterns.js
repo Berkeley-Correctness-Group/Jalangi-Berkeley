@@ -231,6 +231,24 @@ function pattern6_fix() {
     }
 }
 
+//////////////////// pattern-7 ////////////////////
+// unnecessary use of generic array
+
+function pattern7_orig() {
+  var size = 5000000;
+  var array = new Array(size);
+  for (var i = 0; i < size; i++)
+    array[i % size] = i % 255;
+}
+
+function pattern7_fix() {
+  var size = 5000000;
+  var array = new Uint8Array(size);
+  for (var i = 0; i < size; i++)
+    array[i % size] = i % 255;
+}
+
+
 /*
 
 //////////////////// pattern-8 ////////////////////
@@ -257,24 +275,6 @@ function pattern8_fix() {
     }
   }
 }
-
-//////////////////// pattern-7 ////////////////////
-// unnecessary use of generic array
-
-function pattern7_orig() {
-  var size = 5000000;
-  var array = new Array(size);
-  for (var i = 0; i < size; i++)
-    array[i % size] = i % 255;
-}
-
-function pattern7_fix() {
-  var size = 5000000;
-  var array = new Uint8Array(size);
-  for (var i = 0; i < size; i++)
-    array[i % size] = i % 255;
-}
-
 
 //////////////////// pattern-9 ////////////////////
 // Array.prototype.slice
