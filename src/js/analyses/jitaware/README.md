@@ -7,11 +7,11 @@ Most modern JavaScript engines use just-in-time (JIT) compilation to translate p
 ### Authors
 Liang Gong, Michael Pradel, Koushik Sen  
 
-The technical report is available at:
+A technical report is available at:
 
 http://www.eecs.berkeley.edu/Pubs/TechRpts/2014/EECS-2014-144.html
 
-### Download and Intallation
+### Download and Installation
 
 First go to Jalangi-Berkeley page, download and install this project on your machine.
 Instructions are in the following page:
