@@ -59,6 +59,29 @@ Then start the Tomcat Server:
 
 Before running the experiment on Mac OS:
   * close your firefox and chrome instances
+  * disable file caches on Chrome, see the article in the following url:  
+  
+    http://stackoverflow.com/questions/5690269/disabling-chrome-cache-for-website-development
+
+### Run Browser Experiments
+
+Simply use the following command in the root directory:   
+```
+./src/java/jitaware/experiment.sh 
+```
+After finishing the experiment, in directory ```tests/jitaware/experiments/exp_output``` there will be the following three files, which contains the scores for each benchmarks (50 iterations):
+```
+safari-result.csv
+Firefox-result.csv
+Chrome-result.csv
+```
+
+### Run Browser Experiments (Deprecated)
+This is the old experimental framework, implemented purely in JavaScript. However, due to the unstable JavaScript API
+of Selenium, we recommend you use the above experimental framework (implemented in Java).
+
+Before running the experiment on Mac OS:
+  * close your firefox and chrome instances
   * configure your firefox so that it will dump output to the native console:
     in the browser url input box type: ```about:config``` set the following configurations:  
 
@@ -85,19 +108,6 @@ finally after the experiment finished, open the file ```Jalangi-Berkeley/tests/j
 If the auto-experiment is terminated before gracefully complete, use the following command to generate the table with the dump data.
 ```
 node src/js/commands/convert_csv.js
-```
-
-### Run Browser Experiments (new option)
-
-Simply use the following command in the root directory:   
-```
-./src/java/jitaware/experiment.sh 
-```
-After finishing the experiment, in directory ```tests/jitaware/experiments/exp_output``` there will be the following three files:  
-```
-safari-result.csv
-Firefox-result.csv
-Chrome-result.csv
 ```
 
 ### Run Browser Experiments on Micro-Benchmarks
