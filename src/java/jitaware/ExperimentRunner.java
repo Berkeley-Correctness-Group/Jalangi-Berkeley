@@ -35,6 +35,10 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.safari.SafariDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.firefox.FirefoxBinary;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.logging.LogType;
@@ -44,15 +48,18 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 
 public class ExperimentRunner {
 
+	private int rounds = 30;
 	private WebDriver driver = null;
-	int maxWaitTime = 10 * 60;
+	private int maxWaitTime = 10 * 60;
 
 	public static void main(String[] args) throws Exception {
 		if(!isSupportedPlatform()) {
 			System.out.println("only supports Windows and Mac OS");
 		}
 		ExperimentRunner runner = new ExperimentRunner();
-		runner.run();
+		//runner.run("Safari");
+		//runner.run("Firefox");
+		runner.run("Chrome");
 	}
 
 	private static boolean isSupportedPlatform() {
@@ -60,30 +67,78 @@ public class ExperimentRunner {
         return Platform.MAC.is(current) || Platform.WINDOWS.is(current);
     }
 
-    public void createDriver() {
-	    driver = new SafariDriver();
+    final String firefoxBinary = //"/Applications/Firefox.app/Contents/MacOS/firefox-bin";
+    							 "/Applications/Nightly.app/Contents/MacOS/firefox-bin";
+
+    private void setupFirefox() throws Exception {
+		DesiredCapabilities desiredCapabilities = DesiredCapabilities.firefox();
+		FirefoxBinary binary = new FirefoxBinary(new File(firefoxBinary));
+		FirefoxProfile profile = new FirefoxProfile();
+		profile.setPreference("browser.cache.disk.enable", false);
+		profile.setPreference("browser.cache.disk_cache_ssl", false);
+		profile.setPreference("browser.cache.memory.enable", false);
+		profile.setPreference("browser.cache.offline.capacity", 0);
+		profile.setPreference("browser.cache.offline.enable", false);
+		profile.setPreference("media.cache_size", 0);
+		profile.setPreference("network.http.use-cache", false);
+		//profile.setPreference("brwoser.dom.window.dump.enabled", true);
+		driver = new FirefoxDriver(binary, profile, desiredCapabilities);
+		driver.manage().timeouts().implicitlyWait(120, TimeUnit.SECONDS);
 	}
+
+    protected void createDriver(String browser) throws Exception {
+    	if(browser.equals("Safari")) {
+    		driver = new SafariDriver();
+    	} else if (browser.equals("Firefox")) {
+    		setupFirefox();
+    		//driver = new FirefoxDriver();
+    	} else if (browser.equals("Chrome")) {
+    		driver = new ChromeDriver();
+    	} else {
+    		System.out.println("unknown browser: " + browser);
+    		System.exit(0);
+    	}
+	}
+
+	protected void quitDriver() {
+    	driver.quit();
+  	}
 
 	private Hashtable<String, ArrayList<String> > octaneOrigResult = new Hashtable<String, ArrayList<String> >();
 	private Hashtable<String, ArrayList<String> > octaneModifiedResult = new Hashtable<String, ArrayList<String> >();
 
 	private Hashtable<String, ArrayList<String> > sunspiderOrigResult = new Hashtable<String, ArrayList<String> >();
 	private Hashtable<String, ArrayList<String> > sunspiderModifiedResult = new Hashtable<String, ArrayList<String> >();
-	private int rounds = 50;
+	
 
-    public void run() {
-    	createDriver();
-    	for(int i=0;i<rounds;i++) {
-	    	runExperiment("http://127.0.0.1:8080/octane/octane.html", octaneOrigResult);
-	    	runExperiment("http://127.0.0.1:8080/octane/octane_modified.html", octaneModifiedResult);
-	    	runExperiment("http://127.0.0.1:8080/sunspider/driver.html", sunspiderOrigResult);
-	    	runExperiment("http://127.0.0.1:8080/sunspider2/driver.html", sunspiderModifiedResult);
-	    }
-    	generateCSV();
-    	quitDriver();
+	protected void resetResult() {
+		octaneOrigResult.clear();
+		octaneModifiedResult.clear();
+		sunspiderOrigResult.clear();
+		sunspiderModifiedResult.clear();
+	}
+
+    protected void run(String browser) {
+    	try {
+	    	createDriver(browser);
+	    	resetResult();
+	    	String filename = browser + "-result.csv";
+	    	for(int i=0;i<rounds;i++) {
+	    		System.out.println("--------- Round " + i + " ----------");
+		    	runExperiment("http://127.0.0.1:8080/octane/octane.html", octaneOrigResult);
+		    	runExperiment("http://127.0.0.1:8080/octane/octane_modified.html", octaneModifiedResult);
+		    	runExperiment("http://127.0.0.1:8080/sunspider/driver.html", sunspiderOrigResult);
+		    	runExperiment("http://127.0.0.1:8080/sunspider2/driver.html", sunspiderModifiedResult);
+		    	generateCSV(browser);
+		    }
+	    	quitDriver();
+    	} catch (Exception ex) {
+    		System.out.println("running experiment on browser " + browser + " got exception:");
+    		System.out.println("\t" + ex.toString());
+    	}
     }
 
-    public void runExperiment(String url, Hashtable<String, ArrayList<String> > store) {
+    protected void runExperiment(String url, Hashtable<String, ArrayList<String> > store) {
     	driver.get(url);
     	// for octane, if an element with id="jit_final_result" contains text "===experiment done==="
     	new WebDriverWait(driver, maxWaitTime).until(ExpectedConditions.textToBePresentInElementLocated(By.id("jit_final_result"), "===experiment done==="));
@@ -128,32 +183,34 @@ public class ExperimentRunner {
 		}
 	}
 
-	protected void generateCSV() {
+	protected void generateCSV(String browser) {
 		String csvContent = "";
+		/*
 		for (String bench_name : octaneOrigResult.keySet()) {
 			ArrayList<String> orig = octaneOrigResult.get(bench_name);
-			csvContent += "octane-safari-" + bench_name + ",";
+			csvContent += "octane-" + browser + "-" + bench_name + ",";
 			for(int i=0;i<orig.size();i++){
 				csvContent += orig.get(i) + ",";
 			}
 			csvContent += "\r\n";
 			ArrayList<String> modified = octaneModifiedResult.get(bench_name);
-			csvContent += "octane-safari-" + bench_name + "-2,";
+			csvContent += "octane-" + browser + "-" + bench_name + "-2,";
 			for(int i=0;i<modified.size();i++){
 				csvContent += modified.get(i) + ",";
 			}
 			csvContent += "\r\n";
 		}
+		*/
 
 		for (String bench_name : sunspiderOrigResult.keySet()) {
 			ArrayList<String> orig = sunspiderOrigResult.get(bench_name);
-			csvContent += "octane-safari-" + bench_name + ",";
+			csvContent += "sunspider-" + browser + "-" + bench_name + ",";
 			for(int i=0;i<orig.size();i++){
 				csvContent += orig.get(i) + ",";
 			}
 			csvContent += "\r\n";
 			ArrayList<String> modified = sunspiderModifiedResult.get(bench_name + "(*)");
-			csvContent += "octane-safari-" + bench_name + "-2,";
+			csvContent += "sunspider-" + browser + "-" + bench_name + "-2,";
 			for(int i=0;i<modified.size();i++){
 				csvContent += modified.get(i) + ",";
 			}
@@ -163,7 +220,8 @@ public class ExperimentRunner {
 		PrintWriter writer = null;
 		try {
 			System.out.println(csvContent);
-			writer = new PrintWriter("tests/jitaware/experiments/exp_output/safari-result.csv", "UTF-8");
+			writer = new PrintWriter("tests/jitaware/experiments/exp_output/" + browser + "-result.csv", "UTF-8");
+			writer.println("result:");
 			writer.println(csvContent);
 		} catch (Exception exp) {
 			System.out.println(exp.toString());
@@ -173,8 +231,4 @@ public class ExperimentRunner {
 			}
 		}
 	}
-
-    public void quitDriver() {
-    	driver.quit();
-  	}
 }
