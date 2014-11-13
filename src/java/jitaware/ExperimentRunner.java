@@ -58,7 +58,7 @@ public class ExperimentRunner {
 		}
 		ExperimentRunner runner = new ExperimentRunner();
 		//runner.run("Safari");
-		//runner.run("Firefox");
+		runner.run("Firefox");
 		runner.run("Chrome");
 	}
 
