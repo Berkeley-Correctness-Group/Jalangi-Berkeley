@@ -63,8 +63,6 @@ Before running the experiment on Mac OS:
   
     http://stackoverflow.com/questions/5690269/disabling-chrome-cache-for-website-development
 
-### Run Browser Experiments
-
 Simply use the following command in the root directory:   
 ```
 ./src/java/jitaware/experiment.sh 
