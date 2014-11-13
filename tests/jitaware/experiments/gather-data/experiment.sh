@@ -31,10 +31,6 @@
 
 # author: Liang Gong
 
-# set MERGE_ENABLED in PredValues.js to false to activate DSE.
-# time python scripts/jalangi.py symbolic -a src/js/analyses/puresymbolic/Multiple -i 1 tests/compos/parser
-# cd jalangi_tmp; node ../src/js/utils/StatCollector.js; cd ..
-
 # back up the preivous results
 rm result.bak.txt;
 mv result.txt result.bak.txt;
@@ -50,7 +46,7 @@ runexp() {
 
 	# run analysis on the benchmark code
 	# ( python ../jalangi/scripts/jalangi.py direct --analysis ../jalangi/src/js/analyses/ChainedAnalyses.js --analysis src/js/analyses/jitaware/chaining/utils/Utils.js --analysis src/js/analyses/jitaware/chaining/utils/RuntimeDB.js --analysis src/js/analyses/jitaware/chaining/TrackHiddenClass --analysis src/js/analyses/jitaware/chaining/AccessUndefArrayElem --analysis src/js/analyses/jitaware/chaining/SwitchArrayType --analysis src/js/analyses/jitaware/chaining/NonContiguousArray --analysis src/js/analyses/jitaware/chaining/InitFieldOutsideConstructor --analysis src/js/analyses/jitaware/chaining/BinaryOpOnUndef --analysis src/js/analyses/jitaware/chaining/PolymorphicFunCall --analysis src/js/analyses/jitaware/chaining/ArgumentsLeak --analysis src/js/analyses/jitaware/chaining/TypedArray $2 ) >> result.txt
-	( python ../jalangi/scripts/jalangi.py direct --analysis ../jalangi/src/js/analyses/ChainedAnalyses.js --analysis src/js/analyses/jitaware/chaining/utils/Utils.js --analysis src/js/analyses/jitaware/chaining/utils/RuntimeDB.js --analysis src/js/analyses/jitaware/chaining/TrackHiddenClass --analysis src/js/analyses/jitaware/chaining/AccessUndefArrayElem --analysis src/js/analyses/jitaware/chaining/SwitchArrayType --analysis src/js/analyses/jitaware/chaining/NonContiguousArray --analysis src/js/analyses/jitaware/chaining/BinaryOpOnUndef --analysis src/js/analyses/jitaware/chaining/PolymorphicFunCall $2 ) >> result.txt
+	( python ../jalangi/scripts/jalangi.py direct --analysis ../jalangi/src/js/analyses/ChainedAnalyses.js --analysis src/js/analyses/jitaware/chaining/utils/Utils.js --analysis src/js/analyses/jitaware/chaining/utils/RuntimeDB.js --analysis src/js/analyses/jitaware/chaining/TrackHiddenClass --analysis src/js/analyses/jitaware/chaining/AccessUndefArrayElem --analysis src/js/analyses/jitaware/chaining/SwitchArrayType --analysis src/js/analyses/jitaware/chaining/NonContiguousArray --analysis src/js/analyses/jitaware/chaining/BinaryOpOnUndef --analysis src/js/analyses/jitaware/chaining/PolymorphicFunCall --analysis src/js/analyses/jitaware/chaining/TypedArray $2 ) >> result.txt
 	# run the benchmark code without instrumentation and analysis
 	( { time node "$2" | tee >(grep -Ei ".*" >> result.txt); } 2>&1 ) | { grep -Ei "^(real|user|sys)" >> result.txt; }
 }
@@ -59,8 +55,6 @@ runexp() {
 
 : <<'END'
 END
-
-
 
 # Google Octane
 runexp "Octane-Splay" "../jalangi/tests/octane/splay"
@@ -105,8 +99,5 @@ runexp "SunSpider-String-Fasta" "../jalangi/tests/sunspider1/string-fasta"
 runexp "SunSpider-String-Tagcloud" "../jalangi/tests/sunspider1/string-tagcloud"
 runexp "SunSpider-String-Unpack-Code" "../jalangi/tests/sunspider1/string-unpack-code"
 runexp "SunSpider-String-Validate-Input" "../jalangi/tests/sunspider1/string-validate-input"
-
-
-
 
 echo '[*]exp-done' >> result.txt
