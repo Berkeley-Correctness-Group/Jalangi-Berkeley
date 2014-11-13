@@ -87,6 +87,19 @@ If the auto-experiment is terminated before gracefully complete, use the followi
 node src/js/commands/convert_csv.js
 ```
 
+### Run Browser Experiments (new option)
+
+Simply use the following command in the root directory:   
+```
+./src/java/jitaware/experiment.sh 
+```
+After finishing the experiment, in directory ```tests/jitaware/experiments/exp_output``` there will be the following three files:  
+```
+safari-result.csv
+Firefox-result.csv
+Chrome-result.csv
+```
+
 ### Run Browser Experiments on Micro-Benchmarks
 
 In the Jalangi-Berkeley directory type the following command:
