@@ -185,7 +185,7 @@ public class ExperimentRunner {
 
 	protected void generateCSV(String browser) {
 		String csvContent = "";
-		/*
+		/**/
 		for (String bench_name : octaneOrigResult.keySet()) {
 			ArrayList<String> orig = octaneOrigResult.get(bench_name);
 			csvContent += "octane-" + browser + "-" + bench_name + ",";
@@ -200,7 +200,7 @@ public class ExperimentRunner {
 			}
 			csvContent += "\r\n";
 		}
-		*/
+		
 
 		for (String bench_name : sunspiderOrigResult.keySet()) {
 			ArrayList<String> orig = sunspiderOrigResult.get(bench_name);
