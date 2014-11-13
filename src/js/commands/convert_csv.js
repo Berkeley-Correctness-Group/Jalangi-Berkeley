@@ -41,18 +41,18 @@ var fs = require('fs')
 convert_result_to_table(process.cwd() + '/tests/jitaware/experiments/exp_output/results_db.js');
 
 // convert result_db into csv file
-function convert_result_to_table(db_path){
+function convert_result_to_table(db_path) {
     var content = fs.readFileSync(db_path);
     var output = [];
     var db = JSON.parse(content);
-    for(var prop in db){
-        if(db.hasOwnProperty(prop)){
-            for(benchmark in db[prop]){
-                if(db[prop].hasOwnProperty(benchmark)) {
+    for (var prop in db) {
+        if (db.hasOwnProperty(prop)) {
+            for (benchmark in db[prop]) {
+                if (db[prop].hasOwnProperty(benchmark)) {
                     var curdb = [];
                     curdb.push(prop + '-' + benchmark);
                     var values = db[prop][benchmark];
-                    for(var i=0;i<values.length;i++){
+                    for (var i = 0; i < values.length; i++) {
                         curdb.push(values[i]);
                     }
                     output.push(curdb.join(','));

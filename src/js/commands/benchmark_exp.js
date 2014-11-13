@@ -29,6 +29,10 @@
 
 // Author: Liang Gong
 
+// This experiment script is deprecated, selenium's JavaScript API can be unreliable sometimes.
+// Use the following one instead:
+// ./src/java/jitaware/experiment.sh 
+
 // Command Line Usage:
 // node src/js/commands/benchmark_exp.js
 // 1. clear console.txt
@@ -48,7 +52,8 @@ var fs = require('fs');
 var browser_process;
 
 var queue = ['octane-firefox', 'octane2-firefox', 'octane-chrome', 'octane2-chrome',
-    'sunspider-firefox', 'sunspider2-firefox', 'sunspider-chrome', 'sunspider2-chrome'];
+    'sunspider-firefox', 'sunspider2-firefox', 'sunspider-chrome', 'sunspider2-chrome'
+];
 
 var current_index = -1;
 var repeat_time = 50;
@@ -94,18 +99,18 @@ config['browser_arg']['octane2-chrome'] = ['-url', octane2_homepage, '-console']
 //return ;
 
 // obtain the label for the next experiment
-function getNextLabel(){
-    if(current_time >= repeat_time){
+function getNextLabel() {
+    if (current_time >= repeat_time) {
         return undefined;
     }
 
-    current_index ++;
-    if(current_index>=queue.length){
+    current_index++;
+    if (current_index >= queue.length) {
         current_index = 0;
         current_time++;
     }
 
-    if(current_time >= repeat_time){
+    if (current_time >= repeat_time) {
         return current_label = undefined;
     }
 
@@ -116,34 +121,34 @@ function getNextLabel(){
 // check if the parent directory has a sub-directory called jalangi_home
 if (fs.existsSync('./tests/jitaware/experiments/exp_output')) {
     console.log('clear exp_output dir');
-    child_process.exec('rm -r ./tests/jitaware/experiments/exp_output/*', function (error, stdout, stderr) {
+    child_process.exec('rm -r ./tests/jitaware/experiments/exp_output/*', function(error, stdout, stderr) {
         if (error !== null) {
             console.log('clear directory exp_output error: ' + error);
         }
         start_experiment();
     });
-    return ;
+    return;
 } else {
     fs.mkdirSync('./tests/jitaware/experiments/exp_output');
     start_experiment();
 }
 
-function start_experiment(){
+function start_experiment() {
     getNextLabel();
-    if(!current_label) { // undefined label indicates all experiments are done
+    if (!current_label) { // undefined label indicates all experiments are done
         console.log('experiment complete, converting results into csv file...');
         convert_result_to_table('./tests/jitaware/experiments/exp_output/results_db.js');
         console.log('csv table saved into: ' + process.cwd() + 'tests/jitaware/experiments/exp_output/result.csv');
         console.log('Please use excel to view the result.');
-        return ;
+        return;
     }
     console.log('current experiment: ' + current_label);
-    if(current_label.indexOf('firefox')>=0){
-        test_on_firefox();  // run experiment on firefox
-    } else if (current_label.indexOf('chrome')>=0){
-        if(current_label.indexOf('sunspider')>=0){
+    if (current_label.indexOf('firefox') >= 0) {
+        test_on_firefox(); // run experiment on firefox
+    } else if (current_label.indexOf('chrome') >= 0) {
+        if (current_label.indexOf('sunspider') >= 0) {
             test_on_chrome_sunspider();
-        } else if(current_label.indexOf('octane')>=0) {
+        } else if (current_label.indexOf('octane') >= 0) {
             test_on_chrome_octane()
         }
     } else {
@@ -151,7 +156,7 @@ function start_experiment(){
     }
 }
 
-function terminate_firefox(){
+function terminate_firefox() {
     // either kill('SIGKILL') or kill('SIGINT') will brutally kill firefox which leads to a warning dialog prompted next time starting firefox
     console.log('start terminating firefox');
     child_process.exec('osascript -e \'tell application "Crash Reporter" \n quit \n end tell\'');
@@ -163,35 +168,35 @@ function terminate_firefox(){
 }
 
 function test_on_firefox() {
-    try{
+    try {
         check_console_output(); // start checking console.txt file periodically
-        if(browser_process && !browser_process.killed) {
+        if (browser_process && !browser_process.killed) {
             //browser_process.kill('SIGKILL');
             terminate_firefox();
         }
-        
 
-        setTimeout(function () {    
+
+        setTimeout(function() {
             child_process.exec('osascript -e \'tell application "Crash Reporter" \n quit \n end tell\'');
             browser_process = child_process.spawn(config['browser_cmd'][current_label], config['browser_arg'][current_label]);
             fs.writeFileSync(process.cwd() + '/tests/jitaware/experiments/exp_output/console.txt', '');
-            browser_process.stdout.on('data', function (data) {
+            browser_process.stdout.on('data', function(data) {
                 fs.appendFileSync(process.cwd() + '/tests/jitaware/experiments/exp_output/console.txt', data);
             });
 
-            browser_process.stderr.on('data', function (data) {
+            browser_process.stderr.on('data', function(data) {
                 console.log('\tspawn stderr: ' + data);
             });
         }, 1000);
-    }catch(e) {
-        console.log('!!!!!!!!!!!' + e);
+    } catch (ex) {
+        console.log(ex);
     }
 }
 
 
-function test_on_chrome_sunspider(){
+function test_on_chrome_sunspider() {
     var driver = new webdriver.Builder().
-        withCapabilities(webdriver.Capabilities.chrome()).build();
+    withCapabilities(webdriver.Capabilities.chrome()).build();
 
     driver.get(config['url'][current_label]);
 
@@ -200,24 +205,24 @@ function test_on_chrome_sunspider(){
     var interval_handler = setInterval(function() {
         try {
             console.log('checking result in web page...');
-            driver.getCurrentUrl().then(function (url){
+            driver.getCurrentUrl().then(function(url) {
                 //console.log(url);
-                if(!driver_url) { // if driver_url is empty
+                if (!driver_url) { // if driver_url is empty
                     driver_url = url;
-                } else if(driver_url !== url) { // else if the page has been redirected
+                } else if (driver_url !== url) { // else if the page has been redirected
                     // update the driver object
                     result_url = url;
                     driver.get(result_url);
 
-                    setTimeout(function (){ // wait for 3s for the result page to load (in the last round) complete
+                    setTimeout(function() { // wait for 3s for the result page to load (in the last round) complete
                         var elem = driver.findElement(webdriver.By.id("jit_final_result"))
-                        if(elem){
-                            elem.getInnerHtml().then(function (data){
-                                if(data.indexOf('===experiment done===')>=0) {
+                        if (elem) {
+                            elem.getInnerHtml().then(function(data) {
+                                if (data.indexOf('===experiment done===') >= 0) {
                                     process_record_console_output(data); // record final output to db
                                     clearInterval(interval_handler); // stop this interval checking
                                     driver.quit(); // quit the automated web testing
-                                    setTimeout(function () {
+                                    setTimeout(function() {
                                         start_experiment(); // start next round of experiment
                                     }, 1000);
                                 }
@@ -228,16 +233,16 @@ function test_on_chrome_sunspider(){
                     }, 3000);
                 }
             });
-        } catch(e) {
+        } catch (e) {
             console.log(e);
             console.log('empty');
         }
     }, 6000);
 }
 
-function test_on_chrome_octane(){
+function test_on_chrome_octane() {
     var driver = new webdriver.Builder().
-        withCapabilities(webdriver.Capabilities.chrome()).build();
+    withCapabilities(webdriver.Capabilities.chrome()).build();
 
     driver.get(config['url'][current_label]);
 
@@ -245,13 +250,13 @@ function test_on_chrome_octane(){
         try {
             console.log('checking result in web page...');
             var elem = driver.findElement(webdriver.By.id("jit_final_result"))
-            if(elem){
-                elem.getInnerHtml().then(function (data){
-                    if(data.indexOf('===experiment done===')>=0) {
+            if (elem) {
+                elem.getInnerHtml().then(function(data) {
+                    if (data.indexOf('===experiment done===') >= 0) {
                         process_record_console_output(data); // record final output to db
                         clearInterval(interval_handler); // stop this interval checking
                         driver.quit(); // quit the automated web testing
-                        setTimeout(function () {
+                        setTimeout(function() {
                             start_experiment(); // start next round of experiment
                         }, 1000);
                     }
@@ -259,7 +264,7 @@ function test_on_chrome_octane(){
             } else {
                 console.log('empty');
             }
-        } catch(e) {
+        } catch (e) {
             console.log(e);
             console.log('empty');
         }
@@ -271,12 +276,12 @@ function check_console_output() {
     var stop = false;
     child_process.exec('osascript -e \'tell application "Crash Reporter" \n quit \n end tell\'');
     console.log('checking console.txt ...');
-    try{
+    try {
         var content = fs.readFileSync(process.cwd() + '/tests/jitaware/experiments/exp_output/console.txt', 'utf8');
-        if(typeof content === 'string' && content.length>0){
-            if(content.indexOf('===experiment done===') >=0 ){
+        if (typeof content === 'string' && content.length > 0) {
+            if (content.indexOf('===experiment done===') >= 0) {
                 // first close the browser
-                if(browser_process) {
+                if (browser_process) {
                     console.log('kill process');
                     //browser_process.kill('SIGKILL');
                     terminate_firefox();
@@ -287,19 +292,19 @@ function check_console_output() {
                 fs.unlink(process.cwd() + '/tests/jitaware/experiments/exp_output/console.txt');
 
                 stop = true
-                setTimeout(function () {
+                setTimeout(function() {
                     start_experiment(); // start next round of experiment
                 }, 3000);
             }
         } else {
             //console.log(JSON.stringify(content));
         }
-    } catch(e) {
+    } catch (e) {
         console.log('fail to check console output');
         console.log(e);
         // do nothing
     }
-    if(!stop) { // stop checking
+    if (!stop) { // stop checking
         setTimeout(check_console_output, 6000); // check it 1s later
     }
 }
@@ -308,11 +313,11 @@ function process_record_console_output(content) {
     console.log('start processing console output:');
     console.log(content);
     var result = {};
-    if(content.indexOf('===sunspider===')>=0 || content.indexOf('===octane==='>=0)) {
+    if (content.indexOf('===sunspider===') >= 0 || content.indexOf('===octane===') >= 0) {
         var lines = content.split('\n');
-        for(var i=0;i<lines.length;i++){
+        for (var i = 0; i < lines.length; i++) {
             var cols = lines[i].split(',');
-            if(cols.length==4){
+            if (cols.length == 4) {
                 var bench_name = cols[0];
                 var avg_time = cols[2];
                 result[bench_name] = avg_time;
@@ -326,26 +331,26 @@ function process_record_console_output(content) {
 }
 
 
-function add_result_to_csv(result){
+function add_result_to_csv(result) {
     var all_results = {};
-    try{
+    try {
         var content = fs.readFileSync(process.cwd() + '/tests/jitaware/experiments/exp_output/results_db.js');
         all_results = JSON.parse(content);
-    } catch(e) {
+    } catch (e) {
         // do nothing
     }
 
-    if(!all_results){
+    if (!all_results) {
         all_results = {};
     }
 
-    if(!all_results[current_label]){
+    if (!all_results[current_label]) {
         all_results[current_label] = {};
     }
 
-    for(var prop in result){
-        if(result.hasOwnProperty(prop)){
-            if(!all_results[current_label][prop]) {
+    for (var prop in result) {
+        if (result.hasOwnProperty(prop)) {
+            if (!all_results[current_label][prop]) {
                 all_results[current_label][prop] = [];
             }
             all_results[current_label][prop].push(result[prop]);
@@ -355,18 +360,18 @@ function add_result_to_csv(result){
 }
 
 // convert result_db into csv file
-function convert_result_to_table(db_path){
+function convert_result_to_table(db_path) {
     var content = fs.readFileSync(db_path);
     var output = [];
     var db = JSON.parse(content);
-    for(var prop in db){
-        if(db.hasOwnProperty(prop)){
-            for(benchmark in db[prop]){
-                if(db[prop].hasOwnProperty(benchmark)) {
+    for (var prop in db) {
+        if (db.hasOwnProperty(prop)) {
+            for (benchmark in db[prop]) {
+                if (db[prop].hasOwnProperty(benchmark)) {
                     var curdb = [];
                     curdb.push(prop + '-' + benchmark);
                     var values = db[prop][benchmark];
-                    for(var i=0;i<values.length;i++){
+                    for (var i = 0; i < values.length; i++) {
                         curdb.push(values[i]);
                     }
                     output.push(curdb.join(','));
