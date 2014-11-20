@@ -23,6 +23,10 @@
         var iidToLocation = sandbox.iidToLocation;
 
         // data structures
+
+        /*
+         * Some unary operation (may coerce types or not).
+         */
         function UnaryObservation(iid, operation, type, resultType, value, resultValue) {
             this.kind = operation === "conditional" ? "conditional" : "unary";
             this.iid = iid;
@@ -34,6 +38,9 @@
             this.hash = util.stringToHash(hashSeed + iid + operation + type + value);
         }
 
+        /*
+         * Some binary operation (may coerce types or not).
+         */
         function BinaryObservation(iid, operation, leftType, rightType, resultType, leftValue, rightValue, resultValue) {
             this.kind = "binary";
             this.iid = iid;
@@ -47,6 +54,9 @@
             this.hash = util.stringToHash(hashSeed + iid + operation + leftType + rightType + resultType + leftValue + rightValue + resultValue);
         }
 
+        /*
+         * Explicit type conversion, e.g., Boolean(..).
+         */
         function ExplicitObservation(iid, operation, inputType, outputType, inputValue, outputValue) {
             this.kind = "explicit";
             this.iid = iid;
@@ -70,7 +80,7 @@
                 return "undefined";
             if (v === null)
                 return "null";
-//            if (v !== v)
+//            if (v !== v)   // commented to handle NaN as a number
 //                return "NaN";
             var s = Object.prototype.toString.call(v);
             if (s === "[object Array]")
@@ -94,7 +104,11 @@
                 else
                     return "";
             } else if (t === "number") {
-                return 23;  // abstract numbers to NaN or 23 (= some number)
+                if (v === 0) {
+                    return 0;
+                } else {
+                    return "someNonZeroNumber";
+                }
             } else if (t === "boolean") {
                 return v;   // for booleans, store the actual value
             }
