@@ -20,12 +20,11 @@
     function TypeAnalysisEngine3() {
 
         var util = importModule("CommonUtil");
-        var iidToLocation = sandbox.iidToLocation;
 
         // data structures
 
         /*
-         * Some unary operation (may coerce types or not).
+         * Unary operation (may coerce types or not).
          */
         function UnaryObservation(iid, operation, type, resultType, value, resultValue) {
             this.kind = operation === "conditional" ? "conditional" : "unary";
@@ -39,7 +38,7 @@
         }
 
         /*
-         * Some binary operation (may coerce types or not).
+         * Binary operation (may coerce types or not).
          */
         function BinaryObservation(iid, operation, leftType, rightType, resultType, leftValue, rightValue, resultValue) {
             this.kind = "binary";
@@ -70,7 +69,7 @@
 
         // state
         var hashSeed = Date.now();
-        var hashToObservation = {}; // number --> UnaryObservation | BinaryObservation
+        var hashToObservation = {}; // number --> UnaryObservation | BinaryObservation | ExplicitObservation
         var hashToFrequency = {};   // number --> number
         var obsCtr = 0;
 

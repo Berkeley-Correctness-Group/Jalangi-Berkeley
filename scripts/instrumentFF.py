@@ -47,9 +47,6 @@ excluded = [ ]
 #    jalangiBaseDir+"src/js/analyses/objectalloc/ObjectAllocationTrackerEngineIB.js"
 #]
 #jalangiAnalysisFiles = [
-#    jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine2.js"
-#]
-#jalangiAnalysisFiles = [
 #    jalangiBaseDir+"src/js/analyses/logNaN/logNaN.js"
 #]
 #jalangiAnalysisFiles = [
@@ -72,22 +69,22 @@ excluded = [ ]
 #   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/CheckNaN.js",
 #   jalangiBerkeleyBaseDir+"src/js/analyses/dlint/DLintPost.js",
 #]
-jalangiAnalysisFiles = [ 
-   jalangiBaseDir+"src/js/analyses/ChainedAnalyses.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/utils/Utils.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/utils/RuntimeDB.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/TrackHiddenClass.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/PolymorphicFunCall.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/BinaryOpOnUndef.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/NonContiguousArray.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/AccessUndefArrayElem.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/SwitchArrayType.js",
-   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/TypedArray.js"
-]
 #jalangiAnalysisFiles = [ 
-#   jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
-#   jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine3.js",
+#   jalangiBaseDir+"src/js/analyses/ChainedAnalyses.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/utils/Utils.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/utils/RuntimeDB.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/TrackHiddenClass.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/PolymorphicFunCall.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/BinaryOpOnUndef.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/NonContiguousArray.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/AccessUndefArrayElem.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/SwitchArrayType.js",
+#   jalangiBerkeleyBaseDir+"src/js/analyses/jitaware/chaining/TypedArray.js"
 #]
+jalangiAnalysisFiles = [ 
+   jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine3.js",
+]
 #jalangiAnalysis = jalangiBaseDir+"src/js/analyses/logundefinedread/logUndefinedRead.js"
 
 # whether to preprocess code before giving it to the Jalangi instrumenter

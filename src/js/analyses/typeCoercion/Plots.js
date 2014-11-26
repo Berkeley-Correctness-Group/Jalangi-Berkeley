@@ -18,7 +18,7 @@
 
 (function() {
 
-    var plotsDir = "/home/m/research/thinking_by_writing/type_coercions/graphs/";
+    var plotsDir = "/home/m/research/papers/ecoop15/graphs/";
     var fs = require('fs');
     var nbBasic = require('numbers').basic;
     var nbStats = require('numbers').statistic;
@@ -43,7 +43,7 @@
         });
         fs.writeFileSync(plotsDir + filename + ".dat", data);
 
-        // .plot
+        // .byType
         var yRange = "0:" + (maxPerc + 5);
         var templateFile = (options && options.values) ? "histogram_with_values_template.plot_" : "histogram_template.plot_";
         var plotTemplate = fs.readFileSync(plotsDir + templateFile, {encoding:"utf8"});
@@ -89,6 +89,28 @@
         return Math.round(frac * 10000) / 100;
     }
 
+    function stringsToHistogram(arrayOfStrings) {
+        var histo = {};
+        for (var i = 0; i < arrayOfStrings.length; i++) {
+            var s = arrayOfStrings[i];
+            var oldFreq = histo[s] || 0;
+            histo[s] = oldFreq + 1;
+        }
+        return histo;
+    }
+
+    function strAndFreqsToHistogram(strAndFreqs) {
+        var histo = {};
+        for (var i = 0; i < strAndFreqs.length; i++) {
+            var sf = strAndFreqs[i];
+            var oldFreq = histo[sf.str] || 0;
+            histo[sf.str] = oldFreq + sf.freq;
+        }
+        return histo;
+    }
+
+    exports.stringsToHistogram = stringsToHistogram;
+    exports.strAndFreqsToHistogram = strAndFreqsToHistogram;
     exports.plotHistogram = plotHistogram;
     exports.plotBoxAndWhisker = plotBoxAndWhisker;
 
