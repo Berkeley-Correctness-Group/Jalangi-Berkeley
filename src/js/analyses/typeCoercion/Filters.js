@@ -17,11 +17,21 @@
     };
 
     var strAndFreq = {
-        notNone:function notNone(sf) {
+        notNone:function(sf) {
             return sf.str !== "none";
+        },
+        isHarmful:function(sf) {
+            return sf.str === m.Classication.HARMFUL;
+        }
+    };
+
+    var strAndClassAndFreq = {
+        isHarmful:function(scf) {
+            return scf.clss === m.Classication.HARMFUL;
         }
     };
 
     exports.obs = obs;
     exports.strAndFreq = strAndFreq;
+    exports.strAndClassAndFreq = strAndClassAndFreq;
 })();

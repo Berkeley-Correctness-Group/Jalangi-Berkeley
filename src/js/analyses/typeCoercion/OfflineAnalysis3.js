@@ -39,5 +39,17 @@
     // How prevalent are type coercions compared to all operations where coercions may occur?
     prevalencePlots.byBenchmarkGroup(observations);
 
+    // Which benchmarks have the most type coercions?
+    prevalencePlots.byBenchmark(observations);
+
+    // How many of all type coercions are potentially harmful?
+    prevalencePlots.harmfulByBenchmarkGroup(observations);
+
+    // Which benchmarks have the most potentially harmful type coercions?
+    prevalencePlots.harmfulByBenchmark(observations);
+
+    // What kinds of potentially harmful type coercions occur?
+    prevalencePlots.harmfulByType(observations);
+
 
 })();

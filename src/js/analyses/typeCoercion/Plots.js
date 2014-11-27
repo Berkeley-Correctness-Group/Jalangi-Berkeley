@@ -35,16 +35,16 @@
         // .dat
         var total = totalOfHistogram(histogram);
         var data = "";
-        var maxPerc = 0;
+        var maxY = 0;
         entries.forEach(function(entry, idx) {
-            var percentage = Math.round((entry.y / total) * 10000) / 100;
-            data += idx + " \"" + entry.x + "\" " + percentage + "\n";
-            maxPerc = Math.max(maxPerc, percentage);
+            var y = (options && options.toPercentages) ? Math.round((entry.y / total) * 10000) / 100 : entry.y;
+            data += idx + " \"" + entry.x + "\" " + y + "\n";
+            maxY = Math.max(maxY, y);
         });
         fs.writeFileSync(plotsDir + filename + ".dat", data);
 
-        // .byType
-        var yRange = "0:" + (maxPerc + 5);
+        // .plot
+        var yRange = "0:" + (maxY + 0.1 * maxY);
         var templateFile = (options && options.values) ? "histogram_with_values_template.plot_" : "histogram_template.plot_";
         var plotTemplate = fs.readFileSync(plotsDir + templateFile, {encoding:"utf8"});
         var dimensions = (options && options.wide) ? "1.2,0.6" : "0.6,0.6";
@@ -60,33 +60,29 @@
         return total;
     }
 
-    function plotBoxAndWhisker(xToValues, filename, ylabel) {
+    function plotBoxAndWhisker(xToValues, filename, yLabel) {
         // .dat
         var data = "";
         var maxY = 0;
         Object.keys(xToValues).forEach(function(group, idx) {
             var values = xToValues[group].sort();
-            var min = toPerc(nbBasic.min(values));
-            var lower = toPerc(nbStats.quantile(values, 1, 4));
-            var median = toPerc(nbStats.median(values));
-            var upper = toPerc(nbStats.quantile(values, 3, 4));
-            var max = toPerc(nbBasic.max(values));
+            var min = nbBasic.min(values);
+            var lower = nbStats.quantile(values, 1, 4);
+            var median = nbStats.median(values);
+            var upper = nbStats.quantile(values, 3, 4);
+            var max = nbBasic.max(values);
             data += idx + " " + group + " " + min + " " + lower +
-                  " " + median + " " + upper + " " + max + "\n";
+            " " + median + " " + upper + " " + max + "\n";
             maxY = Math.max(maxY, max);
         });
         fs.writeFileSync(plotsDir + filename + ".dat", data);
 
         // .plot
         var plotTemplate = fs.readFileSync(plotsDir + "box_whisker_template.plot_", {encoding:"utf8"});
-        var xrange = "-1:" + (Object.keys(xToValues).length);
-        var yrange = "0:" + (maxY + 5);
-        var plot = plotTemplate.replace(/FILENAME/g, filename).replace(/YLABEL/g, ylabel).replace(/YRANGE/g, yrange).replace(/XRANGE/g, xrange);
+        var xRange = "-1:" + (Object.keys(xToValues).length);
+        var yRange = "0:" + (maxY + 5);
+        var plot = plotTemplate.replace(/FILENAME/g, filename).replace(/YLABEL/g, yLabel).replace(/YRANGE/g, yRange).replace(/XRANGE/g, xRange);
         fs.writeFileSync(plotsDir + filename + ".plot", plot);
-    }
-
-    function toPerc(frac) {
-        return Math.round(frac * 10000) / 100;
     }
 
     function stringsToHistogram(arrayOfStrings) {
