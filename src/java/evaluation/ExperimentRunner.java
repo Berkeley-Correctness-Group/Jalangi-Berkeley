@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import org.junit.Test;
-import org.openqa.jetty.log.LogStream.STDOUT;
+//import org.openqa.jetty.log.LogStream.STDOUT;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxBinary;
@@ -36,8 +36,8 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 
 public class ExperimentRunner {
 
-	final String firefoxBinary = "/home/m/javascript/mozilla-central/obj-x86_64-unknown-linux-gnu/dist/firefox/firefox";
-	final String jalangiFFxpi = "/home/m/research/projects/Jalangi-Berkeley/browserExtensions/jalangiFF/jalangiff.xpi";
+	final String firefoxBinary = "/Applications/Nightly.app/Contents/MacOS/firefox-bin";
+	final String jalangiFFxpi = "/Users/jacksongl/macos-workspace/research/jalangi/github_jit/Jalangi-Berkeley/browserExtensions/jalangiFF/jalangiff.xpi";
 
 	final String firefoxLogFile = "/tmp/firefox.out";
 	final String javascriptLogFile = "/tmp/firefox_javascript.out";
