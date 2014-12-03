@@ -23,6 +23,8 @@
     var util = require("./CommonUtil.js");
     var plots = require('./Plots.js');
     var prevalencePlots = require('./PrevalencePlots.js');
+    var equalityPlots = require('./EqualityPlots.js');
+    var understandabilityPlots = require('./UnderstandabilityPlots.js');
 
 //    var bmGroupDirs = process.argv.slice(2); // directories that contain benchmark directories (e.g., "sunspider" contains "3d-cube")
     var bmGroupDirs = [
@@ -32,6 +34,8 @@
 
     var observations = observationParser.parseDirs(bmGroupDirs);
     console.log("Observations: "+observations.length);
+
+    // ============ Prevalence of type coercions ===================
 
     // What kinds of type coercions occur?
     prevalencePlots.byType(observations);
@@ -51,5 +55,19 @@
     // What kinds of potentially harmful type coercions occur?
     prevalencePlots.harmfulByType(observations);
 
+
+    // ============ (In)Equality checks ===================
+
+    // At code locations with in(equality) checks, are values of the "same" or different types compared?
+    equalityPlots.sameOrDiffTypes(observations);
+
+    // How much dynamic information do we have for locations with (in)equality checks?
+    equalityPlots.dynamicOccurrencesOfLocs(observations);
+
+
+    // ============ Understandability ===================
+
+    // Do code locations with coercions apply always the same coercion?
+    understandabilityPlots.consistentCoercions(observations);
 
 })();

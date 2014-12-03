@@ -105,6 +105,36 @@
         return result;
     }
 
+    function intersect(set1, set2) {
+        var result = {};
+        var keys1 = Object.keys(set1);
+        for (var i = 0; i < keys1.length; i++) {
+            if (HOP(set2, keys1[i])) {
+                result[keys1[i]] = true;
+            }
+        }
+        return result;
+    }
+
+    function substractSets(set1, set2) {
+        var result = {};
+        var keys1 = Object.keys(set1);
+        for (var i = 0; i < keys1.length; i++) {
+            if (!HOP(set2, keys1[i])) {
+                result[keys1[i]] = true;
+            }
+        }
+        return result;
+    }
+
+    function arrayToSet(arr) {
+        var set = {};
+        for (var i = 0; i < arr.length; i++) {
+            set[arr[i]] = true;
+        }
+        return set;
+    }
+
     // boilerplate to use this file both in browser and in node application
     var module;
     if (typeof exports !== "undefined") {
@@ -128,6 +158,9 @@
     module.sameArrays = sameArrays;
     module.stringToHash = stringToHash;
     module.hashInto = hashInto;
+    module.intersect = intersect;
+    module.substractSets = substractSets;
+    module.arrayToSet = arrayToSet;
 
 })();
 

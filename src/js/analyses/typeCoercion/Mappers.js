@@ -239,7 +239,10 @@
         toAbstractStringAndClassificationAndFreq:function(obs) {
             return new StringAndClassAndFreq(coercionOfObs(obs, MapModes.ABSTRACT), coercionOfObs(obs, MapModes.CLASSIFY), obs.frequency);
         },
-        toStatic:obsToStatic
+        toStatic:obsToStatic,
+        toIID:function(obs) {
+            return obs.iid;
+        }
     };
 
     var strAndFreq = {

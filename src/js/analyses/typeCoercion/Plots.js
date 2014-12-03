@@ -28,9 +28,15 @@
         Object.keys(histogram).forEach(function(x) {
             entries.push({x:x, y:histogram[x]});
         });
-        entries.sort(function(a, b) {
-            return b.y - a.y;
-        });
+        if (options && options.order) {
+            entries.sort(function(a, b) {
+                return options.order.indexOf(a.x) - options.order.indexOf(b.x);
+            });
+        } else {
+            entries.sort(function(a, b) {
+                return b.y - a.y;
+            });
+        }
 
         // .dat
         var total = totalOfHistogram(histogram);
@@ -85,6 +91,54 @@
         fs.writeFileSync(plotsDir + filename + ".plot", plot);
     }
 
+    function CategoryData() {
+        this.groupNames = []; // invariant: same length as categoryToValue
+        this.categoryToValue = []; // invariant: same length as groupNames
+    }
+
+    CategoryData.prototype = {
+        addGroup:function(groupName, categoryNames, categoryToValue) {
+            this.groupNames.push(groupName);
+            this.categoryNames = categoryNames;
+            this.categoryToValue.push(categoryToValue);
+        }
+    }
+
+    function plotCategories(categoryData, filename, yLabel) {
+        var dimensions = "0.6,0.6";
+
+        // .data
+        var data = "";
+        var maxY = 0;
+        // first row (category titles)
+        var categories = Object.keys(categoryData.categoryToValue[0]);
+        data += "Group ";
+        for (var i = 0; i < categories.length; i++) {
+            data += "\"" + categories[i] + "\" ";
+        }
+        data += "\n";
+        // other rows (actual data)
+        for (i = 0; i < categoryData.groupNames.length; i++) {
+            var groupName = categoryData.groupNames[i];
+            var categoryToValue = categoryData.categoryToValue[i];
+            data += "\"" + groupName + "\" ";
+            for (var j = 0; j < categoryData.categoryNames.length; j++) {
+                var categoryName = categoryData.categoryNames[j];
+                var value = categoryToValue[categoryName];
+                maxY = Math.max(maxY, value);
+                data += value + " ";
+            }
+            data += "\n";
+        }
+        fs.writeFileSync(plotsDir + filename + ".dat", data);
+
+        // .plot
+        var plotTemplate = fs.readFileSync(plotsDir + "categories_template.plot_", {encoding:"utf8"});
+        var yRange = "0:" + (maxY + 0.1 * maxY);
+        var plot = plotTemplate.replace(/FILENAME/g, filename).replace(/YLABEL/g, yLabel).replace(/YRANGE/g, yRange).replace(/DIMENSIONS/g, dimensions);
+        fs.writeFileSync(plotsDir + filename + ".plot", plot);
+    }
+
     function stringsToHistogram(arrayOfStrings) {
         var histo = {};
         for (var i = 0; i < arrayOfStrings.length; i++) {
@@ -109,5 +163,8 @@
     exports.strAndFreqsToHistogram = strAndFreqsToHistogram;
     exports.plotHistogram = plotHistogram;
     exports.plotBoxAndWhisker = plotBoxAndWhisker;
+    exports.plotCategories = plotCategories;
+    exports.CategoryData = CategoryData;
 
-})();
+})
+();
