@@ -86,7 +86,7 @@
         // .plot
         var plotTemplate = fs.readFileSync(plotsDir + "box_whisker_template.plot_", {encoding:"utf8"});
         var xRange = "-1:" + (Object.keys(xToValues).length);
-        var yRange = "0:" + (maxY + 5);
+        var yRange = "0:" + (maxY + maxY*0.1);
         var plot = plotTemplate.replace(/FILENAME/g, filename).replace(/YLABEL/g, yLabel).replace(/YRANGE/g, yRange).replace(/XRANGE/g, xRange);
         fs.writeFileSync(plotsDir + filename + ".plot", plot);
     }

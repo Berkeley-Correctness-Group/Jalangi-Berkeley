@@ -39,14 +39,14 @@
         var classificationAndFreq = observations.map(m.obs.toClassificationAndFreq);
         var totalFreq = classificationAndFreq.reduce(r.obsAndFreq.addFreq, 0);
         var coercionFreq = classificationAndFreq.filter(f.strAndFreq.notNone).reduce(r.obsAndFreq.addFreq, 0);
-        return totalFreq !== 0 ? coercionFreq / totalFreq : undefined;
+        return totalFreq !== 0 ? (coercionFreq / totalFreq) * 100 : undefined;
     }
 
     function observationsToHarmfulPercentage(observations) {
         var classificationAndFreq = observations.map(m.obs.toClassificationAndFreq);
         var totalFreq = classificationAndFreq.filter(f.strAndFreq.notNone).reduce(r.obsAndFreq.addFreq, 0);
         var harmfulFreq = classificationAndFreq.filter(f.strAndFreq.isHarmful).reduce(r.obsAndFreq.addFreq, 0);
-        return totalFreq !== 0 ? harmfulFreq / totalFreq : undefined;
+        return totalFreq !== 0 ? (harmfulFreq / totalFreq) * 100 : undefined;
     }
 
     /**
