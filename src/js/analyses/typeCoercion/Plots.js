@@ -23,7 +23,7 @@
     var nbBasic = require('numbers').basic;
     var nbStats = require('numbers').statistic;
 
-    function plotHistogram(histogram, filename, ylabel, options) {
+    function plotHistogram(histogram, filename, yLabel, options) {
         var entries = [];
         Object.keys(histogram).forEach(function(x) {
             entries.push({x:x, y:histogram[x]});
@@ -36,6 +36,9 @@
             entries.sort(function(a, b) {
                 return b.y - a.y;
             });
+        }
+        if (options && options.maxValues) {
+            entries = entries.slice(0, Math.min(options.maxValues, entries.length));
         }
 
         // .dat
@@ -50,11 +53,12 @@
         fs.writeFileSync(plotsDir + filename + ".dat", data);
 
         // .plot
+        var xLabel = options && options.xLabel ? options.xLabel : "";
         var yRange = "0:" + (maxY + 0.1 * maxY);
         var templateFile = (options && options.values) ? "histogram_with_values_template.plot_" : "histogram_template.plot_";
         var plotTemplate = fs.readFileSync(plotsDir + templateFile, {encoding:"utf8"});
         var dimensions = (options && options.wide) ? "1.2,0.6" : "0.6,0.6";
-        var plot = plotTemplate.replace(/FILENAME/g, filename).replace(/YLABEL/g, ylabel).replace(/YRANGE/g, yRange).replace(/DIMENSIONS/g, dimensions);
+        var plot = plotTemplate.replace(/FILENAME/g, filename).replace(/YLABEL/g, yLabel).replace(/XLABEL/g, xLabel).replace(/YRANGE/g, yRange).replace(/DIMENSIONS/g, dimensions);
         fs.writeFileSync(plotsDir + filename + ".plot", plot);
     }
 
@@ -86,7 +90,7 @@
         // .plot
         var plotTemplate = fs.readFileSync(plotsDir + "box_whisker_template.plot_", {encoding:"utf8"});
         var xRange = "-1:" + (Object.keys(xToValues).length);
-        var yRange = "0:" + (maxY + maxY*0.1);
+        var yRange = "0:" + (maxY + maxY * 0.1);
         var plot = plotTemplate.replace(/FILENAME/g, filename).replace(/YLABEL/g, yLabel).replace(/YRANGE/g, yRange).replace(/XRANGE/g, xRange);
         fs.writeFileSync(plotsDir + filename + ".plot", plot);
     }
@@ -105,7 +109,7 @@
     }
 
     function plotCategories(categoryData, filename, yLabel) {
-        var dimensions = "0.6,0.6";
+        var dimensions = "0.9,0.6";
 
         // .data
         var data = "";

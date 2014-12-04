@@ -17,7 +17,11 @@
             var obsStrAndFreqs = observations.map(m.obs.toAbstractStringAndFreq).filter(f.strAndFreq.notNone);
             obsStrAndFreqs = mode === "static" ? obsStrAndFreqs.map(m.strAndFreq.toStatic) : obsStrAndFreqs;
             var histo = plots.strAndFreqsToHistogram(obsStrAndFreqs);
-            plots.plotHistogram(histo, mode + "_prevalence", "Percentage", {toPercentages:true, wide:true});
+            plots.plotHistogram(histo, "prevalence_by_type_" + mode, "Percentage", {
+                toPercentages:true,
+                wide:true,
+                maxValues:20
+            });
         });
     }
 
@@ -85,7 +89,11 @@
         var bm2Observations = bmGroups.groupByBenchmark(allObservations);
         ["static", "dynamic"].forEach(function(mode) {
             var bm2Percentage = bmGroups.computeByBenchmark(bm2Observations, observationsToHarmfulPercentage, 20, mode);
-            plots.plotHistogram(bm2Percentage, "harmfulness_by_benchmark_" + mode, "Potentially harmful coercions (%)");
+            plots.plotHistogram(bm2Percentage, "harmfulness_by_benchmark_" + mode, "Potentially harmful coercions (%)",
+                  {
+                      wide:true,
+                      maxValues:20
+                  });
         });
     }
 
@@ -100,7 +108,11 @@
                   .map(m.strAndClassAndFreq.toStrAndFreq);
             strAndFreqs = mode === "static" ? strAndFreqs.map(m.strAndFreq.toStatic) : strAndFreqs;
             var histo = plots.strAndFreqsToHistogram(strAndFreqs);
-            plots.plotHistogram(histo, "harmful_by_type_" + mode, "Percentage", {toPercentages:true, wide:true});
+            plots.plotHistogram(histo, "harmful_by_type_" + mode, "Percentage", {
+                toPercentages:true,
+                wide:true,
+                maxValues:20
+            });
         });
     }
 

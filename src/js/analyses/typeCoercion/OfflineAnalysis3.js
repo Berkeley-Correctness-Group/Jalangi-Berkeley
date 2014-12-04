@@ -27,15 +27,15 @@
     var understandabilityPlots = require('./UnderstandabilityPlots.js');
 
 //    var bmGroupDirs = process.argv.slice(2); // directories that contain benchmark directories (e.g., "sunspider" contains "3d-cube")
-//    var bmGroupDirs = [
-//        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26/websites_subset",
-//        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26/sunspider"
-//    ];
     var bmGroupDirs = [
-        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/websites_subset",
-        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/sunspider",
-        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/octane"
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26/websites_subset",
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26/sunspider"
     ];
+    //var bmGroupDirs = [
+    //    "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/websites_subset",
+    //    "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/sunspider",
+    //    "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/octane"
+    //];
 
     var observations = observationParser.parseDirs(bmGroupDirs);
     console.log("Observations: "+observations.length);
@@ -74,5 +74,9 @@
 
     // Do code locations with coercions apply always the same coercion?
     understandabilityPlots.consistentCoercions(observations);
+
+    // At code locations with polymorphic type coercions, what kinds of coercions occur?
+    understandabilityPlots.polymorphicCoercions(observations);
+
 
 })();

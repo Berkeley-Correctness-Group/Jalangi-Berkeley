@@ -14,11 +14,11 @@
     function sameTypeForTripleEquality(type1, type2) {
         if (type1 === type2) return true;
         if (type1 === "undefined" || type2 === "undefined") return true;
-        if ((type1 === "null" && isPrimititveType(type2)) || (type2 === "null" || isPrimititveType(type1))) return true;
+        if ((type1 === "null" && !isPrimitiveType(type2)) || (type2 === "null" || !isPrimitiveType(type1))) return true;
         return false;
     }
 
-    function isPrimititveType(t) {
+    function isPrimitiveType(t) {
         return t === "number" || t === "string" || t === "boolean";
     }
 
@@ -45,6 +45,9 @@
         },
         isEquality:function(obs) {
             return obs.kind === "binary" && (obs.operation === "!==" || obs.operation === "===" || obs.operation === "!=" || obs.operation === "==");
+        },
+        isCoercion:function(obs) {
+            return m.obs.toStringAndFreq(obs).str !== "none";
         }
     };
 
@@ -81,9 +84,16 @@
         }
     };
 
+    var arr = {
+        moreThanOne:function(arr) {
+            return arr.length > 1;
+        }
+    }
+
     exports.obs = obs;
     exports.doubleEqObs = doubleEqObs;
     exports.tripleEqObs = tripleEqObs;
     exports.strAndFreq = strAndFreq;
     exports.strAndClassAndFreq = strAndClassAndFreq;
+    exports.arr = arr;
 })();

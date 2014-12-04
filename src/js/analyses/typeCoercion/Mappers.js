@@ -8,7 +8,8 @@
         STRING:"string",
         ABSTRACT:"abstract",
         CLASSIFY:"classify",
-        ABSTRACT_CLASSIFY:"abstract_classify"
+        ABSTRACT_CLASSIFY:"abstract_classify",
+        OPERATOR:"operator"
     };
 
     var Classification = {
@@ -32,6 +33,7 @@
      * Analyze the kind of coercion and
      *  - return a string representation (if mode is "string")
      *  - return an abstracted string representation (if mode is "abstract")
+     *  - return a string representation of the operator of the coercion or "none" (if mode is "operator")
      *  - return "none", "potentially harmful" or "harmless (if mode is "classify")
      *  - return the concatenated string (if mode is "abstract_classify")
      */
@@ -73,6 +75,8 @@
                     return obs.type + " in conditional";
                 } else if (mode === MapModes.ABSTRACT) {
                     return abstractType(obs.type) + " in conditional";
+                } else if (mode === MapModes.OPERATOR) {
+                    return "conditional";
                 } else if (mode === MapModes.CLASSIFY) {
                     if (obs.type === "function") {
                         return Classification.HARMFUL;
@@ -90,6 +94,8 @@
                         return op + " " + obs.type;
                     } else if (mode === MapModes.ABSTRACT) {
                         return "\\+\\-\\~ " + abstractType(obs.type);
+                    } else if (mode === MapModes.OPERATOR) {
+                        return "\\+\\-\\~";
                     } else if (mode === MapModes.CLASSIFY) {
                         return Classification.HARMFUL;
                     }
@@ -102,6 +108,8 @@
                         return op + " " + obs.type;
                     } else if (mode === MapModes.ABSTRACT) {
                         return "\\+\\-\\~ " + abstractType(obs.type);
+                    } else if (mode === MapModes.OPERATOR) {
+                        return "\\+\\-\\~";
                     } else if (mode === MapModes.CLASSIFY) {
                         return Classification.HARMFUL;
                     }
@@ -114,6 +122,8 @@
                         return op + " " + obs.type;
                     } else if (mode === MapModes.ABSTRACT) {
                         return op + " " + abstractType(obs.type);
+                    } else if (mode === MapModes.OPERATOR) {
+                        return op;
                     } else if (mode === MapModes.CLASSIFY) {
                         if (obs.type === "function") {
                             return Classification.HARMFUL;
@@ -133,6 +143,8 @@
                         return obs.leftType + " " + op + " " + obs.rightType;
                     } else if (mode === MapModes.ABSTRACT) {
                         return ignoreOrder(abstractType(obs.leftType), "ARITHM\\_OP", abstractType(obs.rightType));
+                    } else if (mode === MapModes.OPERATOR) {
+                        return "ARITHM\\_OP";
                     } else if (mode === MapModes.CLASSIFY) {
                         return Classification.HARMFUL;
                     }
@@ -146,6 +158,8 @@
                         return obs.leftType + " " + op + " " + obs.rightType;
                     } else if (mode === MapModes.ABSTRACT) {
                         return ignoreOrder(abstractType(obs.leftType), "\\+", abstractType(obs.rightType));
+                    }  else if (mode ===MapModes.OPERATOR) {
+                        return "\\+";
                     } else if (mode === MapModes.CLASSIFY) {
                         if (obs.leftType === "string" || obs.rightType === "string") {
                             var otherType = obs.leftType === "string" ? obs.rightType : obs.leftType;
@@ -168,6 +182,8 @@
                         return obs.leftType + " " + op + " " + obs.rightType;
                     } else if (mode === MapModes.ABSTRACT) {
                         return ignoreOrder(abstractType(obs.leftType), "REL\\_OP", abstractType(obs.rightType));
+                    } else if (mode === MapModes.OPERATOR) {
+                        return "REL\\_OP";
                     } else if (mode === MapModes.CLASSIFY) {
                         return Classification.HARMFUL;
                     }
@@ -187,6 +203,8 @@
                         var leftType = stronglyAbstractType(obs.leftType);
                         var rightType = stronglyAbstractType(obs.rightType);
                         return ignoreOrder(stronglyAbstractType(obs.leftType), "EQ\\_OP", stronglyAbstractType(obs.rightType));
+                    } else if (mode === MapModes.OPERATOR) {
+                        return "EQ\\_OP";
                     } else if (mode === MapModes.CLASSIFY) {
                         return Classification.HARMFUL;
                     }
@@ -199,6 +217,8 @@
                         return obs.leftType + " " + op + " " + obs.rightType;
                     } else if (mode === MapModes.ABSTRACT) {
                         return ignoreOrder(abstractType(obs.leftType), "BIT\\_OP", abstractType(obs.rightType));
+                    } else if (mode === MapModes.OPERATOR) {
+                        return "BIT\\_OP";
                     } else if (mode === MapModes.CLASSIFY) {
                         return Classification.HARMFUL;
                     }
@@ -211,6 +231,8 @@
                         return obs.leftType + " " + op + " " + obs.rightType;
                     } else if (mode === MapModes.ABSTRACT) {
                         return ignoreOrder(abstractType(obs.leftType), "BOOL\\_OP", abstractType(obs.rightType));
+                    } else if (mode === MapModes.OPERATOR) {
+                        return "BOOL\\_OP";
                     } else if (mode === MapModes.CLASSIFY) {
                         return Classification.HARMLESS;
                     }
@@ -224,6 +246,20 @@
         var newObs = util.shallowClone(obs);
         newObs.frequency = obs.frequency > 0 ? 1 : 0;
         return newObs;
+    }
+
+    function obsToTypeSummary(obs) {
+        if (obs.kind === "conditional" || obs.kind === "unary") {
+            return obs.type;
+        } else if (obs.kind === "binary") {
+            return [obs.leftType, obs.rightType].sort();
+        } else if (obs.kind === "explicit") {
+            return obs.inputType;
+        } else throw "Unexpected kind of observation: " + obs.kind;
+    }
+
+    function obsToAbstractStringAndTypeSummaryString(obs) {
+        return coercionOfObs(obs, MapModes.ABSTRACT) + "@@@" + obsToTypeSummary(obs);
     }
 
     var obs = {
@@ -242,6 +278,10 @@
         toStatic:obsToStatic,
         toIID:function(obs) {
             return obs.iid;
+        },
+        toTypeSummary:obsToTypeSummary,
+        toOperatorAndTypeSummaryString:function(obs) {
+            return coercionOfObs(obs, MapModes.OPERATOR) + "@@@" + obsToTypeSummary(obs);
         }
     };
 
