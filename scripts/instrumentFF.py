@@ -83,6 +83,7 @@ excluded = [ ]
 #]
 jalangiAnalysisFiles = [ 
    jalangiBerkeleyBaseDir+"src/js/analyses/CommonUtil.js",
+   jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/Constants.js",
    jalangiBerkeleyBaseDir+"src/js/analyses/typeCoercion/TypeAnalysisEngine3.js",
 ]
 #jalangiAnalysis = jalangiBaseDir+"src/js/analyses/logundefinedread/logUndefinedRead.js"
@@ -104,7 +105,7 @@ jalangiLibs = [
     "src/js/iidToLocation.js",
     "src/js/RecordReplayEngine.js",
     "src/js/analysis.js",
-    "node_modules/escodegen/escodegen.browser.js",
+    "node_modules/escodegen/escodegen.browser.min.js",
     "node_modules/acorn/acorn.js",
     "src/js/utils/astUtil.js",
     "src/js/instrument/esnstrument.js"
@@ -253,7 +254,7 @@ def addJalangiLibs(f):
   f.write("// START OF JALANGI LIBS\n\n")
   f.write(open(jalangiBerkeleyBaseDir+"src/js/analyses/InitDirectAnalysis.js").read())
   for jalangiLib in jalangiLibs:
-    f.write(open(jalangiBaseDir+jalangiLib).read())
+    f.write(open(jalangiBaseDir+jalangiLib).read()+"\n;\n")
   for jalangiAnalysisFile in jalangiAnalysisFiles:
     f.write(open(jalangiAnalysisFile).read())
   f.write("\n\n// END OF JALANGI LIBS\n\n")
