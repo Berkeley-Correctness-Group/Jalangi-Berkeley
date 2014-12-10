@@ -5,14 +5,18 @@
     var tablesDir = "/home/m/research/papers/ecoop15/tables/";
     var fs = require('fs');
 
-    function writeTable(headerRow, dataRows, fileName) {
-        var result = "\\begin{table}{" + guessTableDimensions(dataRows) + "}\n";
+    function writeTable(headerRow, dataRows, fileName, options) {
+        var dimensions = (options && options.alignment) ? options.alignment : guessTableDimensions(dataRows);
+        var result = "\\begin{tabular}{" + dimensions + "}\n";
+        result += "\\toprule";
         result += "  " + headerRow.join(" & ") + "\\\\\n";
+        result += "\\midrule";
         for (var i = 0; i < dataRows.length; i++) {
             var row = dataRows[i];
             result += "  " + row.join(" & ") + "\\\\\n";
         }
-        result += "\\end{table}\n";
+        result += "\\bottomrule";
+        result += "\\end{tabular}\n";
         fs.writeFileSync(tablesDir + fileName + ".tex", result);
     }
 

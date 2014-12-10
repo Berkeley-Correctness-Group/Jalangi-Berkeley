@@ -20,51 +20,59 @@
     function TypeAnalysisEngine3() {
 
         var util = importModule("CommonUtil");
+        var constants = importModule("Constants");
 
         // data structures
 
         /*
          * Unary operation (may coerce types or not).
          */
-        function UnaryObservation(iid, operation, type, resultType, value, resultValue) {
+        function UnaryObservation(iid, isStrict, operation, type, extraTypeInfo, resultType, value, resultValue) {
             this.kind = operation === "conditional" ? "conditional" : "unary";
             this.iid = iid;
+            this.isStrict = isStrict;
             this.operation = operation;
             this.type = type;
+            this.extraTypeInfo = extraTypeInfo;
             this.resultType = resultType;
             this.value = value;
             this.resultValue = resultValue;
-            this.hash = util.stringToHash(hashSeed + iid + operation + type + value);
+            this.hash = util.stringToHash(hashSeed + iid + operation + type + extraTypeInfo + value + isStrict);
         }
 
         /*
          * Binary operation (may coerce types or not).
          */
-        function BinaryObservation(iid, operation, leftType, rightType, resultType, leftValue, rightValue, resultValue) {
+        function BinaryObservation(iid, isStrict, operation, leftType, leftExtraTypeInfo, rightType, rightExtraTypeInfo, resultType, leftValue, rightValue, resultValue) {
             this.kind = "binary";
             this.iid = iid;
+            this.isStrict = isStrict;
             this.operation = operation;
             this.leftType = leftType;
+            this.leftExtraTypeInfo = leftExtraTypeInfo;
             this.rightType = rightType;
+            this.rightExtraTypeInfo = rightExtraTypeInfo;
             this.resultType = resultType;
             this.leftValue = leftValue;
             this.rightValue = rightValue;
             this.resultValue = resultValue;
-            this.hash = util.stringToHash(hashSeed + iid + operation + leftType + rightType + resultType + leftValue + rightValue + resultValue);
+            this.hash = util.stringToHash(hashSeed + iid + operation + leftType + leftExtraTypeInfo + rightType + rightExtraTypeInfo + resultType + leftValue + rightValue + resultValue + isStrict);
         }
 
         /*
          * Explicit type conversion, e.g., Boolean(..).
          */
-        function ExplicitObservation(iid, operation, inputType, outputType, inputValue, outputValue) {
+        function ExplicitObservation(iid, isStrict, operation, inputType, extraTypeInfo, outputType, inputValue, outputValue) {
             this.kind = "explicit";
             this.iid = iid;
+            this.isStrict = isStrict;
             this.operation = operation;
             this.inputType = inputType;
+            this.extraTypeInfo = extraTypeInfo;
             this.outputType = outputType;
             this.inputValue = inputValue;
             this.outputValue = outputValue;
-            this.hash = util.stringToHash(hashSeed + iid + operation + inputType + outputType + inputValue + outputValue);
+            this.hash = util.stringToHash(hashSeed + iid + operation + inputType + extraTypeInfo + outputType + inputValue + outputValue + isStrict);
         }
 
         // state
@@ -103,11 +111,10 @@
                 else
                     return "";
             } else if (t === "number") {
-                if (v === 0) {
+                if (v === 0)
                     return 0;
-                } else {
-                    return "someNonZeroNumber";
-                }
+                else
+                    return 42;   // abstract all non-zero number to 42 (to allow for merging observations)
             } else if (t === "boolean") {
                 return v;   // for booleans, store the actual value
             }
@@ -122,6 +129,28 @@
             hashToFrequency[obs.hash] = oldFreq + 1;
 
             obsCtr++;
+        }
+
+        function isStrict() {
+            return !this;
+        };
+
+        function hasToString(obj) {
+            if (!obj) return false;
+            var t = typeof obj;
+            if (t === "number" || t === "boolean" || t === "string") return false;
+            return obj.toString && obj.toString !== Object.prototype.toString;
+        }
+
+        function hasValueOf(obj) {
+            if (!obj) return false;
+            var t = typeof obj;
+            if (t === "number" || t === "boolean" || t === "string") return false;
+            return obj.valueOf && obj.valueOf !== Object.prototype.valueOf;
+        }
+
+        function extraTypeInfo(v) {
+            return constants.createExtraTypeInfo(hasToString(v), hasValueOf(v));
         }
 
         // hooks
@@ -140,7 +169,7 @@
 
         this.invokeFun = function(iid, f, base, args, val, isConstructor) {
             if (!isConstructor && (f.name === "Number" || f.name === "Boolean" || f.name === "String" || f.name === "Object")) {
-                var obs = new ExplicitObservation(iid, f.name, toTypeString(args[0]), toTypeString(val), toValueString(args[0]), toValueString(val));
+                var obs = new ExplicitObservation(iid, isStrict(), f.name, toTypeString(args[0]), extraTypeInfo(args[0]), toTypeString(val), toValueString(args[0]), toValueString(val));
                 addObservation(obs);
             }
             return val;
@@ -185,10 +214,10 @@
                 var resultType = toTypeString(result_c);
                 var obs;
                 if (!(leftType === rightType && rightType === resultType)) {
-                    obs = new BinaryObservation(iid, op, leftType, rightType, resultType,
+                    obs = new BinaryObservation(iid, isStrict(), op, leftType, extraTypeInfo(left), rightType, extraTypeInfo(right), resultType,
                           toValueString(left), toValueString(right), toValueString(result_c));  // record values only for type coercions (for efficiency)
                 } else {
-                    obs = new BinaryObservation(iid, op, leftType, rightType, resultType);
+                    obs = new BinaryObservation(iid, isStrict(), op, leftType, extraTypeInfo(left), rightType, extraTypeInfo(right), resultType);
                 }
                 // for equality operations, compute what the result is with the alternative operator
                 var altResult;
@@ -223,10 +252,10 @@
                 var resultType = toTypeString(resultType);
                 var obs;
                 if (leftType !== resultType) {
-                    obs = new UnaryObservation(iid, op, leftType, resultType,
+                    obs = new UnaryObservation(iid, isStrict(), op, leftType, extraTypeInfo(left), resultType,
                           toValueString(left), toValueString(result_c));
                 } else {
-                    obs = new UnaryObservation(iid, op, leftType, resultType);
+                    obs = new UnaryObservation(iid, isStrict(), op, leftType, extraTypeInfo(left), resultType);
                 }
                 addObservation(obs);
             }
@@ -243,9 +272,9 @@
                 var resultValue = "false";
                 if (left)
                     resultValue = "true";
-                obs = new UnaryObservation(iid, "conditional", leftType, "boolean", toValueString(left), resultValue);
+                obs = new UnaryObservation(iid, isStrict(), "conditional", leftType, extraTypeInfo(left), "boolean", toValueString(left), resultValue);
             } else {
-                obs = new UnaryObservation(iid, "conditional", "boolean", "boolean");
+                obs = new UnaryObservation(iid, isStrict(), "conditional", "boolean", 0, "boolean");
             }
             addObservation(obs);
             return left;

@@ -158,7 +158,7 @@
                         return obs.leftType + " " + op + " " + obs.rightType;
                     } else if (mode === MapModes.ABSTRACT) {
                         return ignoreOrder(abstractType(obs.leftType), "\\+", abstractType(obs.rightType));
-                    }  else if (mode ===MapModes.OPERATOR) {
+                    } else if (mode === MapModes.OPERATOR) {
                         return "\\+";
                     } else if (mode === MapModes.CLASSIFY) {
                         if (obs.leftType === "string" || obs.rightType === "string") {
@@ -252,7 +252,7 @@
         if (obs.kind === "conditional" || obs.kind === "unary") {
             return obs.type;
         } else if (obs.kind === "binary") {
-            return [obs.leftType, obs.rightType].sort();
+            return [obs.leftType, obs.rightType].sort().join(" and ");
         } else if (obs.kind === "explicit") {
             return obs.inputType;
         } else throw "Unexpected kind of observation: " + obs.kind;
@@ -280,8 +280,8 @@
             return obs.iid;
         },
         toTypeSummary:obsToTypeSummary,
-        toOperatorAndTypeSummaryString:function(obs) {
-            return coercionOfObs(obs, MapModes.OPERATOR) + "@@@" + obsToTypeSummary(obs);
+        toOperator:function(obs) {
+            return coercionOfObs(obs, MapModes.OPERATOR);
         }
     };
 

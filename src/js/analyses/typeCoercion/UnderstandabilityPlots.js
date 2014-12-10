@@ -15,7 +15,7 @@
         var bags = ["1", "2", "3-5", "6-10", ">10"];
         var iids = Object.keys(iidToTypeSummaries);
         for (i = 0; i < iids.length; i++) {
-            var nbTypes = Object.keys(iidToTypeSummaries[iids[i]]).length;
+            var nbTypes = iidToTypeSummaries[iids[i]].length;
             var bag;
             if (nbTypes === 1)
                 bag = "1";
@@ -40,6 +40,7 @@
 
     function summarizeTypesAtCoercions(allObservations) {
         var observationsWithCoercions = allObservations.filter(f.obs.isCoercion);
+        // fill it
         var iidToTypeSummaries = {};
         for (var i = 0; i < observationsWithCoercions.length; i++) {
             var obs = observationsWithCoercions[i];
@@ -47,21 +48,49 @@
             typeSummaries[m.obs.toTypeSummary(obs)] = true;
             iidToTypeSummaries[obs.iid] = typeSummaries;
         }
+        // turn type summaries into sorted arrays (to avoid double counting)
+        var iids = Object.keys(iidToTypeSummaries);
+        for (var i = 0; i < iids.length; i++) {
+            var typeSummary = iidToTypeSummaries[iids[i]];
+            typeSummary = Object.keys(typeSummary).sort();
+            iidToTypeSummaries[iids[i]] = typeSummary;
+        }
+
         return iidToTypeSummaries;
+    }
+
+    function summarizeOperators(observations) {
+        var iidToOperators = {};
+        for (var i = 0; i < observations.length; i++) {
+            var op = m.obs.toOperator(observations[i]);
+            iidToOperators[observations[i].iid] = op;
+        }
+        return iidToOperators;
     }
 
     function polymorphicCoercions(allObservations) {
         var observationsWithCoercions = allObservations.filter(f.obs.isCoercion);
-        var summaryToNbIIDs = {};
-        for (var i = 0; i < observationsWithCoercions.length; i++) {
-            var summary = m.obs.toOperatorAndTypeSummaryString(observationsWithCoercions[i]);
-            summaryToNbIIDs[summary] = (summaryToNbIIDs[summary] || 0) + 1;
+        var iidToTypeSummaries = summarizeTypesAtCoercions(observationsWithCoercions);
+        var polymorphicIIDs = {};
+        Object.keys(iidToTypeSummaries).forEach(function(iid) {
+            var nbTypes = iidToTypeSummaries[iid].length;
+            if (nbTypes > 1) polymorphicIIDs[iid] = true;
+        });
+
+        var iidToOperator = summarizeOperators(observationsWithCoercions);
+
+        var opAndTypeSummaryToNbIIDs = {};
+        var polymorphicIIDs = Object.keys(polymorphicIIDs);
+        for (var i = 0; i < polymorphicIIDs.length; i++) {
+            var iid = polymorphicIIDs[i];
+            var opAndTypeSummary = iidToOperator[iid] + "@@@" + iidToTypeSummaries[iid].join(", ");
+            opAndTypeSummaryToNbIIDs[opAndTypeSummary] = (opAndTypeSummaryToNbIIDs[opAndTypeSummary] || 0) + 1;
         }
 
         var summariesAndNbIIDs = [];
-        var summaries = Object.keys(summaryToNbIIDs);
+        var summaries = Object.keys(opAndTypeSummaryToNbIIDs);
         for (i = 0; i < summaries.length; i++) {
-            summariesAndNbIIDs.push({summary:summaries[i], nbIIDs:summaryToNbIIDs[summaries[i]]});
+            summariesAndNbIIDs.push({summary:summaries[i], nbIIDs:opAndTypeSummaryToNbIIDs[summaries[i]]});
         }
         summariesAndNbIIDs.sort(function(a, b) {
             return b.nbIIDs - a.nbIIDs;
@@ -69,14 +98,14 @@
 
         var headerRow = ["Kind of coercion", "Types", "Nb. of locations"];
         var dataRows = [];
-        summariesAndNbIIDs = summariesAndNbIIDs.slice(0, Math.min(summariesAndNbIIDs.length, 20));
+        summariesAndNbIIDs = summariesAndNbIIDs.slice(0, Math.min(summariesAndNbIIDs.length, 40));
         for (i = 0; i < summariesAndNbIIDs.length; i++) {
             var kindAndTypes = summariesAndNbIIDs[i].summary.split("@@@");
             var nbIIDs = summariesAndNbIIDs[i].nbIIDs;
             dataRows.push([kindAndTypes[0], kindAndTypes[1], nbIIDs]);
         }
 
-        tables.writeTable(headerRow, dataRows, "polymorphic_coercions");
+        tables.writeTable(headerRow, dataRows, "polymorphic_coercions", {alignment:"rp{30em}l"});
     }
 
     exports.consistentCoercions = consistentCoercions;
