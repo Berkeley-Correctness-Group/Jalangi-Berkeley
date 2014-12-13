@@ -14,18 +14,24 @@
  * limitations under the License.
  */
 
-// Author: Michael Pradel
+// Author: Michael Pradel, Liang Gong
+
+// command to compile this code:
+// javac -d thirdparty -cp thirdparty/selenium-server-standalone-2.41.0.jar ./src/java/evaluation/ExperimentRunner.java
 
 package evaluation;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-import org.junit.Test;
-//import org.openqa.jetty.log.LogStream.STDOUT;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
@@ -36,27 +42,33 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 
 public class ExperimentRunner {
 
-	// Michael:
-	final String firefoxBinary = "/home/m/javascript/mozilla-central/obj-x86_64-unknown-linux-gnu/dist/firefox/firefox-bin";
-	final String jalangiFFxpi = "/home/m/research/projects/Jalangi-Berkeley/browserExtensions/jalangiFF/jalangiff.xpi";
-	// Liang:
+  // location of Firefox modified for in-browser instrumentation
+	final String firefoxBinary = "/home/m/javascript/instrumenting_firefox_20141210/firefox"; // "/home/m/javascript/mozilla-central/obj-x86_64-unknown-linux-gnu/dist/bin/firefox"; //"thirdparty/instrumenting_firefox";
 	//final String firefoxBinary = "/Applications/Nightly.app/Contents/MacOS/firefox-bin";
-	//final String jalangiFFxpi = "/Users/jacksongl/macos-workspace/research/jalangi/github_jit/Jalangi-Berkeley/browserExtensions/jalangiFF/jalangiff.xpi";
 	
+  
+  // location of the jalangiFF Firefox plugin
+	final String jalangiFFxpi = "thirdparty/jalangiFF.xpi";
+
 	final String firefoxLogFile = "/tmp/firefox.out";
 	final String javascriptLogFile = "/tmp/firefox_javascript.out";
 
 	String baseUrl = "http://127.0.0.1";
+	String bitnamiUrl = "http://127.0.0.1:8081";
 	String jbBaseUrl = "http://127.0.0.1:8000";
 	WebDriver driver;
-	int maxWaitTime = 30 * 60;
+	int maxWaitTime = 2 * 60;
 
 	public static void main(String[] args) throws Exception {
+		System.out.println("AAAAAAAAAAA "+args);
 		ExperimentRunner runner = new ExperimentRunner();
+		System.out.println("setup..");
 		runner.setup();
+		System.out.println("setup done");
 		if (args.length == 1) {
 			runner.runOne(args[0]);
 		} else if (args.length == 2 && args[0].equals("--url")) {
+			System.out.println(">>> ExperimentRunner with URL: "+args[1]);
 			runner.runUrl(args[1]);
 		} else {
 			throw new IllegalArgumentException("need 1 or 2 arguments");
@@ -65,20 +77,45 @@ public class ExperimentRunner {
 		// runner.runAll();
 	}
 
+	public String readFile(String filename) {
+	   String content = null;
+	   File file = new File(filename); //for ex foo.txt
+	   try {
+	       FileReader reader = new FileReader(file);
+	       char[] chars = new char[(int) file.length()];
+	       reader.read(chars);
+	       content = new String(chars);
+	       reader.close();
+	   } catch (IOException e) {
+	       e.printStackTrace();
+	   }
+	   return content;
+	}
+
 	private void setup() throws Exception {
+		System.out.println("xxx1");
 		DesiredCapabilities desiredCapabilities = DesiredCapabilities.firefox();
 		LoggingPreferences loggingPreferences = new LoggingPreferences();
+		System.out.println("xxx2");
 		loggingPreferences.enable(LogType.BROWSER, Level.ALL);
 		desiredCapabilities.setCapability(CapabilityType.LOGGING_PREFS,
 				loggingPreferences);
 		FirefoxBinary binary = new FirefoxBinary(new File(firefoxBinary));
 		FirefoxProfile profile = new FirefoxProfile();
+		System.out.println("xxx3");
 		System.setProperty("webdriver.firefox.logfile", firefoxLogFile);
 		profile.setPreference("webdriver.log.file", javascriptLogFile);
 		profile.setPreference("dom.max_script_run_time", maxWaitTime);
+		// Do not divert any links (browser.link.open_newwindow will have no effect). 
+		// http://kb.mozillazine.org/Browser.link.open_newwindow.restriction
+		profile.setPreference("dom.popup_allowed_events", "");
+		profile.setPreference("dom.popup_maximum", 0);
 		profile.addExtension(new File(jalangiFFxpi));
+		System.out.println("xxx4");
 		driver = new FirefoxDriver(binary, profile, desiredCapabilities);
+		System.out.println("xxx5");
 		driver.manage().timeouts().implicitlyWait(120, TimeUnit.SECONDS);
+		System.out.println("xxx6");
 	}
 
 	private void runOne(String bm) throws Exception {
@@ -98,6 +135,16 @@ public class ExperimentRunner {
 			testTenframe();
 		} else if (bm.equals("todolist")) {
 			testTodolist();
+		} else if (bm.equals("jshint")) {
+			testJSHint();
+		} else if (bm.equals("jslint")) {
+			testJSLint();
+		} else if (bm.equals("esprima")) {
+			testEsprima();
+		} else if (bm.equals("dillinger")) {
+			testDillinger();
+		} else if (bm.equals("angularjs")) {
+			testAngularJS();
 		}
 
 		// trigger beforeunload event after last benchmark
@@ -108,8 +155,23 @@ public class ExperimentRunner {
 	}
 
 	private void runUrl(String url) {
+		System.out.println("Loading "+url);
 		driver.get(url);
-		driver.get("http://127.0.0.1:8000/tests/empty.html");
+		System.out.println("Done loading "+url);
+		
+		System.out.println("Trying to find pElement..");
+		WebElement pElement = driver.findElement(By.className("jalangiFF-p"));
+		System.out.println("pElement: "+pElement);
+		pElement.click();
+		System.out.println("Have clicked pElement");
+		
+		System.out.println("Will sleep a bit..");
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+				
 		driver.close();
 		System.out.println("Done :-)");
 	}
@@ -277,19 +339,99 @@ public class ExperimentRunner {
 				.click();
 	}
 
+	public void autoClick() throws Exception {
+		System.out.println("start auto-clicking");
+		String content = readFile("/Users/jacksongl/macos-workspace/research/jalangi/github_dlint/gitprojects/jalangi-dlint/src/java/evaluation/autoClick.js");
+		JavascriptExecutor jse = (JavascriptExecutor)driver;
+		jse.executeScript(content, "");
+	}
+
+	public void systematicExploreClick() throws Exception {
+		JavascriptExecutor jse = (JavascriptExecutor)driver;
+		for(int i=0;i<5;i++) {
+			autoClick();
+			System.out.println("auto scroll down");
+			jse.executeScript("window.scrollBy(0,250)", "");
+		}
+	}
+
+	public void testJSLint() throws Exception {
+		System.out.println("http://www.jslint.com/");
+		driver.get("http://www.jslint.com/");
+		driver.findElement(By.tagName("textarea")).clear();
+		String content = readFile("/Users/jacksongl/macos-workspace/research/jalangi/github_dlint/gitprojects/jalangi/src/js/RecordReplayEngine.js");
+		driver.findElement(By.tagName("textarea")).sendKeys(content);
+		driver.findElement(By.id("JSLINT_BUTTON")).click();
+	}
+
+	public void testAngularJS() throws Exception {
+		System.out.println("https://angularjs.org/");
+		driver.get("https://angularjs.org/");
+		systematicExploreClick();
+	}
+
+	public void testEsprima() throws Exception {
+		System.out.println("http://esprima.org/demo/parse.html");
+		driver.get("http://esprima.org/demo/parse.html");
+		systematicExploreClick();
+	}
+
+	public void testDillinger() throws Exception {
+		System.out.println("http://dillinger.io/");
+		driver.get("http://dillinger.io/");
+	}
+
+	public void testJSHint() throws Exception {
+		System.out.println("http://www.jshint.com/");
+		driver.get("http://www.jshint.com/");
+		systematicExploreClick();
+	}
+
 	public void testJoomla() throws Exception {
-		driver.get(baseUrl + "/joomla/");
+		System.out.println(bitnamiUrl + "/joomla/");
+		driver.get(bitnamiUrl + "/joomla/");
 		driver.findElement(By.linkText("Home")).click();
 		driver.findElement(By.linkText("Create an account")).click();
 		driver.findElement(By.linkText("Cancel")).click();
 		driver.findElement(By.linkText("Forgot your username?")).click();
 		driver.findElement(By.linkText("Getting Started")).click();
+		// log in
 		driver.findElement(By.id("modlgn-username")).clear();
-		driver.findElement(By.id("modlgn-username")).sendKeys("user");
+		driver.findElement(By.id("modlgn-username")).sendKeys("username");
 		driver.findElement(By.id("modlgn-passwd")).clear();
 		driver.findElement(By.id("modlgn-passwd")).sendKeys("password");
 		driver.findElement(By.name("Submit")).click();
+		// go to the homepage
+		driver.findElement(By.linkText("Home")).click();
+		// submit an article
+		
+		driver.findElement(By.linkText("Submit an Article")).click();
+		driver.findElement(By.id("jform_title")).clear();
+		driver.findElement(By.id("jform_title")).sendKeys("article-title-" + new Date());
+		driver.findElement(By.id("jform_alias")).clear();
+		driver.findElement(By.id("jform_alias")).sendKeys("article-alias-" + new Date());
+		driver.findElement(By.xpath("//a[@title='Read More']")).click();
+		driver.findElement(By.xpath("//a[@title='Toggle editor']")).click();
+		driver.findElement(By.xpath("//a[@title='Article']")).click();
 
+		// site administration
+		driver.findElement(By.linkText("Site Administrator")).click();
+		driver.findElement(By.id("mod-login-username")).clear();
+		driver.findElement(By.id("mod-login-username")).sendKeys("username");
+		driver.findElement(By.id("mod-login-password")).clear();
+		driver.findElement(By.id("mod-login-password")).sendKeys("password");
+		driver.findElement(By.xpath("//button[@tabindex='3']")).click();
+
+		driver.get(bitnamiUrl + "/joomla/administrator/index.php?option=com_media#");
+		driver.findElement(By.id("thumbs")).click();
+		driver.findElement(By.xpath("//button[@data-target='#collapseFolder']")).click();
+		driver.findElement(By.id("foldername")).clear();
+		driver.findElement(By.id("foldername")).sendKeys("test-folder-" + Math.random());
+		driver.findElement(By.xpath("//button[@type='submit']")).click();
+
+		driver.findElement(By.id("details")).click();
+		driver.findElement(By.xpath("//button[@data-target='#collapseUpload']")).click();
+		systematicExploreClick();
 	}
 
 	public void testJoomlaAdmin() throws Exception {
