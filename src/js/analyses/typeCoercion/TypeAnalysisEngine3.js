@@ -79,7 +79,10 @@
         var hashSeed = Date.now();
         var hashToObservation = {}; // number --> UnaryObservation | BinaryObservation | ExplicitObservation
         var hashToFrequency = {};   // number --> number
+        var hashToCallIDs = {};     // number --> set of numbers
         var obsCtr = 0;
+        var currentCallID = 0;
+        var maxCallID = 0;
 
         // functions
         function toTypeString(v) {
@@ -117,8 +120,13 @@
                     return 42;   // abstract all non-zero number to 42 (to allow for merging observations)
             } else if (t === "boolean") {
                 return v;   // for booleans, store the actual value
+            } else if (t === "object" && Object.prototype.toString.call(v) === "[object Array]" && v.length === 0) {
+                return "[]";
+            } else if (t === "object" && Object.prototype.toString.call(v) === "[object Object]" && Object.keys(v).length === 0) {
+                return "{}";
+            } else {
+                return "<ref>";
             }
-            return "<ref>";
         }
 
         function addObservation(obs) {
@@ -127,6 +135,10 @@
             }
             var oldFreq = hashToFrequency[obs.hash] || 0;
             hashToFrequency[obs.hash] = oldFreq + 1;
+
+            var callIDs = hashToCallIDs[obs.hash] || {};
+            callIDs[currentCallID] = true;
+            hashToCallIDs[obs.hash] = callIDs;
 
             obsCtr++;
         }
@@ -149,8 +161,14 @@
             return obj.valueOf && obj.valueOf !== Object.prototype.valueOf;
         }
 
+        function typeOfValueOf(obj) {
+            var v = obj.valueOf();
+            return toTypeString(v);
+        }
+
         function extraTypeInfo(v) {
-            return constants.createExtraTypeInfo(hasToString(v), hasValueOf(v));
+            var hasVO = hasValueOf(v);
+            return constants.createExtraTypeInfo(hasToString(v), hasVO, hasVO ? typeOfValueOf(v) : undefined);
         }
 
         // hooks
@@ -208,7 +226,7 @@
         };
 
         this.binary = function(iid, op, left, right, result_c) {
-            if (op !== "instanceof" && op !== "in") {
+            if (op !== "instanceof" && op !== "in" && op !== "delete") {
                 var leftType = toTypeString(left);
                 var rightType = toTypeString(right);
                 var resultType = toTypeString(result_c);
@@ -281,6 +299,7 @@
         };
 
         this.functionEnter = function(iid, fun, dis /* this */) {
+            currentCallID = ++maxCallID;
         };
 
         this.functionExit = function(iid) {
@@ -302,9 +321,12 @@
         };
 
         this.endExecution = function() {
+            dump("endExecution called");  // TODO RAD
             var results = {
                 hashToObservations:hashToObservation,
-                hashToFrequency:hashToFrequency
+                hashToFrequency:hashToFrequency,
+                hashToCallIDs:hashToCallIDs,
+                maxCallID:maxCallID
             };
             if (sandbox.Constants.isBrowser) {
                 console.log("Sending results to jalangiFF");
@@ -330,10 +352,21 @@
 
     sandbox.analysis = new TypeAnalysisEngine3();
     if (sandbox.Constants.isBrowser) {
-        window.addEventListener("beforeunload", function() {
-            console.log("beforeunload --> logging results");
-            sandbox.analysis.endExecution();
-        }, false);
+        //window.addEventListener("beforeunload", function() {
+        //    console.log("beforeunload --> logging results");
+        //    sandbox.analysis.endExecution();
+        //}, false);
+
+        window.addEventListener("DOMContentLoaded", function() {
+            var p = window.document.createElement("p");
+            p.className = "jalangiFF-p";
+            p.innerHTML = "jalangiFF running...";
+            window.document.body.appendChild(p);
+            p.addEventListener("click", function() {
+                console.log("click on jalangiFF's p element --> logging results");
+                sandbox.analysis.endExecution();
+            }, false);
+        });
     }
 
 }(J$));

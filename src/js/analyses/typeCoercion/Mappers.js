@@ -3,6 +3,7 @@
 (function() {
 
     var util = require('./CommonUtil.js');
+    var constants = require('./Constants.js');
 
     var MapModes = {
         STRING:"string",
@@ -29,6 +30,26 @@
         this.freq = freq;
     }
 
+    function isWrappedPrimitive(t) {
+        return t === "[object Boolean]" || t === "[object Number]" || t === "[object String]";
+    }
+
+    function isQuasiBoolean(type, extraTypeInfo) {
+        return type === "boolean" || (constants.hasValueOf(extraTypeInfo) && constants.typeOfValueOf(extraTypeInfo) === "boolean");
+    }
+
+    function isQuasiNumber(type, extraTypeInfo) {
+        return type === "number" || (constants.hasValueOf(extraTypeInfo) && constants.typeOfValueOf(extraTypeInfo) === "number");
+    }
+
+    function isQuasiString(type, extraTypeInfo) {
+        return type === "string" || (constants.hasValueOf(extraTypeInfo) && constants.typeOfValueOf(extraTypeInfo) === "string");
+    }
+
+    function isUndefinedOrNull(t) {
+        return t === "undefined" || t === "null";
+    }
+
     /*
      * Analyze the kind of coercion and
      *  - return a string representation (if mode is "string")
@@ -39,7 +60,9 @@
      */
     function coercionOfObs(obs, mode) {
         function abstractType(t) {
-            return t.indexOf("[object") === 0 ? "object" : t;
+            if (t.indexOf("[object") === 0 && !(isWrappedPrimitive(t))) {
+                return "object"
+            } else return t;
         }
 
         function stronglyAbstractType(t) {
@@ -78,7 +101,7 @@
                 } else if (mode === MapModes.OPERATOR) {
                     return "conditional";
                 } else if (mode === MapModes.CLASSIFY) {
-                    if (obs.type === "function") {
+                    if (isWrappedPrimitive(obs.type)) {
                         return Classification.HARMFUL;
                     } else {
                         return Classification.HARMLESS;
@@ -97,7 +120,8 @@
                     } else if (mode === MapModes.OPERATOR) {
                         return "\\+\\-\\~";
                     } else if (mode === MapModes.CLASSIFY) {
-                        return Classification.HARMFUL;
+                        if (isQuasiNumber(obs.type, obs.extraTypeInfo)) return Classification.HARMLESS;
+                        else return Classification.HARMFUL;
                     }
                 }
             } else if (op === "~") {
@@ -111,7 +135,8 @@
                     } else if (mode === MapModes.OPERATOR) {
                         return "\\+\\-\\~";
                     } else if (mode === MapModes.CLASSIFY) {
-                        return Classification.HARMFUL;
+                        if (isQuasiNumber(obs.type, obs.extraTypeInfo)) return Classification.HARMLESS;
+                        else return Classification.HARMFUL;
                     }
                 }
             } else if (op === "!") {
@@ -125,7 +150,7 @@
                     } else if (mode === MapModes.OPERATOR) {
                         return op;
                     } else if (mode === MapModes.CLASSIFY) {
-                        if (obs.type === "function") {
+                        if (isWrappedPrimitive(obs.type)) {
                             return Classification.HARMFUL;
                         } else {
                             return Classification.HARMLESS;
@@ -146,7 +171,9 @@
                     } else if (mode === MapModes.OPERATOR) {
                         return "ARITHM\\_OP";
                     } else if (mode === MapModes.CLASSIFY) {
-                        return Classification.HARMFUL;
+                        if (isQuasiNumber(obs.leftType, obs.leftExtraTypeInfo) &&
+                              isQuasiNumber(obs.rightType, obs.rightExtraTypeInfo)) return Classification.HARMLESS;
+                        else return Classification.HARMFUL;
                     }
                 }
             } else if (op === "+") {
@@ -161,9 +188,11 @@
                     } else if (mode === MapModes.OPERATOR) {
                         return "\\+";
                     } else if (mode === MapModes.CLASSIFY) {
-                        if (obs.leftType === "string" || obs.rightType === "string") {
-                            var otherType = obs.leftType === "string" ? obs.rightType : obs.leftType;
-                            if (otherType === "undefined" || otherType === "null") {
+                        var leftIsQuasiString = isQuasiString(obs.leftType, obs.leftExtraTypeInfo);
+                        var rightIsQuasiString = isQuasiString(obs.rightType, obs.rightExtraTypeInfo);
+                        if (leftIsQuasiString || rightIsQuasiString) {
+                            var otherType = leftIsQuasiString ? obs.rightType : obs.leftType;
+                            if (isUndefinedOrNull(otherType)) {
                                 return Classification.HARMFUL;
                             } else {
                                 return Classification.HARMLESS;
@@ -185,7 +214,10 @@
                     } else if (mode === MapModes.OPERATOR) {
                         return "REL\\_OP";
                     } else if (mode === MapModes.CLASSIFY) {
-                        return Classification.HARMFUL;
+                        if ((isQuasiNumber(obs.leftType, obs.leftExtraTypeInfo) && isQuasiNumber(obs.rightType, obs.rightExtraTypeInfo))
+                              || (isQuasiString(obs.leftType, obs.leftExtraTypeInfo) && isQuasiString(obs.rightType, obs.rightExtraTypeInfo)))
+                            return Classification.HARMLESS
+                        else return Classification.HARMFUL;
                     }
                 }
             } else if (op === "===" || op === "!==") {
@@ -206,7 +238,8 @@
                     } else if (mode === MapModes.OPERATOR) {
                         return "EQ\\_OP";
                     } else if (mode === MapModes.CLASSIFY) {
-                        return Classification.HARMFUL;
+                        if (isUndefinedOrNull(obs.leftType) || isUndefinedOrNull(obs.rightType)) return Classification.HARMLESS;
+                        else return Classification.HARMFUL;
                     }
                 }
             } else if (op === "&" || op === "^" || op === "|") {
@@ -220,7 +253,15 @@
                     } else if (mode === MapModes.OPERATOR) {
                         return "BIT\\_OP";
                     } else if (mode === MapModes.CLASSIFY) {
-                        return Classification.HARMFUL;
+                        if (isQuasiNumber(obs.leftType, obs.leftExtraTypeInfo) &&
+                              isQuasiNumber(obs.rightType, obs.rightExtraTypeInfo)) {
+                            return Classification.HARMLESS;
+                        } else if (op === "|" && obs.leftType === "undefined" &&
+                              obs.rightType === "number" && obs.rightValue === 0) {
+                            return Classification.HARMLESS;
+                        } else {
+                            return Classification.HARMFUL;
+                        }
                     }
                 }
             } else if (op === "&&" || op === "||") {
@@ -234,7 +275,11 @@
                     } else if (mode === MapModes.OPERATOR) {
                         return "BOOL\\_OP";
                     } else if (mode === MapModes.CLASSIFY) {
-                        return Classification.HARMLESS;
+                        if (isWrappedPrimitive(obs.leftType) || isWrappedPrimitive(obs.rightType)) {
+                            return Classification.HARMFUL;
+                        } else {
+                            return Classification.HARMLESS;
+                        }
                     }
                 }
             }

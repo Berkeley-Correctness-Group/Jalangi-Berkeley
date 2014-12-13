@@ -27,17 +27,18 @@
     var understandabilityPlots = require('./UnderstandabilityPlots.js');
 
 //    var bmGroupDirs = process.argv.slice(2); // directories that contain benchmark directories (e.g., "sunspider" contains "3d-cube")
-//    var bmGroupDirs = [
-//        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26/websites_subset",
-//        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26/sunspider"
-//    ];
     var bmGroupDirs = [
-        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/websites_subset",
-        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/sunspider",
-        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/octane"
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites"
     ];
+    //var bmGroupDirs = [
+    //    "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/websites_subset",
+    //    "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/sunspider",
+    //    "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/octane"
+    //];
 
-    var observations = observationParser.parseDirs(bmGroupDirs);
+    var onlineAnalysisResults = observationParser.parseDirs(bmGroupDirs);
+    var observations = onlineAnalysisResults.observations;
+    var bmToMaxCallID = onlineAnalysisResults.bmToMaxCallID;
     console.log("Observations: "+observations.length);
 
     // ============ Prevalence of type coercions ===================
@@ -60,6 +61,8 @@
     // What kinds of potentially harmful type coercions occur?
     prevalencePlots.harmfulByType(observations);
 
+    // Which percentage of calls contain at least one coercion?
+    prevalencePlots.callsWithCoercioRatio(observations, bmToMaxCallID);
 
     // ============ (In)Equality checks ===================
 

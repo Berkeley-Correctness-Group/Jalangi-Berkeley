@@ -8,20 +8,25 @@
 
     function mergeObs(bmDirs) {
         var allHashToObs = {};
+        var bmToMaxCallID = {};
         bmDirs.forEach(function(bmDir) {
             var analysisResultsRaw = fs.readFileSync(bmDir + "/analysisResults.json");
             var analysisResults = JSON.parse(analysisResultsRaw);
             var iids = offlineCommon.loadIIDs(bmDir + "/sourcemaps/");
             var bm = bmDir.split("/")[bmDir.split("/").length - 1];
             var bmGroup = bmDir.split("/")[bmDir.split("/").length - 2];
+            if (analysisResults.length !== 1) throw "Unexpected number of analysis results: "+analysisResults.length;
+            bmToMaxCallID[bm] = analysisResults[0].value.maxCallID;
             analysisResults.forEach(function(analysisResult) {
                 var hashToObs = analysisResult.value.hashToObservations;
                 var hashToFreq = analysisResult.value.hashToFrequency;
+                var hashToCallIDs = analysisResult.value.hashToCallIDs;
                 Object.keys(hashToObs).forEach(function(hash) {
                     var obs = hashToObs[hash];
                     obs.location = obs.operation + " at " + iids[obs.iid] + "(" + obs.iid + ") of " + bm;  // unique identifier of source code location
                     obs.benchmark = bm;
                     obs.benchmarkGroup = bmGroup;
+                    obs.callIDs = hashToCallIDs[hash];
                     if (util.HOP(allHashToObs, hash)) {
                         // have already seen this observation: add frequency to total dynamic frequency
                         obs.frequency += hashToFreq[hash];
@@ -36,7 +41,7 @@
         Object.keys(allHashToObs).forEach(function(hash) {
             allObs.push(allHashToObs[hash]);
         });
-        return allObs;
+        return new AnalysisResults(allObs, bmToMaxCallID)
     }
 
 
@@ -49,6 +54,11 @@
             });
         }
         return mergeObs(bmDirs);
+    }
+
+    function AnalysisResults(observations, bmToMaxCallID) {
+        this.observations = observations;
+        this.bmToMaxCallID = bmToMaxCallID;
     }
 
     exports.parseDirs = parseDirs;

@@ -19,9 +19,11 @@
 (function() {
 
     var plotsDir = "/home/m/research/papers/ecoop15/graphs/";
+
     var fs = require('fs');
     var nbBasic = require('numbers').basic;
     var nbStats = require('numbers').statistic;
+    var r = require('./Reducers.js');
 
     function plotHistogram(histogram, filename, yLabel, options) {
         var entries = [];
@@ -37,8 +39,10 @@
                 return b.y - a.y;
             });
         }
-        if (options && options.maxValues) {
-            entries = entries.slice(0, Math.min(options.maxValues, entries.length));
+        if (options && options.maxValues && entries.length > options.maxValues) {
+            var sumOfOthers = entries.slice(options.maxValues).reduce(r.xy.addY, 0);
+            entries = entries.slice(0, options.maxValues - 1);
+            entries.push({x:"Others", y:sumOfOthers});
         }
 
         // .dat
