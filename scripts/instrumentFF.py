@@ -256,7 +256,7 @@ def addJalangiLibs(f):
   for jalangiLib in jalangiLibs:
     f.write(open(jalangiBaseDir+jalangiLib).read()+"\n;\n")
   for jalangiAnalysisFile in jalangiAnalysisFiles:
-    f.write(open(jalangiAnalysisFile).read())
+    f.write(open(jalangiAnalysisFile).read()+"\n;\n")
   f.write("\n\n// END OF JALANGI LIBS\n\n")
 
 def writeURLsToFile(realName, processedName):
