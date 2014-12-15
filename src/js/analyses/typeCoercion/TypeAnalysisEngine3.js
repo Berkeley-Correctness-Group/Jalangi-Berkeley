@@ -151,14 +151,22 @@
             if (!obj) return false;
             var t = typeof obj;
             if (t === "number" || t === "boolean" || t === "string") return false;
-            return obj.toString && obj.toString !== Object.prototype.toString;
+            try {
+                return obj.toString && obj.toString !== Object.prototype.toString;
+            } catch (e) {
+                return false; // to deal w/ objects where accessing valueOf throws "permission denied"
+            }
         }
 
         function hasValueOf(obj) {
             if (!obj) return false;
             var t = typeof obj;
             if (t === "number" || t === "boolean" || t === "string") return false;
-            return obj.valueOf && obj.valueOf !== Object.prototype.valueOf;
+            try {
+                return obj.valueOf && obj.valueOf !== Object.prototype.valueOf;
+            } catch (e) {
+                return false; // to deal w/ objects where accessing valueOf throws "permission denied"
+            }
         }
 
         function typeOfValueOf(obj) {
@@ -321,7 +329,6 @@
         };
 
         this.endExecution = function() {
-            dump("endExecution called");  // TODO RAD
             var results = {
                 hashToObservations:hashToObservation,
                 hashToFrequency:hashToFrequency,
@@ -357,16 +364,16 @@
         //    sandbox.analysis.endExecution();
         //}, false);
 
-        window.addEventListener("DOMContentLoaded", function() {
-            var p = window.document.createElement("p");
-            p.className = "jalangiFF-p";
-            p.innerHTML = "jalangiFF running...";
-            window.document.body.appendChild(p);
-            p.addEventListener("click", function() {
-                console.log("click on jalangiFF's p element --> logging results");
-                sandbox.analysis.endExecution();
-            }, false);
-        });
+        //window.addEventListener("DOMContentLoaded", function() {
+        //    var p = window.document.createElement("p");
+        //    p.className = "jalangiFF-p";
+        //    p.innerHTML = "jalangiFF running...";
+        //    window.document.body.appendChild(p);
+        //    p.addEventListener("click", function() {
+        //        console.log("click on jalangiFF's p element --> logging results");
+        //        sandbox.analysis.endExecution();
+        //    }, false);
+        //});
     }
 
 }(J$));

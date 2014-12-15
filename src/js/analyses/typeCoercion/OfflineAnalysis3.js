@@ -19,16 +19,16 @@
 (function() {
 
     var observationParser = require('./ObservationParser.js');
-    var sets = require('simplesets');
     var util = require("./CommonUtil.js");
     var plots = require('./Plots.js');
     var prevalencePlots = require('./PrevalencePlots.js');
     var equalityPlots = require('./EqualityPlots.js');
     var understandabilityPlots = require('./UnderstandabilityPlots.js');
+    var plusPlots = require('./PlusPlots.js');
 
 //    var bmGroupDirs = process.argv.slice(2); // directories that contain benchmark directories (e.g., "sunspider" contains "3d-cube")
     var bmGroupDirs = [
-        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites"
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites_subset"
     ];
     //var bmGroupDirs = [
     //    "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/websites_subset",
@@ -64,6 +64,10 @@
     // Which percentage of calls contain at least one coercion?
     prevalencePlots.callsWithCoercioRatio(observations, bmToMaxCallID);
 
+    // How does the percentage of coercions among all operations differ for particular libs compared to other code?
+    prevalencePlots.libsVsOthers(observations);
+
+
     // ============ (In)Equality checks ===================
 
     // At code locations with in(equality) checks, are values of the "same" or different types compared?
@@ -71,6 +75,12 @@
 
     // How much dynamic information do we have for locations with (in)equality checks?
     equalityPlots.dynamicOccurrencesOfLocs(observations);
+
+
+    // =========== Binary plus =======================
+
+    // What kinds of binary plus operations occur?
+    plusPlots.kindsOfCoercions(observations);
 
 
     // ============ Understandability ===================

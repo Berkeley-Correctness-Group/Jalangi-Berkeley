@@ -7,6 +7,7 @@
     var r = require('./Reducers.js');
     var bmGroups = require('./BenchmarkGroups.js');
     var plots = require('./Plots.js');
+    var macros = require('./Macros.js');
 
     /**
      * Histogram of percentages of different kinds of type coercions (e.g., 5% number in conditional).
@@ -145,7 +146,36 @@
             wide:true
         });
 
-        console.log("Calls with coercion: " + (callsWithCoercion * 100 / totalCalls) + "%  (" + callsWithCoercion + "/" + totalCalls + ")");
+        var overallPercentage = Math.round(callsWithCoercion * 10000 / totalCalls) / 100;
+        macros.writeMacro("percentageCallsWithCoercion", overallPercentage + "\\%");
+
+        console.log("Calls with coercion: " + overallPercentage + "%  (" + callsWithCoercion + "/" + totalCalls + ")");
+    }
+
+    function libsVsOthers(allObservations) {
+        var componentToObservations = {};
+        for (var i = 0; i < allObservations.length; i++) {
+            var obs = allObservations[i];
+            var comp = "other";
+            if (obs.location.indexOf("jquery") !== -1) {
+                //comp = "jquery";
+            }
+            var compObs = componentToObservations[comp] || [];
+            compObs.push(obs);
+            componentToObservations[comp] = compObs;
+        }
+
+        ["static", "dynamic"].forEach(function(mode) {
+            var compToPercentage = {};
+            var comps = Object.keys(componentToObservations);
+            for (i = 0; i < comps.length; i++) {
+                var obsForComp = componentToObservations[comps[i]];
+                obsForComp = mode === "static" ? obsForComp.map(m.obs.toStatic) : obsForComp;
+                var percentage = observationsToCoercionPercentage(obsForComp);
+                compToPercentage[comps[i]] = percentage;
+            }
+            plots.plotHistogram(compToPercentage, "libsVsOthers_"+mode, "% coercions over all operations");
+        });
     }
 
     exports.byType = byType;
@@ -155,5 +185,6 @@
     exports.harmfulByBenchmark = harmfulByBenchmark;
     exports.harmfulByType = harmfulByType;
     exports.callsWithCoercioRatio = callsWithCoercionPercentage;
+    exports.libsVsOthers = libsVsOthers;
 
 })();

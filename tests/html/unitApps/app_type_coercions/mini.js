@@ -19,7 +19,6 @@
     foo();
     foo();
 
-
     console.log("done");
 
 })();

@@ -48,6 +48,12 @@
         },
         isCoercion:function(obs) {
             return m.obs.toStringAndFreq(obs).str !== "none";
+        },
+        isBinaryPlus:function(obs) {
+            return obs.kind === "binary" && obs.operation === "+";
+        },
+        isHarmful:function(obs) {
+            return m.obs.toClassification(obs) === m.Classication.HARMFUL;
         }
     };
 
@@ -81,6 +87,12 @@
     var strAndClassAndFreq = {
         isHarmful:function(scf) {
             return scf.clss === m.Classication.HARMFUL;
+        },
+        isHarmless:function(scf) {
+            return scf.clss === m.Classication.HARMLESS;
+        },
+        isNonCoercionBinaryPlus:function(scf) {
+            return scf.str === "number+number" || scf.str === "string+string";
         }
     };
 

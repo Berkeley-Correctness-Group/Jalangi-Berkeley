@@ -8,6 +8,7 @@
     var MapModes = {
         STRING:"string",
         ABSTRACT:"abstract",
+        ABSTRACT_ALL:"abstract_all",  // includes details about non-coercions (currently only for binary +)
         CLASSIFY:"classify",
         ABSTRACT_CLASSIFY:"abstract_classify",
         OPERATOR:"operator"
@@ -116,9 +117,9 @@
                     if (mode === MapModes.STRING) {
                         return op + " " + obs.type;
                     } else if (mode === MapModes.ABSTRACT) {
-                        return "\\+\\-\\~ " + abstractType(obs.type);
+                        return "+-~ " + abstractType(obs.type);
                     } else if (mode === MapModes.OPERATOR) {
-                        return "\\+\\-\\~";
+                        return "+-~";
                     } else if (mode === MapModes.CLASSIFY) {
                         if (isQuasiNumber(obs.type, obs.extraTypeInfo)) return Classification.HARMLESS;
                         else return Classification.HARMFUL;
@@ -131,9 +132,9 @@
                     if (mode === MapModes.STRING) {
                         return op + " " + obs.type;
                     } else if (mode === MapModes.ABSTRACT) {
-                        return "\\+\\-\\~ " + abstractType(obs.type);
+                        return "+-~ " + abstractType(obs.type);
                     } else if (mode === MapModes.OPERATOR) {
-                        return "\\+\\-\\~";
+                        return "+-~";
                     } else if (mode === MapModes.CLASSIFY) {
                         if (isQuasiNumber(obs.type, obs.extraTypeInfo)) return Classification.HARMLESS;
                         else return Classification.HARMFUL;
@@ -167,9 +168,9 @@
                     if (mode === MapModes.STRING) {
                         return obs.leftType + " " + op + " " + obs.rightType;
                     } else if (mode === MapModes.ABSTRACT) {
-                        return ignoreOrder(abstractType(obs.leftType), "ARITHM\\_OP", abstractType(obs.rightType));
+                        return ignoreOrder(abstractType(obs.leftType), "ARITHM", abstractType(obs.rightType));
                     } else if (mode === MapModes.OPERATOR) {
-                        return "ARITHM\\_OP";
+                        return "ARITHM";
                     } else if (mode === MapModes.CLASSIFY) {
                         if (isQuasiNumber(obs.leftType, obs.leftExtraTypeInfo) &&
                               isQuasiNumber(obs.rightType, obs.rightExtraTypeInfo)) return Classification.HARMLESS;
@@ -179,14 +180,18 @@
             } else if (op === "+") {
                 if ((obs.leftType === "number" && obs.rightType === "number") ||
                       (obs.leftType === "string" && obs.rightType === "string")) {
-                    return "none";
+                    if (mode === MapModes.ABSTRACT_ALL) {
+                        return ignoreOrder(abstractType(obs.leftType), "+", abstractType(obs.rightType));
+                    } else {
+                        return "none";
+                    }
                 } else {
                     if (mode === MapModes.STRING) {
                         return obs.leftType + " " + op + " " + obs.rightType;
-                    } else if (mode === MapModes.ABSTRACT) {
-                        return ignoreOrder(abstractType(obs.leftType), "\\+", abstractType(obs.rightType));
+                    } else if (mode === MapModes.ABSTRACT || mode === MapModes.ABSTRACT_ALL) {
+                        return ignoreOrder(abstractType(obs.leftType), "+", abstractType(obs.rightType));
                     } else if (mode === MapModes.OPERATOR) {
-                        return "\\+";
+                        return "+";
                     } else if (mode === MapModes.CLASSIFY) {
                         var leftIsQuasiString = isQuasiString(obs.leftType, obs.leftExtraTypeInfo);
                         var rightIsQuasiString = isQuasiString(obs.rightType, obs.rightExtraTypeInfo);
@@ -210,9 +215,9 @@
                     if (mode === MapModes.STRING) {
                         return obs.leftType + " " + op + " " + obs.rightType;
                     } else if (mode === MapModes.ABSTRACT) {
-                        return ignoreOrder(abstractType(obs.leftType), "REL\\_OP", abstractType(obs.rightType));
+                        return ignoreOrder(abstractType(obs.leftType), "REL", abstractType(obs.rightType));
                     } else if (mode === MapModes.OPERATOR) {
-                        return "REL\\_OP";
+                        return "REL";
                     } else if (mode === MapModes.CLASSIFY) {
                         if ((isQuasiNumber(obs.leftType, obs.leftExtraTypeInfo) && isQuasiNumber(obs.rightType, obs.rightExtraTypeInfo))
                               || (isQuasiString(obs.leftType, obs.leftExtraTypeInfo) && isQuasiString(obs.rightType, obs.rightExtraTypeInfo)))
@@ -234,9 +239,9 @@
                     } else if (mode === MapModes.ABSTRACT) {
                         var leftType = stronglyAbstractType(obs.leftType);
                         var rightType = stronglyAbstractType(obs.rightType);
-                        return ignoreOrder(stronglyAbstractType(obs.leftType), "EQ\\_OP", stronglyAbstractType(obs.rightType));
+                        return ignoreOrder(stronglyAbstractType(obs.leftType), "EQ", stronglyAbstractType(obs.rightType));
                     } else if (mode === MapModes.OPERATOR) {
-                        return "EQ\\_OP";
+                        return "EQ";
                     } else if (mode === MapModes.CLASSIFY) {
                         if (isUndefinedOrNull(obs.leftType) || isUndefinedOrNull(obs.rightType)) return Classification.HARMLESS;
                         else return Classification.HARMFUL;
@@ -249,9 +254,9 @@
                     if (mode === MapModes.STRING) {
                         return obs.leftType + " " + op + " " + obs.rightType;
                     } else if (mode === MapModes.ABSTRACT) {
-                        return ignoreOrder(abstractType(obs.leftType), "BIT\\_OP", abstractType(obs.rightType));
+                        return ignoreOrder(abstractType(obs.leftType), "BIT", abstractType(obs.rightType));
                     } else if (mode === MapModes.OPERATOR) {
-                        return "BIT\\_OP";
+                        return "BIT";
                     } else if (mode === MapModes.CLASSIFY) {
                         if (isQuasiNumber(obs.leftType, obs.leftExtraTypeInfo) &&
                               isQuasiNumber(obs.rightType, obs.rightExtraTypeInfo)) {
@@ -271,9 +276,9 @@
                     if (mode === MapModes.STRING) {
                         return obs.leftType + " " + op + " " + obs.rightType;
                     } else if (mode === MapModes.ABSTRACT) {
-                        return ignoreOrder(abstractType(obs.leftType), "BOOL\\_OP", abstractType(obs.rightType));
+                        return ignoreOrder(abstractType(obs.leftType), "BOOL", abstractType(obs.rightType));
                     } else if (mode === MapModes.OPERATOR) {
-                        return "BOOL\\_OP";
+                        return "BOOL";
                     } else if (mode === MapModes.CLASSIFY) {
                         if (isWrappedPrimitive(obs.leftType) || isWrappedPrimitive(obs.rightType)) {
                             return Classification.HARMFUL;
@@ -317,8 +322,14 @@
         toClassificationAndFreq:function(obs) {
             return new StringAndFreq(coercionOfObs(obs, MapModes.CLASSIFY), obs.frequency);
         },
+        toClassification:function(obs) {
+            return coercionOfObs(obs, MapModes.CLASSIFY);
+        },
         toAbstractStringAndClassificationAndFreq:function(obs) {
             return new StringAndClassAndFreq(coercionOfObs(obs, MapModes.ABSTRACT), coercionOfObs(obs, MapModes.CLASSIFY), obs.frequency);
+        },
+        toAbstractAllStringAndClassificationAndFreq:function(obs) {
+            return new StringAndClassAndFreq(coercionOfObs(obs, MapModes.ABSTRACT_ALL), coercionOfObs(obs, MapModes.CLASSIFY), obs.frequency);
         },
         toStatic:obsToStatic,
         toIID:function(obs) {
@@ -342,6 +353,15 @@
     var strAndClassAndFreq = {
         toStrAndFreq:function(scf) {
             return new StringAndFreq(scf.str, scf.freq > 0 ? 1 : 0);
+        },
+        toStatic:function(scf) {
+            return new StringAndClassAndFreq(scf.str, scf.clss, scf.freq > 0 ? 1 : 0);
+        },
+        toStr:function(scf) {
+            return scf.str;
+        },
+        toStrClssAndFreq:function(scf) {
+            return new StringAndFreq(scf.str + " (" + scf.clss + ")", scf.freq);
         }
     }
 

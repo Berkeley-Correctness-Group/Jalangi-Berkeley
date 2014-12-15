@@ -135,6 +135,20 @@
         return set;
     }
 
+    function randomSample(arr, nb) {
+        if (arr.length < nb) throw "Cannot pick sample of size " + nb + " from " + arr.length + " values.";
+        var result = [];
+        var pickedIdxs = {};
+        while (result.length < nb) {
+            var randomIdx = Math.round(Math.random() * arr.length);
+            if (!pickedIdxs.hasOwnProperty(randomIdx)) {
+                pickedIdxs[randomIdx] = true;
+                result.push(arr[randomIdx]);
+            }
+        }
+        return result;
+    }
+
     // boilerplate to use this file both in browser and in node application
     var module;
     if (typeof exports !== "undefined") {
@@ -161,6 +175,7 @@
     module.intersect = intersect;
     module.substractSets = substractSets;
     module.arrayToSet = arrayToSet;
+    module.randomSample = randomSample;
 
 })();
 

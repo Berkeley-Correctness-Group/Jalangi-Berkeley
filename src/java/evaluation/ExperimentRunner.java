@@ -42,12 +42,13 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 
 public class ExperimentRunner {
 
-  // location of Firefox modified for in-browser instrumentation
-	final String firefoxBinary = "/home/m/javascript/instrumenting_firefox_20141210/firefox"; // "/home/m/javascript/mozilla-central/obj-x86_64-unknown-linux-gnu/dist/bin/firefox"; //"thirdparty/instrumenting_firefox";
-	//final String firefoxBinary = "/Applications/Nightly.app/Contents/MacOS/firefox-bin";
-	
-  
-  // location of the jalangiFF Firefox plugin
+	// location of Firefox modified for in-browser instrumentation
+	final String firefoxBinary = "/home/m/javascript/instrumenting_firefox_20141212_off-thread_comp_disabled/firefox"; // "/home/m/javascript/mozilla-central/obj-x86_64-unknown-linux-gnu/dist/bin/firefox";
+																								// //"thirdparty/instrumenting_firefox";
+	// final String firefoxBinary =
+	// "/Applications/Nightly.app/Contents/MacOS/firefox-bin";
+
+	// location of the jalangiFF Firefox plugin
 	final String jalangiFFxpi = "thirdparty/jalangiFF.xpi";
 
 	final String firefoxLogFile = "/tmp/firefox.out";
@@ -60,7 +61,7 @@ public class ExperimentRunner {
 	int maxWaitTime = 2 * 60;
 
 	public static void main(String[] args) throws Exception {
-		System.out.println("AAAAAAAAAAA "+args);
+		System.out.println("AAAAAAAAAAA " + args);
 		ExperimentRunner runner = new ExperimentRunner();
 		System.out.println("setup..");
 		runner.setup();
@@ -68,7 +69,7 @@ public class ExperimentRunner {
 		if (args.length == 1) {
 			runner.runOne(args[0]);
 		} else if (args.length == 2 && args[0].equals("--url")) {
-			System.out.println(">>> ExperimentRunner with URL: "+args[1]);
+			System.out.println(">>> ExperimentRunner with URL: " + args[1]);
 			runner.runUrl(args[1]);
 		} else {
 			throw new IllegalArgumentException("need 1 or 2 arguments");
@@ -78,18 +79,18 @@ public class ExperimentRunner {
 	}
 
 	public String readFile(String filename) {
-	   String content = null;
-	   File file = new File(filename); //for ex foo.txt
-	   try {
-	       FileReader reader = new FileReader(file);
-	       char[] chars = new char[(int) file.length()];
-	       reader.read(chars);
-	       content = new String(chars);
-	       reader.close();
-	   } catch (IOException e) {
-	       e.printStackTrace();
-	   }
-	   return content;
+		String content = null;
+		File file = new File(filename); // for ex foo.txt
+		try {
+			FileReader reader = new FileReader(file);
+			char[] chars = new char[(int) file.length()];
+			reader.read(chars);
+			content = new String(chars);
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return content;
 	}
 
 	private void setup() throws Exception {
@@ -106,7 +107,8 @@ public class ExperimentRunner {
 		System.setProperty("webdriver.firefox.logfile", firefoxLogFile);
 		profile.setPreference("webdriver.log.file", javascriptLogFile);
 		profile.setPreference("dom.max_script_run_time", maxWaitTime);
-		// Do not divert any links (browser.link.open_newwindow will have no effect). 
+		// Do not divert any links (browser.link.open_newwindow will have no
+		// effect).
 		// http://kb.mozillazine.org/Browser.link.open_newwindow.restriction
 		profile.setPreference("dom.popup_allowed_events", "");
 		profile.setPreference("dom.popup_maximum", 0);
@@ -154,24 +156,45 @@ public class ExperimentRunner {
 		System.out.println("Done :-)");
 	}
 
+	private String endExecCode = "if (J$ && J$.analysis) J$.analysis.endExecution();";
+
 	private void runUrl(String url) {
-		System.out.println("Loading "+url);
+		System.out.println("Loading " + url);
 		driver.get(url);
-		System.out.println("Done loading "+url);
-		
-		System.out.println("Trying to find pElement..");
-		WebElement pElement = driver.findElement(By.className("jalangiFF-p"));
-		System.out.println("pElement: "+pElement);
-		pElement.click();
-		System.out.println("Have clicked pElement");
-		
+		System.out.println("Done loading " + url);
+
+		// System.out.println("Trying to find pElement..");
+		// WebElement pElement =
+		// driver.findElement(By.className("jalangiFF-p"));
+		// System.out.println("pElement: "+pElement);
+		// pElement.click();
+		// System.out.println("Have clicked pElement");
+
+		// wait a little bit to allow additional js
+		// code to be executed
+		System.out.println("Waiting...");
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException ex) {
+			ex.printStackTrace();
+		}
+
+		System.out.println("Ending execution...");
+		JavascriptExecutor jse = (JavascriptExecutor) driver;
+		try {
+			jse.executeScript(endExecCode, "");
+		} catch (Exception ex) {
+			System.out
+					.println("!!!exception occurred, analysis.json file is not generated.");
+		}
+
 		System.out.println("Will sleep a bit..");
 		try {
 			Thread.sleep(5000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-				
+
 		driver.close();
 		System.out.println("Done :-)");
 	}
@@ -342,13 +365,13 @@ public class ExperimentRunner {
 	public void autoClick() throws Exception {
 		System.out.println("start auto-clicking");
 		String content = readFile("/Users/jacksongl/macos-workspace/research/jalangi/github_dlint/gitprojects/jalangi-dlint/src/java/evaluation/autoClick.js");
-		JavascriptExecutor jse = (JavascriptExecutor)driver;
+		JavascriptExecutor jse = (JavascriptExecutor) driver;
 		jse.executeScript(content, "");
 	}
 
 	public void systematicExploreClick() throws Exception {
-		JavascriptExecutor jse = (JavascriptExecutor)driver;
-		for(int i=0;i<5;i++) {
+		JavascriptExecutor jse = (JavascriptExecutor) driver;
+		for (int i = 0; i < 5; i++) {
 			autoClick();
 			System.out.println("auto scroll down");
 			jse.executeScript("window.scrollBy(0,250)", "");
@@ -404,12 +427,14 @@ public class ExperimentRunner {
 		// go to the homepage
 		driver.findElement(By.linkText("Home")).click();
 		// submit an article
-		
+
 		driver.findElement(By.linkText("Submit an Article")).click();
 		driver.findElement(By.id("jform_title")).clear();
-		driver.findElement(By.id("jform_title")).sendKeys("article-title-" + new Date());
+		driver.findElement(By.id("jform_title")).sendKeys(
+				"article-title-" + new Date());
 		driver.findElement(By.id("jform_alias")).clear();
-		driver.findElement(By.id("jform_alias")).sendKeys("article-alias-" + new Date());
+		driver.findElement(By.id("jform_alias")).sendKeys(
+				"article-alias-" + new Date());
 		driver.findElement(By.xpath("//a[@title='Read More']")).click();
 		driver.findElement(By.xpath("//a[@title='Toggle editor']")).click();
 		driver.findElement(By.xpath("//a[@title='Article']")).click();
@@ -422,15 +447,19 @@ public class ExperimentRunner {
 		driver.findElement(By.id("mod-login-password")).sendKeys("password");
 		driver.findElement(By.xpath("//button[@tabindex='3']")).click();
 
-		driver.get(bitnamiUrl + "/joomla/administrator/index.php?option=com_media#");
+		driver.get(bitnamiUrl
+				+ "/joomla/administrator/index.php?option=com_media#");
 		driver.findElement(By.id("thumbs")).click();
-		driver.findElement(By.xpath("//button[@data-target='#collapseFolder']")).click();
+		driver.findElement(By.xpath("//button[@data-target='#collapseFolder']"))
+				.click();
 		driver.findElement(By.id("foldername")).clear();
-		driver.findElement(By.id("foldername")).sendKeys("test-folder-" + Math.random());
+		driver.findElement(By.id("foldername")).sendKeys(
+				"test-folder-" + Math.random());
 		driver.findElement(By.xpath("//button[@type='submit']")).click();
 
 		driver.findElement(By.id("details")).click();
-		driver.findElement(By.xpath("//button[@data-target='#collapseUpload']")).click();
+		driver.findElement(By.xpath("//button[@data-target='#collapseUpload']"))
+				.click();
 		systematicExploreClick();
 	}
 
