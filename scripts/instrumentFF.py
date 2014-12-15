@@ -215,7 +215,8 @@ def instrument():
   if firstTime:
     addJalangiLibs(f)
   # add instrumented code  
-  f.write(open(instr).read()+"\n\n") 
+  if os.path.exists(instr):
+    f.write(open(instr).read()+"\n\n") 
   f.close()
   
   # write original and sanitized URL to file
@@ -224,8 +225,9 @@ def instrument():
   if firstTime:
     shutil.copyfile(tmpInstr, instr+"_withJalangiLibs")
   
-  shutil.move(workingDirName+"jalangi_sourcemap.js", os.path.join(workingDir, uniqueFileName+"_jalangi_sourcemap.js"))
-  shutil.move(workingDirName+"jalangi_sourcemap.json", os.path.join(workingDir, uniqueFileName+"_jalangi_sourcemap.json"))
+  if os.path.exists(instr):
+    shutil.move(workingDirName+"jalangi_sourcemap.js", os.path.join(workingDir, uniqueFileName+"_jalangi_sourcemap.js"))
+    shutil.move(workingDirName+"jalangi_sourcemap.json", os.path.join(workingDir, uniqueFileName+"_jalangi_sourcemap.json"))
 
 
 def makeUniqueFileName(realFileName, workingDir):
