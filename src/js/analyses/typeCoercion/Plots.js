@@ -42,14 +42,19 @@
             });
         }
         if (options && options.maxValues && entries.length > options.maxValues) {
+            if (options.maxValues % 2 !== 0) throw "Need even maxValues";
+            var firstOnes = entries.slice(0, options.maxValues / 2);
+            var others = entries.slice(options.maxValues / 2, entries.length - (options.maxValues / 2));
+            var lastOnes = entries.slice(entries.length - (options.maxValues / 2));
             var yOfOthers;
             if (options.toPercentages) {
-                yOfOthers = entries.slice(options.maxValues).reduce(r.xy.addY, 0);
+                yOfOthers = others.reduce(r.xy.addY, 0);
             } else {
-                yOfOthers = util.avgOfArray(entries.slice(options.maxValues).map(m.xy.toY));
+                yOfOthers = util.avgOfArray(others.map(m.xy.toY));
             }
-            entries = entries.slice(0, options.maxValues - 1);
+            entries = firstOnes;
             entries.push({x:"Others", y:yOfOthers});
+            entries = entries.concat(lastOnes);
         }
 
         // .dat

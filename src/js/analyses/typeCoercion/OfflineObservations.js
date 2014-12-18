@@ -11,7 +11,6 @@
             nb = nextTypeSummaryNb++;
             typeSummaryToNb[typeSummary] = nb;
             nbToTypeSummary[nb] = typeSummary;
-            console.log("New type summary nb: " + nb); // TODO RAD
         }
         if (nextTypeSummaryNb === Number.MAX_VALUE) throw "Too many type summary numbers";
         return nb;

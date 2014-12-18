@@ -34,9 +34,9 @@
 
 //    var bmGroupDirs = process.argv.slice(2); // directories that contain benchmark directories (e.g., "sunspider" contains "3d-cube")
     var bmGroupDirs = [
-        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites"
-        //"/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/octane",
-        //"/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/sunspider"
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites",
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/octane",
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/sunspider"
     ];
     //var bmGroupDirs = [
     //    "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/websites_subset",
@@ -48,26 +48,6 @@
 
     var onlineAnalysisResults = observationParser.parseDirs(bmGroupDirs);
     console.log("Observations: " + onlineAnalysisResults.observations.length);
-
-    // TODO RAD
-    var typeSummaryToFreq = {};
-    for (var i = 0; i < onlineAnalysisResults.observations.length; i++) {
-        var obs = onlineAnalysisResults.observations[i];
-        var summary;
-        if (obs.kind === "unary") {
-            summary = obs.type + "@@@" + obs.value + "@@@" + obs.resultType + "@@@" + obs.resultValue;
-        } else if (obs.kind === "binary") {
-            summary = obs.leftType + "@@@" + obs.leftValue + "@@@" + obs.rightType + "@@@" + obs.rightValue + "@@@" + obs.resultType + "@@@" + obs.resultValue;
-        }
-        typeSummaryToFreq[summary] = (typeSummaryToFreq[summary] || 0) + 1;
-    }
-    Object.keys(typeSummaryToFreq).sort(function(s1,s2) {
-        return typeSummaryToFreq[s2] - typeSummaryToFreq[s1];
-    }).slice(0, 32).forEach(function(s) {
-       console.log(typeSummaryToFreq[s]+" -- "+s);
-    });
-    // TODO RAD (END)
-
 
     // ============ Prevalence of type coercions ===================
 

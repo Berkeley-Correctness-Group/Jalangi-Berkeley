@@ -26,11 +26,14 @@
     };
 
     function mergeObs(bmDirs) {
-        var allHashToObs = {};
         var bmToMaxCallID = {};
         var benchmarks = [];
         var benchmarkGroups = [];
-        bmDirs.forEach(function(bmDir) {
+        var allObs = [];
+        for (var i = 0; i < bmDirs.length; i++) {
+            var bmDir = bmDirs[i];
+            console.log("Reading directory " + bmDir);
+            var allHashToObs = {};
             var analysisResultsRaw = fs.readFileSync(bmDir + "/analysisResults.json");
             var analysisResults = JSON.parse(analysisResultsRaw);
             //var i ids = offlineCommon.loadIIDs(bmDir + "/sourcemaps/");
@@ -44,10 +47,11 @@
                 var hashToObs = analysisResult.value.hashToObservations;
                 var hashToFreq = analysisResult.value.hashToFrequency;
                 var hashToCallIDs = analysisResult.value.hashToCallIDs;
+                console.log("  Found analysis result with " + Object.keys(hashToObs).length + " hashes");
                 Object.keys(hashToObs).forEach(function(hash) {
                     var obs = hashToObs[hash];
-                    delete obs.isStrict; // not needed, save memory
-                    delete obs.hash;     // not needed after this point, save memory
+                    delete obs.isStrict;  // save memory
+                    delete obs.hash;      // save memory
                     obs.benchmark = bm;
                     obs.benchmarkGroup = bmGroup;
                     obs.callIDs = hashToCallIDs[hash];
@@ -60,14 +64,16 @@
                     }
                 });
             });
-            console.log("Reading directory " + bmDir + " ... done");
-        });
-        var allObs = [];
-        Object.keys(allHashToObs).forEach(function(hash) {
-            var obs = allHashToObs[hash];
-            var offlineObs = offlineObservations.toOfflineObservation(obs);
-            allObs.push(offlineObs);
-        });
+            var hashes = Object.keys(allHashToObs);
+            for (var j = 0; j < hashes.length; j++) {
+                var obs = allHashToObs[hashes[j]];
+                var offlineObs = offlineObservations.toOfflineObservation(obs);
+                allObs.push(offlineObs);
+            }
+
+            console.log("Reading directory " + bmDir + " ... done (total observations now: " + allObs.length + ")");
+        }
+
         console.log("Creating list of observations ... done");
         return new AnalysisResults(allObs, bmToMaxCallID, benchmarks, benchmarkGroups);
     }
@@ -87,7 +93,7 @@
                 bmDirs.push(bmGroupDir + "/" + bmName);
             });
         }
-        console.log("Parsing directories ... done");
+        console.log("Parsing directories ... done: "+bmDirs.length);
         return mergeObs(bmDirs);
     }
 
