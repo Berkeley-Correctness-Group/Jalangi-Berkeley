@@ -8,9 +8,10 @@
     var plots = require('./Plots.js');
     var tables = require('./Tables.js');
     var util = require("./CommonUtil.js");
+    var macros = require('./Macros.js');
 
-    function consistentCoercions(allObservations) {
-        var iidToTypeSummaries = summarizeTypesAtCoercions(allObservations);
+    function consistentCoercions(analysisResults) {
+        var iidToTypeSummaries = summarizeTypesAtCoercions(analysisResults.observations);
         var nbTypesToNbIIDs = {};
         var bags = ["1", "2", "3-5", "6-10", ">10"];
         var iids = Object.keys(iidToTypeSummaries);
@@ -36,6 +37,9 @@
             toPercentages:true,
             xLabel:"Number of different types coerced"
         });
+
+        var percentageMonomorphic = nbTypesToNbIIDs["1"] * 100 / iids.length;
+        macros.writeMacro("percentageMonomorphic", util.roundPerc(percentageMonomorphic) + "\\%");
     }
 
     function summarizeTypesAtCoercions(allObservations) {
@@ -68,8 +72,8 @@
         return iidToOperators;
     }
 
-    function polymorphicCoercions(allObservations) {
-        var observationsWithCoercions = allObservations.filter(f.obs.isCoercion);
+    function polymorphicCoercions(analysisResults) {
+        var observationsWithCoercions = analysisResults.observations.filter(f.obs.isCoercion);
         var iidToTypeSummaries = summarizeTypesAtCoercions(observationsWithCoercions);
         var polymorphicIIDs = {};
         Object.keys(iidToTypeSummaries).forEach(function(iid) {

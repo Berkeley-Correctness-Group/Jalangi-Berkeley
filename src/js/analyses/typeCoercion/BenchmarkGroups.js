@@ -6,7 +6,8 @@
     var f = require('./Filters.js');
     var r = require('./Reducers.js');
 
-    function groupByGroupAndBenchmark(allObservations) {
+    function groupByGroupAndBenchmark(analysisResults) {
+        var allObservations = analysisResults.observations;
         var bmGroup2Bm2Observations = {};
         for (var i = 0; i < allObservations.length; i++) {
             var obs = allObservations[i];
@@ -21,7 +22,8 @@
         return bmGroup2Bm2Observations;
     }
 
-    function groupByBenchmark(allObservations) {
+    function groupByBenchmark(analysisResults) {
+        var allObservations = analysisResults.observations;
         var bm2Observations = {};
         for (var i = 0; i < allObservations.length; i++) {
             var obs = allObservations[i];
@@ -41,7 +43,7 @@
      * @mode "static" or "dynamic"
      * @returns map from at most maxNbValues benchmarks to the computed value
      */
-    function computeByBenchmark(bm2Observations, observationsToValueFun, maxNbValues, mode) {
+    function computeByBenchmark(bm2Observations, observationsToValueFun, maxNbValues, mode, analysisResults) {
         var bmAndValue = [];
         for (var bm in bm2Observations) {
             var observations = bm2Observations[bm];
@@ -57,7 +59,8 @@
         bmAndValue = bmAndValue.slice(0, Math.min(maxNbValues, bmAndValue.length));
         var bm2Values = {};
         for (var i = 0; i < bmAndValue.length; i++) {
-            bm2Values[bmAndValue[i].bm] = bmAndValue[i].value;
+            var bmName = analysisResults.resolveBenchmark(bmAndValue[i].bm);
+            bm2Values[bmName] = bmAndValue[i].value;
         }
         return bm2Values;
     }
@@ -70,11 +73,12 @@
      * @param mode
      * @return map from benchmark group to array of values (one value per benchmark in the group)
      */
-    function computeByBenchmarkGroup(bmGroup2Bm2Observations, observationsToValueFun, mode) {
-        var bmGroup2Values = {};
-        for (var bmGroup in bmGroup2Bm2Observations) {
-            var bm2Observations = bmGroup2Bm2Observations[bmGroup];
-            var values = bmGroup2Values[bmGroup] || [];
+    function computeByBenchmarkGroup(bmGroup2Bm2Observations, observationsToValueFun, mode, analysisResults) {
+        var bmGroupName2Values = {};
+        for (var bmGroupNb in bmGroup2Bm2Observations) {
+            var bmGroupName = analysisResults.resolveBenchmarkGroup(bmGroupNb);
+            var bm2Observations = bmGroup2Bm2Observations[bmGroupNb];
+            var values = bmGroupName2Values[bmGroupName] || [];
             for (var bm in bm2Observations) {
                 var observations = bm2Observations[bm];
                 observations = mode === "static" ? observations.map(m.obs.toStatic) : observations;
@@ -83,9 +87,9 @@
                     values.push(value);
                 }
             }
-            bmGroup2Values[bmGroup] = values;
+            bmGroupName2Values[bmGroupName] = values;
         }
-        return bmGroup2Values;
+        return bmGroupName2Values;
     }
 
     exports.groupByGroupAndBenchmark = groupByGroupAndBenchmark;

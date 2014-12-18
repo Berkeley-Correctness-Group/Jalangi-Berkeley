@@ -8,9 +8,9 @@
     var plots = require('./Plots.js');
     var util = require("./CommonUtil.js");
 
-    function kindsOfCoercions(allObservations) {
+    function kindsOfCoercions(analysisResults) {
         ["static", "dynamic"].forEach(function(mode) {
-            var strAndClassAndFreqs = allObservations.filter(f.obs.isBinaryPlus).map(m.obs.toAbstractAllStringAndClassificationAndFreq);
+            var strAndClassAndFreqs = analysisResults.observations.filter(f.obs.isBinaryPlus).map(m.obs.toAbstractAllStringAndClassificationAndFreq);
             strAndClassAndFreqs = mode === "static" ? strAndClassAndFreqs.map(m.strAndClassAndFreq.toStatic) : strAndClassAndFreqs;
 
 

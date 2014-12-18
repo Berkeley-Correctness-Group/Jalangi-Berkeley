@@ -20,7 +20,7 @@
     }
 
     function shallowClone(s) {
-        var r = {};
+        var r = Object.create(s.__proto__);
         for (var p in s) {
             if (HOP(s, p))
                 r[p] = s[p];
@@ -149,6 +149,24 @@
         return result;
     }
 
+    function printElapsedTime(startMilliSecs) {
+        var elapsedMS = new Date().getTime() - startMilliSecs;
+        console.log("Elapsed time: " + (Math.round(elapsedMS / 1000)) + " seconds = " + (Math.round(elapsedMS / 1000 / 60)) + " minutes");
+    }
+
+    function avgOfArray(arr) {
+        if (arr.length === 0) return;
+        var sum = 0;
+        for (var i = 0; i < arr.length; i++) {
+            sum += arr[i];
+        }
+        return sum / arr.length;
+    }
+
+    function roundPerc(perc) {
+        return Math.round(perc*100)/100;
+    }
+
     // boilerplate to use this file both in browser and in node application
     var module;
     if (typeof exports !== "undefined") {
@@ -176,6 +194,9 @@
     module.substractSets = substractSets;
     module.arrayToSet = arrayToSet;
     module.randomSample = randomSample;
+    module.printElapsedTime = printElapsedTime;
+    module.avgOfArray = avgOfArray;
+    module.roundPerc = roundPerc;
 
 })();
 

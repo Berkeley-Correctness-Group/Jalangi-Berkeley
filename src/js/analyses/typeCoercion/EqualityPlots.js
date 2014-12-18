@@ -13,9 +13,9 @@
         TRIPLE:"!== or ==="
     };
 
-    function sameOrDiffTypes(allObservations) {
-        var doubleEqualityObservations = allObservations.filter(f.obs.isDoubleEquality);
-        var tripleEqualityObservations = allObservations.filter(f.obs.isTripleEquality);
+    function sameOrDiffTypes(analysisResults) {
+        var doubleEqualityObservations = analysisResults.observations.filter(f.obs.isDoubleEquality);
+        var tripleEqualityObservations = analysisResults.observations.filter(f.obs.isTripleEquality);
 
         var categoryData = new plots.CategoryData();
 
@@ -53,8 +53,8 @@
         return iidSet;
     }
 
-    function dynamicOccurrencesOfLocs(allObservations) {
-        var equalityObservations = allObservations.filter(f.obs.isEquality);
+    function dynamicOccurrencesOfLocs(analysisResults) {
+        var equalityObservations = analysisResults.observations.filter(f.obs.isEquality);
         var iidToNbOccurrences = {};
         for (var i = 0; i < equalityObservations.length; i++) {
             var obs = equalityObservations[i];

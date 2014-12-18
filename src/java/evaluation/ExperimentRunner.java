@@ -184,8 +184,8 @@ public class ExperimentRunner {
 		try {
 			jse.executeScript(endExecCode, "");
 		} catch (Exception ex) {
-			System.out
-					.println("!!!exception occurred, analysis.json file is not generated.");
+			System.out.println("!!!exception occurred, analysis.json file is not generated.");
+			System.out.println(ex);
 		}
 
 		System.out.println("Will sleep a bit..");

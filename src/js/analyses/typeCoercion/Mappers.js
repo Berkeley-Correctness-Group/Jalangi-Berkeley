@@ -365,9 +365,16 @@
         }
     }
 
+    var xy = {
+        toY:function(xy) {
+            return xy.y;
+        }
+    }
+
     exports.obs = obs;
     exports.strAndFreq = strAndFreq;
     exports.strAndClassAndFreq = strAndClassAndFreq;
     exports.Classication = Classification;
+    exports.xy = xy;
 
 })();

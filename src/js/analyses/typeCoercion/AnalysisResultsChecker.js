@@ -9,6 +9,14 @@
     var baseDir = "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites/";
     var allURLs = "/home/m/research/projects/Jalangi-Berkeley/tests/typeCoercion/alexa_top100_20140716.txt";
 
+    var blacklist = ['http://Thepiratebay.se',
+        'http://Akamaihd.net',
+        'http://Bp.blogspot.com',
+        'http://Huffingtonpost.com',
+        'http://Soso.com',
+        'http://Vube.com'];
+
+
     var done = [];
     var notDone = [];
     var files = fs.readdirSync(baseDir);
@@ -25,10 +33,11 @@
     }
 
     console.log("DONE:\n" + done.join("\n") + "\n");
-    console.log("DONE BUT NO RESULTS:\n" + notDone.join("\n")+"\n")
+    console.log("DONE BUT NO RESULTS:\n" + notDone.join("\n") + "\n")
 
     var urls = fs.readFileSync(allURLs, {encoding:"utf8"}).split("\n");
     var todo = util.substractSets(util.arrayToSet(urls), util.arrayToSet(done));
+    todo = util.substractSets(todo, util.arrayToSet(blacklist));
 
     console.log("STILL TO DO:\n" + Object.keys(todo).sort().join("\n"));
 

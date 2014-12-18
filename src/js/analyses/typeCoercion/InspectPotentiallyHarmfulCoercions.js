@@ -8,7 +8,7 @@
     var f = require('./Filters.js');
 
     var bmGroupDirs = [
-        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites_subset"
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites"
     ];
 
     function getHarmfulObservations() {
@@ -26,9 +26,10 @@
         var locToObservations = {};
         for (var i = 0; i < observations.length; i++) {
             var obs = observations[i];
-            var obsForLoc = locToObservations[obs.location] || [];
+            var loc = obs.bm + "@@@" + obs.iid;
+            var obsForLoc = locToObservations[loc] || [];
             obsForLoc.push(obs);
-            locToObservations[obs.location] = obsForLoc;
+            locToObservations[loc] = obsForLoc;
         }
         var locsToInspect = util.randomSample(Object.keys(locToObservations), sampleSize);
         var resultLocToObservations = {};

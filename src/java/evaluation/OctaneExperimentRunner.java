@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxBinary;
@@ -37,14 +38,13 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class OctaneExperimentRunner {
 
-	final String firefoxBinary = "/Applications/Nightly.app/Contents/MacOS/firefox-bin";
-	final String jalangiFFxpi = "/Users/jacksongl/macos-workspace/research/jalangi/github_jit/Jalangi-Berkeley/browserExtensions/jalangiFF/jalangiff.xpi";
+	final String firefoxBinary = "/home/m/javascript/instrumenting_firefox_20141212_off-thread_comp_disabled/firefox";
+	final String jalangiFFxpi = "thirdparty/jalangiFF.xpi";
 	
 	final String firefoxLogFile = "/tmp/firefox.out";
 	final String javascriptLogFile = "/tmp/firefox_javascript.out";
 
 	String baseUrl = "http://127.0.0.1:8000/tests/octane2/";
-	String emptyPageUrl = "http://127.0.0.1:8000/tests/inconsistentType/empty.html";
 	WebDriver driver;
 	int maxWaitTime = 30*60;
 
@@ -75,12 +75,28 @@ public class OctaneExperimentRunner {
 		System.out.println("Done :-)");
 	}
 
+	private String endExecCode = "if (J$ && J$.analysis) J$.analysis.endExecution();";
 	
 	public void testBenchmark(String benchmark) throws Exception {
 		driver.get(baseUrl+"index_"+benchmark+".html?auto=1");
 		(new WebDriverWait(driver, maxWaitTime)).until(ExpectedConditions.textToBePresentInElementLocated(By.id("main-banner"), "Score"));
-		driver.get(emptyPageUrl);
-		
+
+		System.out.println("Ending execution...");
+		JavascriptExecutor jse = (JavascriptExecutor) driver;
+		try {
+			jse.executeScript(endExecCode, "");
+		} catch (Exception ex) {
+			System.out.println("!!!exception occurred, analysis.json file is not generated.");
+			System.out.println(ex);
+		}
+
+		System.out.println("Will sleep a bit..");
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
 	}
 	
 }

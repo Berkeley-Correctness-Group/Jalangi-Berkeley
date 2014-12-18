@@ -1,3 +1,6 @@
 http://Thepiratebay.se --> seems to have died (timeout) (Dec 15, 2014)
-http://www.akamaihd.net/ --> doesn't exist anymore (server not found) (Dec 15, 2014)
+http://Akamaihd.net --> doesn't exist anymore (server not found) (Dec 15, 2014)
 http://Bp.blogspot.com --> doesn't exist anymore (server not found) (Dec 15, 2014)
+http://Huffingtonpost.com --> exception when calling endExecution from Selenium; works if we trigger endExecution from site console
+http://Soso.com --> not usable (timeout/takes extremely long to load) (Dec 16, 2014)
+http://Vube.com --> infinite loop in endExecution, unclear why (Dec 16, 2014)

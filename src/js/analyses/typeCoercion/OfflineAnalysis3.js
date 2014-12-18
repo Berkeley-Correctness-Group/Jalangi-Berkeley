@@ -18,6 +18,12 @@
 
 (function() {
 
+    // poor man's parallelization :-)
+    var parallelize = process.argv.length === 3;
+    if (parallelize) {
+        var workload = parseInt(process.argv[2]);
+    }
+
     var observationParser = require('./ObservationParser.js');
     var util = require("./CommonUtil.js");
     var plots = require('./Plots.js');
@@ -28,7 +34,9 @@
 
 //    var bmGroupDirs = process.argv.slice(2); // directories that contain benchmark directories (e.g., "sunspider" contains "3d-cube")
     var bmGroupDirs = [
-        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites_subset"
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites"
+        //"/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/octane",
+        //"/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/sunspider"
     ];
     //var bmGroupDirs = [
     //    "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/websites_subset",
@@ -36,60 +44,91 @@
     //    "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/octane"
     //];
 
+    var startTime = new Date().getTime();
+
     var onlineAnalysisResults = observationParser.parseDirs(bmGroupDirs);
-    var observations = onlineAnalysisResults.observations;
-    var bmToMaxCallID = onlineAnalysisResults.bmToMaxCallID;
-    console.log("Observations: "+observations.length);
+    console.log("Observations: " + onlineAnalysisResults.observations.length);
+
+    // TODO RAD
+    var typeSummaryToFreq = {};
+    for (var i = 0; i < onlineAnalysisResults.observations.length; i++) {
+        var obs = onlineAnalysisResults.observations[i];
+        var summary;
+        if (obs.kind === "unary") {
+            summary = obs.type + "@@@" + obs.value + "@@@" + obs.resultType + "@@@" + obs.resultValue;
+        } else if (obs.kind === "binary") {
+            summary = obs.leftType + "@@@" + obs.leftValue + "@@@" + obs.rightType + "@@@" + obs.rightValue + "@@@" + obs.resultType + "@@@" + obs.resultValue;
+        }
+        typeSummaryToFreq[summary] = (typeSummaryToFreq[summary] || 0) + 1;
+    }
+    Object.keys(typeSummaryToFreq).sort(function(s1,s2) {
+        return typeSummaryToFreq[s2] - typeSummaryToFreq[s1];
+    }).slice(0, 32).forEach(function(s) {
+       console.log(typeSummaryToFreq[s]+" -- "+s);
+    });
+    // TODO RAD (END)
+
 
     // ============ Prevalence of type coercions ===================
 
-    // How prevalent are type coercions compared to all operations where coercions may occur?
-    prevalencePlots.byBenchmarkGroup(observations);
+    if (!parallelize || workload === 0) {
+        // How prevalent are type coercions compared to all operations where coercions may occur?
+        prevalencePlots.byBenchmarkGroup(onlineAnalysisResults);
+        prevalencePlots.overallPrevalence(onlineAnalysisResults);
 
-    // Which benchmarks have the most type coercions?
-    prevalencePlots.byBenchmark(observations);
+        // Which benchmarks have the most type coercions?
+        prevalencePlots.byBenchmark(onlineAnalysisResults);
 
-    // What kinds of type coercions occur?
-    prevalencePlots.byType(observations);
+        // What kinds of type coercions occur?
+        prevalencePlots.byType(onlineAnalysisResults);
+    }
 
-    // How many of all type coercions are potentially harmful?
-    prevalencePlots.harmfulByBenchmarkGroup(observations);
+    if (!parallelize || workload === 1) {
+        // How many of all type coercions are potentially harmful?
+        prevalencePlots.harmfulByBenchmarkGroup(onlineAnalysisResults);
+        prevalencePlots.overallPercentageHarmful(onlineAnalysisResults);
 
-    // Which benchmarks have the most potentially harmful type coercions?
-    prevalencePlots.harmfulByBenchmark(observations);
+        // Which benchmarks have the most potentially harmful type coercions?
+        prevalencePlots.harmfulByBenchmark(onlineAnalysisResults);
 
-    // What kinds of potentially harmful type coercions occur?
-    prevalencePlots.harmfulByType(observations);
+        // What kinds of potentially harmful type coercions occur?
+        prevalencePlots.harmfulByType(onlineAnalysisResults);
+    }
 
-    // Which percentage of calls contain at least one coercion?
-    prevalencePlots.callsWithCoercioRatio(observations, bmToMaxCallID);
+    if (!parallelize || workload === 2) {
+        // Which percentage of calls contain at least one coercion?
+        prevalencePlots.callsWithCoercioRatio(onlineAnalysisResults);
 
-    // How does the percentage of coercions among all operations differ for particular libs compared to other code?
-    prevalencePlots.libsVsOthers(observations);
+        // How does the percentage of coercions among all operations differ for particular libs compared to other code?
+        //prevalencePlots.libsVsOthers(observations);   // memory problem when analyzing all benchmarks
+
+        // ============ (In)Equality checks ===================
+
+        // At code locations with in(equality) checks, are values of the "same" or different types compared?
+        equalityPlots.sameOrDiffTypes(onlineAnalysisResults);
+
+        // How much dynamic information do we have for locations with (in)equality checks?
+        equalityPlots.dynamicOccurrencesOfLocs(onlineAnalysisResults);
+    }
+
+    if (!parallelize || workload === 3) {
+
+        // =========== Binary plus =======================
+
+        // What kinds of binary plus operations occur?
+        plusPlots.kindsOfCoercions(onlineAnalysisResults);
 
 
-    // ============ (In)Equality checks ===================
+        // ============ Understandability ===================
 
-    // At code locations with in(equality) checks, are values of the "same" or different types compared?
-    equalityPlots.sameOrDiffTypes(observations);
+        // Do code locations with coercions apply always the same coercion?
+        understandabilityPlots.consistentCoercions(onlineAnalysisResults);
 
-    // How much dynamic information do we have for locations with (in)equality checks?
-    equalityPlots.dynamicOccurrencesOfLocs(observations);
+        // At code locations with polymorphic type coercions, what kinds of coercions occur?
+        understandabilityPlots.polymorphicCoercions(onlineAnalysisResults);
 
+    }
 
-    // =========== Binary plus =======================
-
-    // What kinds of binary plus operations occur?
-    plusPlots.kindsOfCoercions(observations);
-
-
-    // ============ Understandability ===================
-
-    // Do code locations with coercions apply always the same coercion?
-    understandabilityPlots.consistentCoercions(observations);
-
-    // At code locations with polymorphic type coercions, what kinds of coercions occur?
-    understandabilityPlots.polymorphicCoercions(observations);
-
+    util.printElapsedTime(startTime);
 
 })();
