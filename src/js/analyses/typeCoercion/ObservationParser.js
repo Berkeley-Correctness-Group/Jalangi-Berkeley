@@ -4,7 +4,6 @@
 
     var fs = require('fs');
     var util = require("./CommonUtil.js");
-    var offlineCommon = require('../OfflineAnalysesCommon.js');
     var offlineObservations = require('./OfflineObservations.js');
 
     function AnalysisResults(observations, bmToMaxCallID, benchmarks, benchmarkGroups) {
@@ -36,7 +35,6 @@
             var allHashToObs = {};
             var analysisResultsRaw = fs.readFileSync(bmDir + "/analysisResults.json");
             var analysisResults = JSON.parse(analysisResultsRaw);
-            //var i ids = offlineCommon.loadIIDs(bmDir + "/sourcemaps/");
             var bmName = bmDir.split("/")[bmDir.split("/").length - 1];
             var bm = getOrCreateIndex(benchmarks, bmName);
             var bmGroupName = bmDir.split("/")[bmDir.split("/").length - 2];

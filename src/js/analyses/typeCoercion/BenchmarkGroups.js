@@ -39,11 +39,10 @@
      * and summarizes the resulting benchmark-value pairs.
      * @param bm2Observations
      * @param observationsToValueFun
-     * @param maxNbValues
      * @mode "static" or "dynamic"
      * @returns map from at most maxNbValues benchmarks to the computed value
      */
-    function computeByBenchmark(bm2Observations, observationsToValueFun, maxNbValues, mode, analysisResults) {
+    function computeByBenchmark(bm2Observations, observationsToValueFun, mode, analysisResults) {
         var bmAndValue = [];
         for (var bm in bm2Observations) {
             var observations = bm2Observations[bm];
@@ -56,7 +55,6 @@
         bmAndValue.sort(function(a, b) {
             return b.value - a.value;
         });
-        bmAndValue = bmAndValue.slice(0, Math.min(maxNbValues, bmAndValue.length));
         var bm2Values = {};
         for (var i = 0; i < bmAndValue.length; i++) {
             var bmName = analysisResults.resolveBenchmark(bmAndValue[i].bm);

@@ -100,16 +100,16 @@
             return b.nbIIDs - a.nbIIDs;
         });
 
-        var headerRow = ["Kind of coercion", "Types", "Nb. of locations"];
+        var headerRow = ["Operation", "Coerced types", "Nb. of locations"];
         var dataRows = [];
-        summariesAndNbIIDs = summariesAndNbIIDs.slice(0, Math.min(summariesAndNbIIDs.length, 40));
+        summariesAndNbIIDs = summariesAndNbIIDs.slice(0, Math.min(summariesAndNbIIDs.length, 10));
         for (i = 0; i < summariesAndNbIIDs.length; i++) {
             var kindAndTypes = summariesAndNbIIDs[i].summary.split("@@@");
             var nbIIDs = summariesAndNbIIDs[i].nbIIDs;
             dataRows.push([kindAndTypes[0], kindAndTypes[1], nbIIDs]);
         }
 
-        tables.writeTable(headerRow, dataRows, "polymorphic_coercions", {alignment:"rp{30em}l"});
+        tables.writeTable(headerRow, dataRows, "polymorphic_coercions", {alignment:"lp{20em}l"});
     }
 
     exports.consistentCoercions = consistentCoercions;

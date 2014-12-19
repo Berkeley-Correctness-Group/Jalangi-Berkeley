@@ -27,7 +27,6 @@
         });
     }
 
-
     /**
      * Box and whisker plot of coercions over all operations in
      * different benchmark groups (e.g., 5%-25% in websites).
@@ -37,6 +36,10 @@
         var bmGroup2Bm2Observations = bmGroups.groupByGroupAndBenchmark(analysisResults);
         ["static", "dynamic"].forEach(function(mode) {
             var bmGroup2Percentages = bmGroups.computeByBenchmarkGroup(bmGroup2Bm2Observations, observationsToCoercionPercentage, mode, analysisResults);
+            if (mode === "static" && bmGroup2Percentages["websites"]) {
+                var avgWebsitesStatic = util.avgOfArray(bmGroup2Percentages["websites"]);
+                macros.writeMacro("percentageCoercionsAmongOperationsWebsites", util.roundPerc(avgWebsitesStatic) + "\\%");
+            }
             plots.plotBoxAndWhisker(bmGroup2Percentages, "prevalence_by_benchmark_group_" + mode, "Coercions among all operations (%)");
         });
     }
@@ -67,10 +70,15 @@
      */
     function byBenchmark(analysisResults) {
         var bm2Observations = bmGroups.groupByBenchmark(analysisResults);
+        Object.keys(bm2Observations).forEach(function(bm) {
+            if (bm2Observations[bm].length < 100) {
+                delete bm2Observations[bm]; // ignore benchmarks with few observations
+            }
+        });
         ["static", "dynamic"].forEach(function(mode) {
-            var bm2PercentageOfCoercions = bmGroups.computeByBenchmark(bm2Observations, observationsToCoercionPercentage, 20, mode, analysisResults);
+            var bm2PercentageOfCoercions = bmGroups.computeByBenchmark(bm2Observations, observationsToCoercionPercentage, mode, analysisResults);
             plots.plotHistogram(bm2PercentageOfCoercions, "prevalence_by_benchmark_" + mode,
-                  "Coercions among all operations (%)", {wide:true});
+                  "Coercions among all operations (%)", {wide:true, maxValues:20});
         });
     }
 
@@ -94,8 +102,13 @@
      */
     function harmfulByBenchmark(analysisResults) {
         var bm2Observations = bmGroups.groupByBenchmark(analysisResults);
+        Object.keys(bm2Observations).forEach(function(bm) {
+            if (bm2Observations[bm].length < 100) {
+                delete bm2Observations[bm]; // ignore benchmarks with few observations
+            }
+        });
         ["static", "dynamic"].forEach(function(mode) {
-            var bm2Percentage = bmGroups.computeByBenchmark(bm2Observations, observationsToHarmfulPercentage, 20, mode, analysisResults);
+            var bm2Percentage = bmGroups.computeByBenchmark(bm2Observations, observationsToHarmfulPercentage, mode, analysisResults);
             plots.plotHistogram(bm2Percentage, "harmfulness_by_benchmark_" + mode, "Potentially harmful coercions (%)",
                   {
                       wide:true,
@@ -149,9 +162,13 @@
             var bmTotal = analysisResults.bmToMaxCallID[bm] + 1;
             var bmWith = Object.keys(callIDsWithCoercion).length;
             var percentage = bmWith > 0 && bmTotal > 0 ? bmWith * 100 / bmTotal : 0;
-            bmToPercentage[analysisResults.resolveBenchmark(bm)] = percentage;
+            if (bmTotal >= 100) {  // exclude benchmarks with very few calls (some have only one!) from histogram
+                bmToPercentage[analysisResults.resolveBenchmark(bm)] = percentage;
+            }
             totalCalls += bmTotal;
             callsWithCoercion += bmWith;
+
+            console.log(analysisResults.resolveBenchmark(bm) + " has " + bmTotal + " calls");
         }
         plots.plotHistogram(bmToPercentage, "percentage_calls_with_coercion", "Percentage of calls", {
             maxValues:20,
@@ -180,8 +197,6 @@
                 }
             }
             componentToObservations["all"] = allObservations;
-
-            console.log("XXXX reaching middle.."); // TODO RAD
 
             var compToPercentage = {};
             var comps = Object.keys(componentToObservations);
