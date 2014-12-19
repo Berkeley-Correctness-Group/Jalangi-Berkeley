@@ -102,10 +102,17 @@
         }
     }
 
+    var str = {
+        isConditionalRelated:function(str) {
+            return (str.indexOf("!") === 0) || (str.indexOf(" in conditional") !== -1) || (str.indexOf(" BOOL ") !== -1);
+        }
+    }
+
     exports.obs = obs;
     exports.doubleEqObs = doubleEqObs;
     exports.tripleEqObs = tripleEqObs;
     exports.strAndFreq = strAndFreq;
     exports.strAndClassAndFreq = strAndClassAndFreq;
     exports.arr = arr;
+    exports.str = str;
 })();

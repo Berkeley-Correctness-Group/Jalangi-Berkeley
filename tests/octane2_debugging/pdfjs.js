@@ -2143,6 +2143,10 @@ function addContextCurrentTransform(ctx) {
 
     ctx.transform = function ctxTransform(a, b, c, d, e, f) {
       var m = this._transformMatrix;
+      console.log("YY: "+a+" "+b+" "+c+" "+d+" "+e+" "+f+" "+m[0]+" "+m[1]);
+      if (e === undefined) {
+        console.log("XXX");
+      }
       this._transformMatrix = [
         m[0] * a + m[2] * b,
         m[1] * a + m[3] * b,

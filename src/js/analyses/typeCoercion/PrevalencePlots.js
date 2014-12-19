@@ -18,12 +18,21 @@
         ["static", "dynamic"].forEach(function(mode) {
             var obsStrAndFreqs = analysisResults.observations.map(m.obs.toAbstractStringAndFreq).filter(f.strAndFreq.notNone);
             obsStrAndFreqs = mode === "static" ? obsStrAndFreqs.map(m.strAndFreq.toStatic) : obsStrAndFreqs;
-            var histo = plots.strAndFreqsToHistogram(obsStrAndFreqs);
-            plots.plotHistogram(histo, "prevalence_by_type_" + mode, "Percentage", {
+            var strToFreq = plots.strAndFreqsToHistogram(obsStrAndFreqs);
+            plots.plotHistogram(strToFreq, "prevalence_by_type_" + mode, "Percentage", {
                 toPercentages:true,
                 wide:true,
                 maxValues:20
             });
+
+            if (mode === "dynamic") {
+                var total = util.mapToValues(strToFreq).reduce(r.number.add, 0);
+                var condRel = 0;
+                Object.keys(strToFreq).filter(f.str.isConditionalRelated).forEach(function(str) {
+                    condRel += strToFreq[str];
+                });
+                macros.writeMacro("percentageConditionalRelatedDynamic", util.roundPerc(condRel * 100 / total) + "\\%");
+            }
         });
     }
 
@@ -92,6 +101,14 @@
         ["static", "dynamic"].forEach(function(mode) {
             var bmGroup2Percentages = bmGroups.computeByBenchmarkGroup(bmGroup2Bm2Observations, observationsToHarmfulPercentage, mode, analysisResults);
             plots.plotBoxAndWhisker(bmGroup2Percentages, "harmfulness_by_benchmark_group_" + mode, "Potentially harmful coercions (%)");
+
+            var percentageHarmfulOnWebsitesDynamic;
+            if (mode === "dynamic" && bmGroup2Percentages["websites"]) {
+                percentageHarmfulOnWebsitesDynamic = util.roundPerc(bmGroup2Percentages["websites"][1]);
+            } else percentageHarmfulOnWebsitesDynamic = "???"
+            macros.writeMacro("percentageHarmfulOnWebsitesDynamic", percentageHarmfulOnWebsitesDynamic + "\\%");
+
+
         });
     }
 
@@ -210,6 +227,11 @@
         });
     }
 
+    function totalHarmfulLocations(analysisResults) {
+        var locations = util.arrayToSet(analysisResults.observations.filter(f.obs.isHarmful).map(m.obs.toUniqueLocation));
+        macros.writeMacro("totalHarmfulLocations", locations);
+    }
+
     exports.byType = byType;
     exports.byBenchmarkGroup = byBenchmarkGroup;
     exports.byBenchmark = byBenchmark;
@@ -220,5 +242,6 @@
     exports.overallPercentageHarmful = overallPercentageHarmful;
     exports.callsWithCoercioRatio = callsWithCoercionPercentage;
     exports.libsVsOthers = libsVsOthers;
+    exports.totalHarmfulLocations = totalHarmfulLocations;
 
 })();

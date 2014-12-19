@@ -40,6 +40,9 @@
 
         var percentageMonomorphic = nbTypesToNbIIDs["1"] * 100 / iids.length;
         macros.writeMacro("percentageMonomorphic", util.roundPerc(percentageMonomorphic) + "\\%");
+
+        var percentageThreeOrMore = (iids.length - nbTypesToNbIIDs["1"] - nbTypesToNbIIDs["2"]) * 100 / iids.length;
+        macros.writeMacro("percentageLocationsWithThreeOrMoreCoercions", util.roundPerc(percentageThreeOrMore) + "\\%");
     }
 
     function summarizeTypesAtCoercions(allObservations) {

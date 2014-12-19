@@ -46,11 +46,16 @@
     function print(analysisResults, locToObservations) {
         var detailedLocToObservations = {};
         Object.keys(locToObservations).forEach(function(loc) {
-            var obs = locToObservations[loc][0];
-            var instrumentFFTmpPath = location(analysisResults, obs)[0];
-            var fileName = instrumentFFTmpPath.split("instrumentFF_tmp/")[1];
+            var observations = locToObservations[loc];
+            var obs = observations[0];
+            var tmpLocation = location(analysisResults, obs);
+            var fileName = tmpLocation[0].split("instrumentFF_tmp/")[1];
             var permanentLocation = baseDir + analysisResults.benchmarkGroups[obs.benchmarkGroup] + "/" + analysisResults.benchmarks[obs.benchmark] + "/src/" + fileName;
-            detailedLocToObservations[permanentLocation] = locToObservations[loc];
+            permanentLocation += "," + tmpLocation.slice(1);
+            for (var i = 0; i < observations.length; i++) {
+                observations[i].expandSummaryNb();
+            }
+            detailedLocToObservations[permanentLocation] = observations;
         });
 
         console.log(JSON.stringify(detailedLocToObservations, null, 2));
@@ -60,7 +65,7 @@
     var allObservations = analysisResults.observations;
     var harmfulObservations = allObservations.filter(f.obs.isHarmful);
 
-    print(analysisResults, sample(harmfulObservations, 30));
+    print(analysisResults, sample(harmfulObservations, 25));
 
 
 })();

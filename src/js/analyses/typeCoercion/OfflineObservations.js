@@ -16,6 +16,11 @@
         return nb;
     }
 
+    function expandSummaryNb() {
+        var summary = JSON.parse(nbToTypeSummary[this.summaryNb]);
+        this.details = summary;
+    }
+
     function OfflineUnaryObservation(iid, benchmark, benchmarkGroup, callIDs, frequency, operation, type, extraTypeInfo, value, resultType, resultValue) {
         var summary = {
             type:type,
@@ -38,7 +43,8 @@
     OfflineUnaryObservation.prototype = {
         get kind() {
             return this.operation === "conditional" ? "conditional" : "unary";
-        }
+        },
+        expandSummaryNb:expandSummaryNb
     };
     ["type", "extraTypeInfo", "value", "resultType", "resultValue"].forEach(function(propName) {
         Object.defineProperty(OfflineUnaryObservation.prototype, propName, {
@@ -73,7 +79,8 @@
     OfflineBinaryObservation.prototype = {
         get kind() {
             return "binary";
-        }
+        },
+        expandSummaryNb:expandSummaryNb
     };
     ["leftType", "leftExtraTypeInfo", "leftValue", "rightType", "rightExtraTypeInfo", "rightValue", "resultType", "resultValue"].forEach(function(propName) {
         Object.defineProperty(OfflineBinaryObservation.prototype, propName, {
@@ -105,7 +112,8 @@
     OfflineExplicitObservation.prototype = {
         get kind() {
             return "explicit";
-        }
+        },
+        expandSummaryNb:expandSummaryNb
     };
     ["inputType", "inputExtraTypeInfo", "inputValue", "outputType", "outputValue"].forEach(function(propName) {
         Object.defineProperty(OfflineExplicitObservation.prototype, propName, {

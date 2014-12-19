@@ -338,6 +338,9 @@
         toTypeSummary:obsToTypeSummary,
         toOperator:function(obs) {
             return coercionOfObs(obs, MapModes.OPERATOR);
+        },
+        toUniqueLocation:function(obs) {
+            return obs.benchmarkGroup+"@"+obs.benchmark+"@"+obs.iid;
         }
     };
 
@@ -352,7 +355,7 @@
 
     var strAndClassAndFreq = {
         toStrAndFreq:function(scf) {
-            return new StringAndFreq(scf.str, scf.freq > 0 ? 1 : 0);
+            return new StringAndFreq(scf.str, scf.freq);
         },
         toStatic:function(scf) {
             return new StringAndClassAndFreq(scf.str, scf.clss, scf.freq > 0 ? 1 : 0);

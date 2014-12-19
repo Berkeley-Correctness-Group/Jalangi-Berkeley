@@ -10,7 +10,7 @@
 
     var strAndClassAndFreq = {
         addFreq:function(oldVal, scf) {
-            return oldVald + scf.freq;
+            return oldVal + scf.freq;
         }
     }
 
@@ -20,8 +20,15 @@
         }
     }
 
+    var number = {
+        add:function(oldVal, v) {
+            return oldVal + v;
+        }
+    }
+
     exports.obsAndFreq = obsAndFreq;
     exports.strAndClassAndFreq = strAndClassAndFreq;
     exports.xy = xy;
+    exports.number = number;
 
 })();
