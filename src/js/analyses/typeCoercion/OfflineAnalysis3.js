@@ -34,9 +34,9 @@
 
 //    var bmGroupDirs = process.argv.slice(2); // directories that contain benchmark directories (e.g., "sunspider" contains "3d-cube")
     var bmGroupDirs = [
-        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites_subset"
-        //"/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/octane",
-        //"/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/sunspider"
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites",
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/octane",
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/sunspider"
     ];
     //var bmGroupDirs = [
     //    "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/websites_subset",
