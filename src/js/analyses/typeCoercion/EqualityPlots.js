@@ -22,7 +22,7 @@
         analyzeTypeDiffs(doubleEqualityObservations, EqualityKinds.DOUBLE, categoryData);
         analyzeTypeDiffs(tripleEqualityObservations, EqualityKinds.TRIPLE, categoryData);
 
-        plots.plotCategories(categoryData, "equality_same_or_diff_types", "% locations w/ equ. op.");
+        plots.plotCategories(categoryData, "equality_same_or_diff_types", "Locations with equality check (%)");
     }
 
     function analyzeTypeDiffs(observations, equalityKind, categoryData) {
@@ -38,9 +38,9 @@
         var nbAllIIDs = Object.keys(allIIDs).length;
 
         var categoryToValue = {};
-        categoryToValue["always same"] = Object.keys(iidsWithAlwaysSameTypes).length / nbAllIIDs;
-        categoryToValue["mixed"] = Object.keys(iidsWithBoth).length / nbAllIIDs;
-        categoryToValue["always different"] = Object.keys(iidsWithAlwaysDiffTypes).length / nbAllIIDs;
+        categoryToValue["always same"] = Object.keys(iidsWithAlwaysSameTypes).length * 100 / nbAllIIDs;
+        categoryToValue["mixed"] = Object.keys(iidsWithBoth).length * 100 / nbAllIIDs;
+        categoryToValue["always different"] = Object.keys(iidsWithAlwaysDiffTypes).length * 100 / nbAllIIDs;
         categoryData.addGroup(equalityKind, ["always same", "mixed", "always different"], categoryToValue);
     }
 

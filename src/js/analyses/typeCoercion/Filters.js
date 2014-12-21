@@ -54,6 +54,9 @@
         },
         isHarmful:function(obs) {
             return m.obs.toClassification(obs) === m.Classication.HARMFUL;
+        },
+        isHarmless:function(obs) {
+            return m.obs.toClassification(obs) === m.Classication.HARMLESS;
         }
     };
 

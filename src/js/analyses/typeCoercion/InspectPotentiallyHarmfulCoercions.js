@@ -63,9 +63,9 @@
 
     var analysisResults = observationParser.parseDirs(bmGroupDirs);
     var allObservations = analysisResults.observations;
-    var harmfulObservations = allObservations.filter(f.obs.isHarmful);
+    var harmfulObservations = allObservations.filter(f.obs.isHarmless);
 
-    print(analysisResults, sample(harmfulObservations, 25));
+    print(analysisResults, sample(harmfulObservations, 30));
 
 
 })();

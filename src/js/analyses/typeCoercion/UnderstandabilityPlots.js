@@ -103,7 +103,18 @@
             return b.nbIIDs - a.nbIIDs;
         });
 
-        var headerRow = ["Operation", "Coerced types", "Nb. of locations"];
+        var totalPolymorphic = 0;
+        var condRelated = 0;
+        for (i = 0; i < summariesAndNbIIDs.length; i++) {
+            var op = summariesAndNbIIDs[i].summary.split("@@@")[0];
+            var nbIIDs = summariesAndNbIIDs[i].nbIIDs;
+            if (op === "conditional" || op === "!" || op === "&&" || op === "||") condRelated += nbIIDs;
+            totalPolymorphic += nbIIDs;
+        }
+        var percentagePolymorphicAndConditionalRelated = condRelated * 100 / totalPolymorphic;
+        macros.writeMacro("percentagePolymorphicAndConditionalRelated", util.roundPerc(percentagePolymorphicAndConditionalRelated) + "\\%");
+
+        var headerRow = ["Operation", "Coerced types", "Locations"];
         var dataRows = [];
         summariesAndNbIIDs = summariesAndNbIIDs.slice(0, Math.min(summariesAndNbIIDs.length, 10));
         for (i = 0; i < summariesAndNbIIDs.length; i++) {
@@ -111,8 +122,7 @@
             var nbIIDs = summariesAndNbIIDs[i].nbIIDs;
             dataRows.push([kindAndTypes[0], kindAndTypes[1], nbIIDs]);
         }
-
-        tables.writeTable(headerRow, dataRows, "polymorphic_coercions", {alignment:"lp{20em}l"});
+        tables.writeTable(headerRow, dataRows, "polymorphic_coercions", {alignment:"p{10em}p{12em}l"});
     }
 
     exports.consistentCoercions = consistentCoercions;

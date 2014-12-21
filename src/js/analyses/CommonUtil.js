@@ -164,7 +164,8 @@
     }
 
     function roundPerc(perc) {
-        return Math.round(perc * 100) / 100;
+        if (perc < 0.005) return Math.round(perc * 10000) / 10000;
+        else return Math.round(perc * 100) / 100;
     }
 
     function mapToValues(m) {
@@ -174,6 +175,12 @@
             result.push(m[keys[i]]);
         }
         return result;
+    }
+
+    function numberWithCommas(x) {
+        var parts = x.toString().split(".");
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return parts.join(".");
     }
 
     // boilerplate to use this file both in browser and in node application
@@ -207,6 +214,7 @@
     module.avgOfArray = avgOfArray;
     module.roundPerc = roundPerc;
     module.mapToValues = mapToValues;
+    module.numberWithCommas = numberWithCommas;
 
 })();
 

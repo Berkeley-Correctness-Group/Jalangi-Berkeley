@@ -31,12 +31,13 @@
     var equalityPlots = require('./EqualityPlots.js');
     var understandabilityPlots = require('./UnderstandabilityPlots.js');
     var plusPlots = require('./PlusPlots.js');
+    var generalStats = require('./GeneralStats.js');
 
 //    var bmGroupDirs = process.argv.slice(2); // directories that contain benchmark directories (e.g., "sunspider" contains "3d-cube")
     var bmGroupDirs = [
-        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites",
-        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/octane",
-        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/sunspider"
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites_subset"
+        //"/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/octane",
+        //"/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/sunspider"
     ];
     //var bmGroupDirs = [
     //    "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/websites_subset",
@@ -54,7 +55,6 @@
     if (!parallelize || workload === 0) {
         // How prevalent are type coercions compared to all operations where coercions may occur?
         prevalencePlots.byBenchmarkGroup(onlineAnalysisResults);
-        prevalencePlots.overallPrevalence(onlineAnalysisResults);
 
         // Which benchmarks have the most type coercions?
         prevalencePlots.byBenchmark(onlineAnalysisResults);
@@ -109,6 +109,9 @@
 
         // At code locations with polymorphic type coercions, what kinds of coercions occur?
         understandabilityPlots.polymorphicCoercions(onlineAnalysisResults);
+
+        // Nb of observations? Nb of locations w/ observations? Nb of lines of code?
+        generalStats.observationStats(onlineAnalysisResults);
 
     }
 

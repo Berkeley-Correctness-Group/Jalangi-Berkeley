@@ -312,6 +312,11 @@
         return coercionOfObs(obs, MapModes.ABSTRACT) + "@@@" + obsToTypeSummary(obs);
     }
 
+    function shorten(classification) {
+        if (classification === Classification.HARMFUL) return "pot. harmful";
+        return classification;
+    }
+
     var obs = {
         toStringAndFreq:function(obs) {
             return new StringAndFreq(coercionOfObs(obs, MapModes.STRING), obs.frequency);
@@ -329,7 +334,7 @@
             return new StringAndClassAndFreq(coercionOfObs(obs, MapModes.ABSTRACT), coercionOfObs(obs, MapModes.CLASSIFY), obs.frequency);
         },
         toAbstractAllStringAndClassificationAndFreq:function(obs) {
-            return new StringAndClassAndFreq(coercionOfObs(obs, MapModes.ABSTRACT_ALL), coercionOfObs(obs, MapModes.CLASSIFY), obs.frequency);
+            return new StringAndClassAndFreq(coercionOfObs(obs, MapModes.ABSTRACT_ALL), shorten(coercionOfObs(obs, MapModes.CLASSIFY)), obs.frequency);
         },
         toStatic:obsToStatic,
         toIID:function(obs) {

@@ -49,13 +49,8 @@
                 var avgWebsitesStatic = util.avgOfArray(bmGroup2Percentages["websites"]);
                 macros.writeMacro("percentageCoercionsAmongOperationsWebsites", util.roundPerc(avgWebsitesStatic) + "\\%");
             }
-            plots.plotBoxAndWhisker(bmGroup2Percentages, "prevalence_by_benchmark_group_" + mode, "Coercions among all operations (%)");
+            plots.plotBoxAndWhisker(bmGroup2Percentages, "prevalence_by_benchmark_group_" + mode, "Coercions among operations (%)");
         });
-    }
-
-    function overallPrevalence(analysisResults) {
-        var percentage = observationsToCoercionPercentage(analysisResults.observations);
-        macros.writeMacro("percentageCoercions", util.roundPerc(percentage) + "\\%");
     }
 
     function observationsToCoercionPercentage(observations) {
@@ -79,15 +74,23 @@
      */
     function byBenchmark(analysisResults) {
         var bm2Observations = bmGroups.groupByBenchmark(analysisResults);
-        Object.keys(bm2Observations).forEach(function(bm) {
-            if (bm2Observations[bm].length < 100) {
-                delete bm2Observations[bm]; // ignore benchmarks with few observations
-            }
-        });
         ["static", "dynamic"].forEach(function(mode) {
             var bm2PercentageOfCoercions = bmGroups.computeByBenchmark(bm2Observations, observationsToCoercionPercentage, mode, analysisResults);
+
+            if (mode === "dynamic") { // compute average percentage of (dynamic) coercions
+                var sumOfPercentages = util.mapToValues(bm2PercentageOfCoercions).reduce(r.number.add, 0);
+                var avgPercentage = sumOfPercentages / Object.keys(bm2PercentageOfCoercions).length;
+                macros.writeMacro("avgPercentageCoercions", util.roundPerc(avgPercentage));
+            }
+
+            Object.keys(bm2PercentageOfCoercions).forEach(function(bmName) {
+                var bmNb = analysisResults.benchmarks.indexOf(bmName);
+                if (bm2Observations[bmNb].length < 100) {
+                    delete bm2PercentageOfCoercions[bmName]; // ignore benchmarks with few observations
+                }
+            });
             plots.plotHistogram(bm2PercentageOfCoercions, "prevalence_by_benchmark_" + mode,
-                  "Coercions among all operations (%)", {wide:true, maxValues:20});
+                  "Coercions among operations (%)", {wide:true, maxValues:20});
         });
     }
 
@@ -100,7 +103,7 @@
         var bmGroup2Bm2Observations = bmGroups.groupByGroupAndBenchmark(analysisResults);
         ["static", "dynamic"].forEach(function(mode) {
             var bmGroup2Percentages = bmGroups.computeByBenchmarkGroup(bmGroup2Bm2Observations, observationsToHarmfulPercentage, mode, analysisResults);
-            plots.plotBoxAndWhisker(bmGroup2Percentages, "harmfulness_by_benchmark_group_" + mode, "Potentially harmful coercions (%)");
+            plots.plotBoxAndWhisker(bmGroup2Percentages, "harmfulness_by_benchmark_group_" + mode, "Potentially harmful coerc. (%)");
 
             var percentageHarmfulOnWebsitesDynamic;
             if (mode === "dynamic" && bmGroup2Percentages["websites"]) {
@@ -126,7 +129,7 @@
         });
         ["static", "dynamic"].forEach(function(mode) {
             var bm2Percentage = bmGroups.computeByBenchmark(bm2Observations, observationsToHarmfulPercentage, mode, analysisResults);
-            plots.plotHistogram(bm2Percentage, "harmfulness_by_benchmark_" + mode, "Potentially harmful coercions (%)",
+            plots.plotHistogram(bm2Percentage, "harmfulness_by_benchmark_" + mode, "Potentially harmful coerc. (%)",
                   {
                       wide:true,
                       maxValues:20
@@ -228,14 +231,13 @@
     }
 
     function totalHarmfulLocations(analysisResults) {
-        var locations = util.arrayToSet(analysisResults.observations.filter(f.obs.isHarmful).map(m.obs.toUniqueLocation));
+        var locations = Object.keys(util.arrayToSet(analysisResults.observations.filter(f.obs.isHarmful).map(m.obs.toUniqueLocation))).length;
         macros.writeMacro("totalHarmfulLocations", locations);
     }
 
     exports.byType = byType;
     exports.byBenchmarkGroup = byBenchmarkGroup;
     exports.byBenchmark = byBenchmark;
-    exports.overallPrevalence = overallPrevalence;
     exports.harmfulByBenchmarkGroup = harmfulByBenchmarkGroup;
     exports.harmfulByBenchmark = harmfulByBenchmark;
     exports.harmfulByType = harmfulByType;
