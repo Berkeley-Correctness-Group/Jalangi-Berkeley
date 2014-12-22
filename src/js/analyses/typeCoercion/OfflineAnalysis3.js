@@ -35,9 +35,9 @@
 
 //    var bmGroupDirs = process.argv.slice(2); // directories that contain benchmark directories (e.g., "sunspider" contains "3d-cube")
     var bmGroupDirs = [
-        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites_subset"
-        //"/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/octane",
-        //"/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/sunspider"
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/websites",
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/octane",
+        "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results/sunspider"
     ];
     //var bmGroupDirs = [
     //    "/home/m/research/projects/Jalangi-Berkeley/type_coercions_results_nov26_and_older/websites_subset",
@@ -85,6 +85,9 @@
         // How does the percentage of coercions among all operations differ for particular libs compared to other code?
         //prevalencePlots.libsVsOthers(observations);   // memory problem when analyzing all benchmarks
 
+        // What's the ratio of explicit to implicit conversions?
+        prevalencePlots.explicitVsImplicit(onlineAnalysisResults);
+
         // ============ (In)Equality checks ===================
 
         // At code locations with in(equality) checks, are values of the "same" or different types compared?
@@ -92,6 +95,9 @@
 
         // How much dynamic information do we have for locations with (in)equality checks?
         equalityPlots.dynamicOccurrencesOfLocs(onlineAnalysisResults);
+
+        // How many equality checks are (non-)strict?
+        equalityPlots.strictVsNonStrict(onlineAnalysisResults);
     }
 
     if (!parallelize || workload === 3) {

@@ -26,9 +26,16 @@
         }
     }
 
+    var obs = {
+        addFreq:function(oldVal, obs) {
+            return oldVal + obs.frequency;
+        }
+    }
+
     exports.obsAndFreq = obsAndFreq;
     exports.strAndClassAndFreq = strAndClassAndFreq;
     exports.xy = xy;
     exports.number = number;
+    exports.obs = obs;
 
 })();

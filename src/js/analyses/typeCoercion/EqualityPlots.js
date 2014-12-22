@@ -6,6 +6,7 @@
     var f = require('./Filters.js');
     var r = require('./Reducers.js');
     var plots = require('./Plots.js');
+    var macros = require('./Macros.js');
     var util = require("./CommonUtil.js");
 
     var EqualityKinds = {
@@ -87,8 +88,19 @@
         });
     }
 
+    function strictVsNonStrict(analysisResults) {
+        var doubleEqualityObservations = analysisResults.observations.filter(f.obs.isDoubleEquality);
+        var tripleEqualityObservations = analysisResults.observations.filter(f.obs.isTripleEquality);
+
+        var totalNonStrictDynamic = doubleEqualityObservations.reduce(r.obs.addFreq, 0);
+        var totalStrictDynamic = tripleEqualityObservations.reduce(r.obs.addFreq, 0);
+
+        macros.writeMacro("totalStrictEqualityDynamic", totalStrictDynamic);
+        macros.writeMacro("totalNonStrictEqualityDynamic", totalNonStrictDynamic);
+    }
+
     exports.sameOrDiffTypes = sameOrDiffTypes;
     exports.dynamicOccurrencesOfLocs = dynamicOccurrencesOfLocs;
-
+    exports.strictVsNonStrict = strictVsNonStrict;
 
 })();

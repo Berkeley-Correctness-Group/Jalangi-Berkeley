@@ -313,7 +313,8 @@
     }
 
     function shorten(classification) {
-        if (classification === Classification.HARMFUL) return "pot. harmful";
+        if (classification === Classification.HARMFUL) return "harmf.";
+        if (classification === Classification.HARMLESS) return "harml.";
         return classification;
     }
 

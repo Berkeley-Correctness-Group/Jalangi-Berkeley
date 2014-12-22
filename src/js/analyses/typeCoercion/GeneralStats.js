@@ -20,9 +20,8 @@
         var totalLocsWithObs = Object.keys(locsWithObs).length;
 
         macros.writeMacro("totalObservations", util.numberWithCommas(totalObs));
-        macros.writeMacro("avgObservations", Math.round(totalObs / Object.keys(bmToNbObs).length));
         macros.writeMacro("totalLocationsWithObservations", util.numberWithCommas(totalLocsWithObs));
-        macros.writeMacro("avgLocationsWithObservations", Math.round(totalLocsWithObs / Object.keys(bmToNbObs).length) + "\\%");
+        macros.writeMacro("totalPrograms", Object.keys(bmToNbObs).length);
     }
 
     exports.observationStats = observationStats;

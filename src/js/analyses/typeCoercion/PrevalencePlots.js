@@ -49,7 +49,7 @@
                 var avgWebsitesStatic = util.avgOfArray(bmGroup2Percentages["websites"]);
                 macros.writeMacro("percentageCoercionsAmongOperationsWebsites", util.roundPerc(avgWebsitesStatic) + "\\%");
             }
-            plots.plotBoxAndWhisker(bmGroup2Percentages, "prevalence_by_benchmark_group_" + mode, "Coercions among operations (%)");
+            plots.plotBoxAndWhisker(bmGroup2Percentages, "prevalence_by_benchmark_group_" + mode, "CAO");
         });
     }
 
@@ -80,7 +80,7 @@
             if (mode === "dynamic") { // compute average percentage of (dynamic) coercions
                 var sumOfPercentages = util.mapToValues(bm2PercentageOfCoercions).reduce(r.number.add, 0);
                 var avgPercentage = sumOfPercentages / Object.keys(bm2PercentageOfCoercions).length;
-                macros.writeMacro("avgPercentageCoercions", util.roundPerc(avgPercentage));
+                macros.writeMacro("avgPercentageCoercions", util.roundPerc(avgPercentage) + "\\%");
             }
 
             Object.keys(bm2PercentageOfCoercions).forEach(function(bmName) {
@@ -90,7 +90,7 @@
                 }
             });
             plots.plotHistogram(bm2PercentageOfCoercions, "prevalence_by_benchmark_" + mode,
-                  "Coercions among operations (%)", {wide:true, maxValues:20});
+                  "CAO", {wide:true, maxValues:20});
         });
     }
 
@@ -103,13 +103,14 @@
         var bmGroup2Bm2Observations = bmGroups.groupByGroupAndBenchmark(analysisResults);
         ["static", "dynamic"].forEach(function(mode) {
             var bmGroup2Percentages = bmGroups.computeByBenchmarkGroup(bmGroup2Bm2Observations, observationsToHarmfulPercentage, mode, analysisResults);
-            plots.plotBoxAndWhisker(bmGroup2Percentages, "harmfulness_by_benchmark_group_" + mode, "Potentially harmful coerc. (%)");
+            plots.plotBoxAndWhisker(bmGroup2Percentages, "harmfulness_by_benchmark_group_" + mode, "Pot. harmful coerc. (%)");
 
-            var percentageHarmfulOnWebsitesDynamic;
+            var avgPercentageHarmfulOnWebsitesDynamic;
             if (mode === "dynamic" && bmGroup2Percentages["websites"]) {
-                percentageHarmfulOnWebsitesDynamic = util.roundPerc(bmGroup2Percentages["websites"][1]);
-            } else percentageHarmfulOnWebsitesDynamic = "???"
-            macros.writeMacro("percentageHarmfulOnWebsitesDynamic", percentageHarmfulOnWebsitesDynamic + "\\%");
+                var allPercentages = util.mapToValues(bmGroup2Percentages["websites"]);
+                avgPercentageHarmfulOnWebsitesDynamic = util.roundPerc(util.avgOfArray(allPercentages));
+            } else avgPercentageHarmfulOnWebsitesDynamic = "???"
+            macros.writeMacro("avgPercentageHarmfulOnWebsitesDynamic", avgPercentageHarmfulOnWebsitesDynamic + "\\%");
 
 
         });
@@ -129,7 +130,7 @@
         });
         ["static", "dynamic"].forEach(function(mode) {
             var bm2Percentage = bmGroups.computeByBenchmark(bm2Observations, observationsToHarmfulPercentage, mode, analysisResults);
-            plots.plotHistogram(bm2Percentage, "harmfulness_by_benchmark_" + mode, "Potentially harmful coerc. (%)",
+            plots.plotHistogram(bm2Percentage, "harmfulness_by_benchmark_" + mode, "Pot. harmful coerc. (%)",
                   {
                       wide:true,
                       maxValues:20
@@ -190,7 +191,7 @@
 
             console.log(analysisResults.resolveBenchmark(bm) + " has " + bmTotal + " calls");
         }
-        plots.plotHistogram(bmToPercentage, "percentage_calls_with_coercion", "Percentage of calls", {
+        plots.plotHistogram(bmToPercentage, "percentage_calls_with_coercion", "FEC", {
             maxValues:20,
             wide:true
         });
@@ -232,7 +233,18 @@
 
     function totalHarmfulLocations(analysisResults) {
         var locations = Object.keys(util.arrayToSet(analysisResults.observations.filter(f.obs.isHarmful).map(m.obs.toUniqueLocation))).length;
-        macros.writeMacro("totalHarmfulLocations", locations);
+        macros.writeMacro("totalHarmfulLocations", util.numberWithCommas(locations));
+    }
+
+    function explicitVsImplicit(analysisResults) {
+        var totalImplicit = analysisResults.observations.filter(f.obs.isCoercion).reduce(r.obs.addFreq, 0);
+        var totalExplicit = analysisResults.observations.filter(f.obs.isExplicit).reduce(r.obs.addFreq, 0);
+
+        var implicitPerOneExplicit = Math.round(totalImplicit / totalExplicit);
+
+        macros.writeMacro("implicitPerOneExplicit", util.numberWithCommas(implicitPerOneExplicit));
+        macros.writeMacro("totalImplicit", util.numberWithCommas(totalImplicit));
+        macros.writeMacro("totalExplicit", util.numberWithCommas(totalExplicit));
     }
 
     exports.byType = byType;
@@ -245,5 +257,6 @@
     exports.callsWithCoercioRatio = callsWithCoercionPercentage;
     exports.libsVsOthers = libsVsOthers;
     exports.totalHarmfulLocations = totalHarmfulLocations;
+    exports.explicitVsImplicit = explicitVsImplicit;
 
 })();

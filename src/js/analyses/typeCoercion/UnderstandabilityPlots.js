@@ -33,7 +33,7 @@
             nbTypesToNbIIDs[bag] = (nbTypesToNbIIDs[bag] || 0) + 1;
         }
 
-        plots.plotHistogram(nbTypesToNbIIDs, "consistency_at_location", "Percentage of type coercions", {
+        plots.plotHistogram(nbTypesToNbIIDs, "consistency_at_location", "Percentage of locations", {
             toPercentages:true,
             xLabel:"Number of different types coerced"
         });
@@ -114,7 +114,7 @@
         var percentagePolymorphicAndConditionalRelated = condRelated * 100 / totalPolymorphic;
         macros.writeMacro("percentagePolymorphicAndConditionalRelated", util.roundPerc(percentagePolymorphicAndConditionalRelated) + "\\%");
 
-        var headerRow = ["Operation", "Coerced types", "Locations"];
+        var headerRow = ["Operation", "Coerced types", "Locs."];
         var dataRows = [];
         summariesAndNbIIDs = summariesAndNbIIDs.slice(0, Math.min(summariesAndNbIIDs.length, 10));
         for (i = 0; i < summariesAndNbIIDs.length; i++) {
@@ -122,7 +122,7 @@
             var nbIIDs = summariesAndNbIIDs[i].nbIIDs;
             dataRows.push([kindAndTypes[0], kindAndTypes[1], nbIIDs]);
         }
-        tables.writeTable(headerRow, dataRows, "polymorphic_coercions", {alignment:"p{10em}p{12em}l"});
+        tables.writeTable(headerRow, dataRows, "polymorphic_coercions", {alignment:"p{5.5em}p{12em}l"});
     }
 
     exports.consistentCoercions = consistentCoercions;
