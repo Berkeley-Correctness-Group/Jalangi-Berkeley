@@ -16,7 +16,6 @@ A paper on TypeDevil has been accepted at the International Conference on Softwa
 ## Download and Installation
 
 1. Clone the Jalangi-Berkeley repository to your computer:
-
 ```
 git clone https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley.git
 ```
@@ -34,12 +33,14 @@ All commands listed below assume that ```Jalangi-Berkeley``` is your current wor
 ```./scripts/inconsistent_type_analysis.sh your_file.js```
 
 For example, the following applies TypeDevil to the running example in our ICSE'15 paper:
+
 ```./scripts/inconsistent_type_analysis.sh tests/inconsistentType/inconsistent_paper.js```
 
 
 ### Analyze our Test Suite of Small Example Programs
 
 The following applies TypeDevil to a test suite of small example programs:
+
 ```node tests/inconsistentType/runAllTests.js```
 
 
@@ -50,11 +51,13 @@ The following assumes that TypeDevil is used as an online + offline analysis. Th
 To apply TypeDevil to the Sunspider benchmarks:
 
 ```./scripts/inconsistent_type_analysis_sunsider_online.sh```
+
 ```./scripts/inconsistent_type_analysis_sunsider_offline.sh```
 
 Similar, to apply TypeDevil to the Octane benchmarks:
 
 ```./scripts/inconsistent_type_analysis_octane_online.sh```
+
 ```./scripts/inconsistent_type_analysis_octane_offline.sh```
 
 
