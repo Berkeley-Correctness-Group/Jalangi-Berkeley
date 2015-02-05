@@ -20,6 +20,11 @@
 (function(sandbox) {
 
     function InconsistentTypeEngine() {
+        var online = false;  // set to 'true' to search for inconsistencies right after the end of the execution
+                             //    (recommended for small examples)
+                             // set to 'false' to run online and offline analysis separately
+                             //    (recommended for larger programs)
+
         var smemory = sandbox.smemory;
         var iidToLocation = sandbox.iidToLocation;
         var typeAnalysis = importModule("TypeAnalysis");
@@ -27,7 +32,6 @@
         var callGraph = importModule("CallGraph");
         var beliefPrefix = "ITA_Belief: ";
         var beliefInfix = " has type ";
-        var online = false;//sandbox.Constants.isBrowser ? false : true;
         var printWarnings = true;
         var visualizeAllTypes = false; // only for node.js execution (i.e., not in browser)
         var visualizeWarningTypes = sandbox.Constants.isBrowser ? false : true; // only for node.js execution (i.e., not in browser)
