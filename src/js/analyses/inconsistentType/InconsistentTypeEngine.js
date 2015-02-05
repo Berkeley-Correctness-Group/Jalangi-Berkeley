@@ -20,7 +20,7 @@
 (function(sandbox) {
 
     function InconsistentTypeEngine() {
-        var online = false;  // set to 'true' to search for inconsistencies right after the end of the execution
+        var online = true;  // set to 'true' to search for inconsistencies right after the end of the execution
                              //    (recommended for small examples)
                              // set to 'false' to run online and offline analysis separately
                              //    (recommended for larger programs)

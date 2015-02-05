@@ -4,8 +4,10 @@
     var util = require('./CommonUtil.js');
 
     function readFile(fileName) {
-        var data = fs.readFileSync(fileName);
-        return JSON.parse(data);
+        if (fs.existsSync(fileName)) {
+            var data = fs.readFileSync(fileName);
+            return JSON.parse(data);
+        } else return [];
     }
 
     function InspectedId(id, comment) {

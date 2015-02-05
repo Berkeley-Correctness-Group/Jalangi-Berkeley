@@ -50,15 +50,13 @@ The following assumes that TypeDevil is used as an online + offline analysis. Th
 
 To apply TypeDevil to the Sunspider benchmarks:
 
-```./scripts/inconsistent_type_analysis_sunsider_online.sh```
-
-```./scripts/inconsistent_type_analysis_sunsider_offline.sh```
+```./scripts/inconsistent_type_analysis_sunsider_online.sh
+./scripts/inconsistent_type_analysis_sunsider_offline.sh```
 
 Similar, to apply TypeDevil to the Octane benchmarks:
 
-```./scripts/inconsistent_type_analysis_octane_online.sh```
-
-```./scripts/inconsistent_type_analysis_octane_offline.sh```
+```./scripts/inconsistent_type_analysis_octane_online.sh
+./scripts/inconsistent_type_analysis_octane_offline.sh```
 
 
 ### Analyze Web Applications
