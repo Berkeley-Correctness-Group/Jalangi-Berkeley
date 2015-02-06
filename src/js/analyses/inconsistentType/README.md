@@ -70,5 +70,5 @@ Similar, to apply TypeDevil to the Octane benchmarks:
 
 ### Analyze Web Applications
 
-There are different ways to apply TypeDevil to web applications. We are using ```instrumentFF```, a modified version of Firefox that intercepts and instruments all JavaScript code before executing it. Search for ```instrumentFF``` on (this page)[https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley] for instructions on installing it.
+There are different ways to apply TypeDevil to web applications. We are using ```instrumentFF```, a modified version of Firefox that intercepts and instruments all JavaScript code before executing it. Search for ```instrumentFF``` on [this page](https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley) for instructions on installing it.
 
