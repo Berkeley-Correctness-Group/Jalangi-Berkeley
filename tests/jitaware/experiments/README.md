@@ -123,7 +123,7 @@ node src/js/commands/convert_micro_csv.js
 
 ### Automatically Collect Benchmark and Warning Statistics
 
-To collect warning statistics from all analsis on SunSpider and Google Octane:
+To collect warning statistics from all analysis on SunSpider and Google Octane:
 
 ```
 bash tests/jitaware/experiments/gather-data/experiment.sh
