@@ -1,7 +1,9 @@
 Jalangi
 =======
 
-*Quick link: [JITProf](https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/tree/master/src/js/analyses/jitaware)*
+*Quick links:*
+ * [JITProf](https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/tree/master/src/js/analyses/jitaware)
+ * [TypeDevil](https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/tree/master/src/js/analyses/inconsistentType)
 
 
 ### Introduction
@@ -115,7 +117,7 @@ node src/js/commands/benchmark_exp.js
 ```
 finally after the experiment finished, open the file ```Jalangi-Berkeley/exp_output/result.csv``` using Excel.
 
-### In-browser Instrumentation
+### In-browser Instrumentation (instrumentFF)
 
 As an alternative to instrumenting JavaScript files on the file system, you can instrument JavaScript on the fly in the Firefox browser, using ```instrumentFF```. This setup enables you to easily analyze arbitrary web applications. ```instrumentFF``` will instrument all JavaScript code executed by Firefox, including code given to ```eval()```.
 

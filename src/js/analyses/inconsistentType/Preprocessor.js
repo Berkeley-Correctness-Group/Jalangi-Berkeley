@@ -213,7 +213,6 @@
         return esprima.parse("\"" + str + "\"").body[0];
     }
 
-
     // main part
     var fileName = process.argv[2];
     var newFileName = process.argv[3];
