@@ -6,11 +6,7 @@ TypeDevil
 Dynamic languages, such as JavaScript, give programmers the freedom to ignore types, and enable them to write concise code in short time. Despite this freedom, many programs follow implicit type rules, for example, that a function has a particular signature or that a property has a particular type. Violations of such implicit type rules often correlate with problems in the program. We page is about TypeDevil, a mostly dynamic analysis that warns developers about inconsistent types. The key idea is to assign a set of observed types to each variable, property, and function, to merge types based in their structure, and to warn developers about variables, properties, and functions that have inconsistent types. To deal with the pervasiveness of polymorphic behavior in real-world JavaScript programs, we present a set of techniques to remove spurious warnings and to merge related warnings. Applying TypeDevil to widely used benchmark suites and real-world web applications reveals 15 problematic type inconsistencies, including correctness problems, performance problems, and dangerous coding practices.
 
 
-## Authors
-
-[Michael Pradel](http://mp.binaervarianz.de/), Parker Schuh, and [Koushik Sen](http://srl.cs.berkeley.edu/~ksen/)
-
-A paper on TypeDevil has been accepted at the International Conference on Software Engineering (ICSE) 2015.
+A [paper on TypeDevil](http://mp.binaervarianz.de/icse2015.pdf) has been accepted at the International Conference on Software Engineering (ICSE) 2015. Authors: [Michael Pradel](http://mp.binaervarianz.de/), Parker Schuh, and [Koushik Sen](http://srl.cs.berkeley.edu/~ksen/).
 
 
 ## Download and Installation
