@@ -1,7 +1,7 @@
 JITProf
 =======
 
-**Note:** JITProf has [a new version](https://github.com/Berkeley-Correctness-Group/jalangi2analyses) which improve the runtime performance and supports checking JIT-unfriendly code on real-world websites. [Go and check out!](https://github.com/Berkeley-Correctness-Group/jalangi2analyses)
+**Note:** JITProf has [a new version](https://github.com/Berkeley-Correctness-Group/jalangi2analyses) which improves the runtime performance and supports checking JIT-unfriendly code on real-world websites. [Go and check out!](https://github.com/Berkeley-Correctness-Group/jalangi2analyses)
 
 ### Introduction
 
