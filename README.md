@@ -2,7 +2,7 @@ Jalangi
 =======
 
 *Quick links:*
- * [JITProf](https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/tree/master/src/js/analyses/jitaware)
+ * [JITProf v1.1](https://github.com/Berkeley-Correctness-Group/jalangi2analyses), [JITProf v1.0](https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/tree/master/src/js/analyses/jitaware)
  * [TypeDevil](https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/tree/master/src/js/analyses/inconsistentType)
 
 
