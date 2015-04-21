@@ -1,0 +1,17 @@
+set term postscript eps noenhanced "NimbusSanL-Regu" 15 fontfile "uhvr8a.pfb" color
+
+set size 0.4,0.6
+
+set output 'FILENAME.eps'
+
+set xtics nomirror out
+set xtics rotate by -30
+set ylabel "YLABEL"
+set xrange [XRANGE]
+set yrange [YRANGE]
+
+set boxwidth 0.2 absolute
+plot 'FILENAME.dat' using 1:4:3:7:6:xticlabels(2) with candlesticks lt 3 lw 2 title 'Quartiles' whiskerbars,\
+'' using 1:5:5:5:5 with candlesticks lt -1 lw 2 notitle
+
+

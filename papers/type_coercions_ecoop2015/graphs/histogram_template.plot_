@@ -1,0 +1,24 @@
+set term postscript eps noenhanced "NimbusSanL-Regu" 15 fontfile "uhvr8a.pfb" color
+
+set size DIMENSIONS
+
+set output 'FILENAME.eps'
+
+set xtics nomirror out
+
+set style data histogram
+set style fill solid
+set boxwidth 0.75 relative
+set style histogram clustered gap 1
+set lmargin 8
+set rmargin 18
+set bmargin 10
+
+set nokey
+set xtics rotate by -35
+set xlabel "XLABEL"
+set ylabel "YLABEL"
+set yrange [YRANGE]
+
+plot 'FILENAME.dat' using 3:xtic(2)
+

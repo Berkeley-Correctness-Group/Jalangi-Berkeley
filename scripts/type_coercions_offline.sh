@@ -1,8 +1,7 @@
 #!/bin/bash
 
-mkdir -p type_coercions_paper/graphs
-mkdir -p type_coercions_paper/tables
-mkdir -p type_coercions_paper/generated_results
+mkdir -p papers/type_coercions_ecoop2015/tables
+mkdir -p papers/type_coercions_ecoop2015/generated_results
 
 node --max-old-space-size=2048 src/js/analyses/typeCoercion/OfflineAnalysis.js 0 &> out_offline_0 &
 node --max-old-space-size=2048 src/js/analyses/typeCoercion/OfflineAnalysis.js 1 &> out_offline_1 &
