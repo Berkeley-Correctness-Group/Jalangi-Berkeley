@@ -23,9 +23,9 @@ Download Jalangi-Berkeley:
 
 Install requirements:
 
-```cd Jalangi-Berkeley/
+```cd Jalangi-Berkeley/```
 
-npm install numbers```
+```npm install numbers```
 
 Download the raw data that we extracted from web sites as of December 13, 2014:
 
