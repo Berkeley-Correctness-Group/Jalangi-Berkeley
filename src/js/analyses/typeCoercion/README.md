@@ -28,7 +28,7 @@ Install requirements:
 
 Download the raw data that we extracted from web sites as of December 13, 2014:
 
-    wget XXXXXXXXXXXX
+    wget https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/releases/download/ECOOP2015/type_coercions_results_ecoop2015.tar.gz
     tar -xzf type_coercions_results_ecoop2015.tar.gz
 
 Analyze the raw data and produce the results of the study:
@@ -37,7 +37,7 @@ Analyze the raw data and produce the results of the study:
 
 Crunching the data takes several minutes. Eventually, the results are written into the `papers/type_coercions_ecoop2015` directory. It contains:
  * All numbers and tables given in the paper.
- * All figures given in the paper. To generate .pdf, install *gnuplot* and *epstopdf*, and execute `./generate.sh` from the `papers/type_coercions_ecoop2015/graphs` directory.
+ * All figures given in the paper. To generate .pdf files, install *gnuplot* and *epstopdf*, and execute `./generate.sh` from the `papers/type_coercions_ecoop2015/graphs` directory.
 
 The above steps execute the study on the raw data we use in the ECOOP'15 paper. To obtain the raw data from web sites or benchmarks programs, see the following scripts:
 
