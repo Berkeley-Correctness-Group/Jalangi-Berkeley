@@ -18,25 +18,33 @@ coercions.
 ## Experimental Data and Instructions for Reproducing the Study
 
 Download Jalangi-Berkeley:
+
 ```git clone https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley.git```
 
 Install requirements:
+
 ```cd Jalangi-Berkeley/
+
 npm install numbers```
 
 Download the raw data that we extracted from web sites as of December 13, 2014:
+
 ```wget XXXXXXXXXXXX
 tar -xzf type_coercions_results_ecoop2015.tar.gz```
 
 Analyze the raw data and produce the results of the study:
+
 ```./scripts/type_coercions_offline.sh```
 
 Crunching the data takes several minutes. Eventually, the results (graphs, tables, and numbers) are written into the `type_coercions_paper` directory.
 
 
 The above steps execute the study on the raw data we use in the ECOOP'15 paper. To obtain the raw data from web sites or benchmarks programs, see the following scripts:
+
 ```./scripts/type_coercions_sunspider.sh
+
 ./scripts/type_coercions_octane.sh
+
 ./scripts/type_coercions_websites.sh```
 
 Executing these scripts requires to fully install Jalangi-Berkeley, including a modified version of the Firefox browser called instrumentFF. See [here](https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley) for detailed instructions.
