@@ -18,7 +18,7 @@
 
 (function() {
 
-    var plotsDir = "/home/m/research/papers/ecoop15/graphs/";
+    var plotsDir = "./type_coercions_paper/graphs/";
 
     var util = require("./CommonUtil.js");
     var fs = require('fs');
