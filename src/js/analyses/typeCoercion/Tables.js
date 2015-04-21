@@ -2,7 +2,7 @@
 
 (function() {
 
-    var tablesDir = "./type_coercions_paper/tables/";
+    var tablesDir = "./papers/type_coercions_ecoop2015/tables/";
     var fs = require('fs');
 
     function writeTable(headerRow, dataRows, fileName, options) {
