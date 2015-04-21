@@ -17,7 +17,7 @@
 // Author: Michael Pradel
 
 (function(sandbox) {
-    function TypeAnalysisEngine3() {
+    function TypeAnalysisEngine() {
 
         var util = importModule("CommonUtil");
         var constants = importModule("Constants");
@@ -357,7 +357,7 @@
         }
     }
 
-    sandbox.analysis = new TypeAnalysisEngine3();
+    sandbox.analysis = new TypeAnalysisEngine();
     if (sandbox.Constants.isBrowser) {
         //window.addEventListener("beforeunload", function() {
         //    console.log("beforeunload --> logging results");
