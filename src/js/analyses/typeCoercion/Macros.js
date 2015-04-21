@@ -2,7 +2,7 @@
 
 (function() {
 
-    var generatedResultsDir = "./type_coercions_paper/generated_results/";
+    var generatedResultsDir = "./papers/type_coercions_ecoop2015/generated_results/";
     var fs = require('fs');
 
     function writeMacro(name, value) {

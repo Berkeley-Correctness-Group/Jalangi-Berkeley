@@ -37,8 +37,9 @@ Analyze the raw data and produce the results of the study:
 
 ```./scripts/type_coercions_offline.sh```
 
-Crunching the data takes several minutes. Eventually, the results (graphs, tables, and numbers) are written into the `type_coercions_paper` directory.
-
+Crunching the data takes several minutes. Eventually, the results are written into the `papers/type_coercions_ecoop2015` directory. It contains:
+ * All numbers and tables given in the paper.
+ * All figures given in the paper. To generate .pdf, install *gnuplot* and *epstopdf*, and execute `./generate.sh` from the `papers/type_coercions_ecoop2015/graphs` directory.
 
 The above steps execute the study on the raw data we use in the ECOOP'15 paper. To obtain the raw data from web sites or benchmarks programs, see the following scripts:
 
