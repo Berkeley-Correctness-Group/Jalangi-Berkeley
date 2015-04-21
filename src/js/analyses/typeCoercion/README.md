@@ -29,8 +29,9 @@ npm install numbers```
 
 Download the raw data that we extracted from web sites as of December 13, 2014:
 
-```wget XXXXXXXXXXXX
-tar -xzf type_coercions_results_ecoop2015.tar.gz```
+```wget XXXXXXXXXXXX```
+
+```tar -xzf type_coercions_results_ecoop2015.tar.gz```
 
 Analyze the raw data and produce the results of the study:
 
@@ -41,11 +42,11 @@ Crunching the data takes several minutes. Eventually, the results (graphs, table
 
 The above steps execute the study on the raw data we use in the ECOOP'15 paper. To obtain the raw data from web sites or benchmarks programs, see the following scripts:
 
-```./scripts/type_coercions_sunspider.sh
+```./scripts/type_coercions_sunspider.sh```
 
-./scripts/type_coercions_octane.sh
+```./scripts/type_coercions_octane.sh```
 
-./scripts/type_coercions_websites.sh```
+```./scripts/type_coercions_websites.sh```
 
 Executing these scripts requires to fully install Jalangi-Berkeley, including a modified version of the Firefox browser called instrumentFF. See [here](https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley) for detailed instructions.
 
