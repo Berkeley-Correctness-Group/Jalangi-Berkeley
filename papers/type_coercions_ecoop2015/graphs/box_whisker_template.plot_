@@ -10,8 +10,10 @@ set ylabel "YLABEL"
 set xrange [XRANGE]
 set yrange [YRANGE]
 
+load 'dark_colors.pal'
+
 set boxwidth 0.2 absolute
-plot 'FILENAME.dat' using 1:4:3:7:6:xticlabels(2) with candlesticks lt 3 lw 2 title 'Quartiles' whiskerbars,\
+plot 'FILENAME.dat' using 1:4:3:7:6:xticlabels(2) with candlesticks ls 2 lt 3 lw 2 title 'Quartiles' whiskerbars,\
 '' using 1:5:5:5:5 with candlesticks lt -1 lw 2 notitle
 
 

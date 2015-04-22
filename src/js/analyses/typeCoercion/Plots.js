@@ -73,7 +73,7 @@
         var yRange = "0:" + (maxY + 0.1 * maxY);
         var templateFile = (options && options.values) ? "histogram_with_values_template.plot_" : "histogram_template.plot_";
         var plotTemplate = fs.readFileSync(plotsDir + templateFile, {encoding:"utf8"});
-        var dimensions = (options && options.wide) ? "1.0,0.6" : "0.6,0.6";
+        var dimensions = (options && options.wide) ? "1.1,0.6" : "0.6,0.6";
         var plot = plotTemplate.replace(/FILENAME/g, filename).replace(/YLABEL/g, yLabel).replace(/XLABEL/g, xLabel).replace(/YRANGE/g, yRange).replace(/DIMENSIONS/g, dimensions);
         fs.writeFileSync(plotsDir + filename + ".plot", plot);
     }

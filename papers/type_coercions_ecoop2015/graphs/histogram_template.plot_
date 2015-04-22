@@ -20,5 +20,7 @@ set xlabel "XLABEL"
 set ylabel "YLABEL"
 set yrange [YRANGE]
 
-plot 'FILENAME.dat' using 3:xtic(2)
+load 'dark_colors.pal'
+
+plot 'FILENAME.dat' using 3:xtic(2) ls 1
 

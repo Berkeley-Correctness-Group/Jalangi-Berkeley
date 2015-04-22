@@ -17,6 +17,8 @@ set xtics rotate by -30
 set ylabel "YLABEL"
 set yrange [YRANGE]
 
-plot 'FILENAME.dat' using 3:xtic(2),\
+load 'dark_colors.pal'
+
+plot 'FILENAME.dat' using 3:xtic(2) ls 1,\
      '' using 1:(10):3 with labels
 
