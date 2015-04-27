@@ -15,6 +15,13 @@ may want to disallow. Our results suggest that type coercions are significantly 
 commonly assumed and that analyses targeted at real-world JavaScript programs must consider
 coercions.
 
+## Paper
+
+[The Good, the Bad, and the Ugly: An Empirical Study of Implicit Type Conversions in JavaScript](http://mp.binaervarianz.de/ecoop2015.pdf)
+
+by Michael Pradel and Koushik Sen, ECOOP 2015
+
+
 ## Experimental Data and Instructions for Reproducing the Study
 
 Download Jalangi-Berkeley:
