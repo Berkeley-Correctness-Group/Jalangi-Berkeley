@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Jalangi-berkeley by Berkeley-Correctness-Group</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Jalangi-berkeley</h1>
+      <h2 class="project-tagline">Doing research on top of Jalangi</h2>
+      <a href="https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley" class="btn">View on GitHub</a>
+      <a href="https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="jalangi" class="anchor" href="#jalangi" aria-hidden="true"><span class="octicon octicon-link"></span></a>Jalangi</h1>
+
+<p><em>Quick links:</em></p>
+
+<ul>
+<li>
+<a href="https://github.com/Berkeley-Correctness-Group/JITProf">JITProf v1.1</a>, <a href="https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/tree/master/src/js/analyses/jitaware">JITProf v1.0</a>
+</li>
+<li><a href="https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/tree/master/src/js/analyses/inconsistentType">TypeDevil</a></li>
+</ul>
+
+<h3>
+<a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction</h3>
+
+<p>This repository is set up for doing researching on top of Jalangi, which is a dynamic analysis framework for JavaScript.</p>
+
+<p>More more details please visit jalangi master branch:
+<a href="https://github.com/SRA-SiliconValley/jalangi">https://github.com/SRA-SiliconValley/jalangi</a></p>
+
+<p>Or visit the project website:
+<a href="https://www.eecs.berkeley.edu/%7Egongliang13/jalangi_ff/">https://www.eecs.berkeley.edu/~gongliang13/jalangi_ff/</a></p>
+
+<h3>
+<a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a>Requirements</h3>
+
+<p>We tested Jalangi on Mac OS X 10.8 with the Chromium browser and on Ubuntu 12.04 with both the Chromium and the Firefox browsers.  Jalangi should work on Mac OS 10.7, Ubuntu 11.0 and higher and Windows 7 or higher. Jalangi will NOT work with Internet Explorer.</p>
+
+<ul>
+<li>Latest version of Node.js available at <a href="http://nodejs.org/">http://nodejs.org/</a>.  We have tested Jalangi with Node v0.8.22 and v0.10.3.</li>
+<li>Sun's JDK 1.6 or higher.  We have tested Jalangi with Java 1.6.0_43.</li>
+<li>Command-line git.</li>
+<li>libgmp (<a href="http://gmplib.org/">http://gmplib.org/</a>) is required by cvc3.  Concolic testing uses cvc3 and automaton.jar for constraint solving. The installation script checks if cvc3 and automaton.jar are installed properly.</li>
+<li>Chrome browser if you need to test web apps.</li>
+<li>Python (<a href="http://python.org">http://python.org</a>) version 2.7 or higher</li>
+</ul>
+
+<p>On Windows you need the following extra dependencies:</p>
+
+<ul>
+<li>Install Microsoft Visual Studio 2010 (Free express version is fine).</li>
+<li>If on 64bit also install Windows 7 64-bit SDK.</li>
+</ul>
+
+<p>If you have a fresh installation of Ubuntu, you can install all the requirements by invoking the following commands from a terminal.</p>
+
+<pre><code>sudo apt-get update
+sudo apt-get install python-software-properties python g++ make
+sudo add-apt-repository ppa:chris-lea/node.js
+sudo apt-get update
+sudo apt-get install nodejs
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update
+sudo apt-get install oracle-java7-installer
+sudo update-java-alternatives -s java-7-oracle
+sudo apt-get install git
+sudo apt-get install libgmp10
+sudo apt-get install chromium-browser
+</code></pre>
+
+<h3>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h3>
+
+<p>In the root dir of the repository:</p>
+
+<pre><code>node src/js/commands/install.js
+</code></pre>
+
+<p>if your current working dir is <code>[parent-dir] / [cur-dir]</code> then it will check and create a directory <code>[parent-dir] / [jalangi]</code> where the master branch of Jalangi will be cloned and installed.</p>
+
+<p>If Installation succeeds, you should see the following message:</p>
+
+<pre><code>---&gt; Installation successful.
+---&gt; run 'npm test' to make sure all tests pass
+</code></pre>
+
+<p>to run test, type:</p>
+
+<pre><code>cd ../jalangi
+npm test
+</code></pre>
+
+<h3>
+<a id="run-experiments" class="anchor" href="#run-experiments" aria-hidden="true"><span class="octicon octicon-link"></span></a>Run Experiments</h3>
+
+<p>In the Jalangi-Berkeley directory:</p>
+
+<pre><code>python &lt;Jalangi root path&gt;/jalangi/scripts/jalangi.py direct -a &lt;analysis code file&gt; &lt;program to be instrumented&gt;
+</code></pre>
+
+<p>All files paths should be relative path to the root directory of this repository.</p>
+
+<p>For example, to find JIT-unfriendly code using JITProf:</p>
+
+<pre><code>python ../jalangi/scripts/jalangi.py direct --analysis ../jalangi/src/js/analyses/ChainedAnalyses.js --analysis src/js/analyses/jitaware/chaining/utils/Utils.js --analysis src/js/analyses/jitaware/chaining/utils/RuntimeDB.js --analysis src/js/analyses/jitaware/chaining/TrackHiddenClass --analysis src/js/analyses/jitaware/chaining/AccessUndefArrayElem --analysis src/js/analyses/jitaware/chaining/SwitchArrayType --analysis src/js/analyses/jitaware/chaining/NonContiguousArray --analysis src/js/analyses/jitaware/chaining/InitFieldOutsideConstructor --analysis src/js/analyses/jitaware/chaining/BinaryOpOnUndef --analysis src/js/analyses/jitaware/chaining/PolymorphicFunCall --analysis src/js/analyses/jitaware/chaining/ArgumentsLeak --analysis src/js/analyses/jitaware/chaining/TypedArray tests/jitaware/JITAwareTest
+</code></pre>
+
+<p>To run an analysis to find inconsistent types:</p>
+
+<pre><code>python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/inconsistentType/InconsistentTypeEngine.js tests/inconsistentType/inconsistent1
+</code></pre>
+
+<p>To run an analysis to find arrays that can be cast to typed arrays:</p>
+
+<pre><code>python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/jitaware/fixArray tests/jitaware/arrayTypeTest
+</code></pre>
+
+<p>To run single file version of JITProf (outdated):</p>
+
+<pre><code>python ../jalangi/scripts/jalangi.py direct -a src/js/analyses/jitaware/JITAware tests/jitaware/JITAwareTest
+</code></pre>
+
+<h3>
+<a id="run-browser-experiments" class="anchor" href="#run-browser-experiments" aria-hidden="true"><span class="octicon octicon-link"></span></a>Run Browser Experiments</h3>
+
+<p>For now, this experiment only supports Firefox and Chrome on Mac OS.
+To automated the web testing, selenium is needed, to install selenium type the following command in the terminal:</p>
+
+<pre><code>npm install selenium-webdriver
+npm install mocha selenium-webdriver
+</code></pre>
+
+<p>Currently <code>install.js</code> automatically installs for MacOS. So if you are using a non-Mac OS, you also need to download and install chromedriver by yourself at the following link:</p>
+
+<pre><code>https://code.google.com/p/selenium/wiki/ChromeDriver
+</code></pre>
+
+<p>Before running the experiment on Mac OS:</p>
+
+<ul>
+<li>close your firefox and chrome instances</li>
+<li>configure your firefox so that it will dump output to the native console:
+in the browser url input box type: <code>about:config</code>
+search for: <code>brwoser.dom.window.dump.enabled</code>, set it to <code>true</code>
+</li>
+</ul>
+
+<p>In the Jalangi-Berkeley directory type the following command:</p>
+
+<pre><code>node src/js/commands/benchmark_exp.js
+</code></pre>
+
+<p>finally after the experiment finished, open the file <code>Jalangi-Berkeley/exp_output/result.csv</code> using Excel.</p>
+
+<h3>
+<a id="in-browser-instrumentation-instrumentff" class="anchor" href="#in-browser-instrumentation-instrumentff" aria-hidden="true"><span class="octicon octicon-link"></span></a>In-browser Instrumentation (instrumentFF)</h3>
+
+<p>As an alternative to instrumenting JavaScript files on the file system, you can instrument JavaScript on the fly in the Firefox browser, using <code>instrumentFF</code>. This setup enables you to easily analyze arbitrary web applications. <code>instrumentFF</code> will instrument all JavaScript code executed by Firefox, including code given to <code>eval()</code>.</p>
+
+<ul>
+<li>Install our custom version of Firefox:
+
+<ul>
+<li>
+<a href="http://mp.binaervarianz.de/jalangi/firefox-jalangi-27.0a1.en-US.linux-x86_64_20140815.tar.bz2">Linux (64 bit)</a> (recommended)</li>
+<li>
+<a href="http://mp.binaervarianz.de/jalangi/firefox-jalangi-27.0a1.en-US.mac64_20140520.dmg">Mac OS (64 bit)</a> (has <a href="https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/issues/3">this bug</a> related to script-inserted scripts)</li>
+<li>Build it yourself by applying <a href="http://mp.binaervarianz.de/jalangi/firefox_jalangi_20140815.diff">this patch</a> against revision c6fc35c53c37 of the <a href="https://hg.mozilla.org/mozilla-central">Mozilla code base</a>
+</li>
+</ul>
+</li>
+<li>Add instrumentFF to your PATH environment variable:
+<code>export PATH="/Your/path/to/Jalangi-Berkeley/scripts/path_unix":$PATH</code>
+</li>
+<li>Edit <code>scripts/instrumentFF.py</code>:
+
+<ul>
+<li>Modify the variable <code>jalangiAnalysisFiles</code> to specify the Jalangi analyses that you want to run (an array of file names).</li>
+<li>Modify the variable <code>included</code> to specify the URLs for which to instrument JavaScript files (an array of regular expressions).</li>
+<li>Set the variable '''preprocess''' to '''False''' (unless you're running the inconsistentTypes analysis).</li>
+</ul>
+</li>
+<li>Start the custom version of Firefox. Make sure that your current working directory is Jalangi-Berkeley.</li>
+</ul>
+
+<p>Firefox will write the uninstrumented .js files and the instrumented .js files to <code>instrumentFF_tmp</code>, along with the sourcemaps produced by the Jalangi instrumenter. <code>instrumentFF</code> caches instrumented files to avoid unnecessarily re-instrumenting files. If you modify your analysis, empty the cache by removing all files in <code>instrumentFF_tmp</code> and by restarting Firefox.</p>
+
+<h3>
+<a id="jitprof-pinpointing-jit-unfriendly-javascript-code" class="anchor" href="#jitprof-pinpointing-jit-unfriendly-javascript-code" aria-hidden="true"><span class="octicon octicon-link"></span></a>JITProf: Pinpointing JIT-unfriendly JavaScript Code</h3>
+
+<p>The JITProf source code and project README is available at:</p>
+
+<p><a href="https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/tree/master/src/js/analyses/jitaware">https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley/tree/master/src/js/analyses/jitaware</a></p>
+
+<p>The technical report is available at:</p>
+
+<p><a href="http://www.eecs.berkeley.edu/Pubs/TechRpts/2014/EECS-2014-144.html">http://www.eecs.berkeley.edu/Pubs/TechRpts/2014/EECS-2014-144.html</a></p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/Berkeley-Correctness-Group/Jalangi-Berkeley">Jalangi-berkeley</a> is maintained by <a href="https://github.com/Berkeley-Correctness-Group">Berkeley-Correctness-Group</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
