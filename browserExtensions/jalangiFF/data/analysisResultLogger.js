@@ -1,40 +1,14 @@
-/*
- * Copyright 2014 University of California, Berkeley.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *		http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 // Author: Michael Pradel
 
 (function() {
 
     console.log("jalangiFF: page script running");
 
-    var commonUtil = unwrapObject(window).$jalangiFFCommonUtil;
-
-    unwrapObject(window).$jalangiFFLogResult = function(json, append) {
+    function logResult(json, append) {
         console.log("Receiving results from page script");
-        var url = unwrapObject(document.URL);
-        self.port.emit("logResult", url, json, append);
+        self.port.emit("logResult", json, append);
     };
 
-    function unwrapObject(object) {
-        if (!object)
-            return object;
-        if (object.wrappedJSObject) {
-            return object.wrappedJSObject;
-        }
-        return object;
-    }
+    exportFunction(logResult, unsafeWindow, {defineAs: "logResult"});
 
 })();

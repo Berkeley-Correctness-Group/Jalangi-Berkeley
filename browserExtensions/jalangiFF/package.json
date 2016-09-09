@@ -1,9 +1,10 @@
 {
   "name": "jalangiff",
   "fullName": "jalangiFF",
-  "id": "jid1-PAxDHALorD2vvw",
-  "description": "a basic add-on",
-  "author": "",
-  "license": "MPL 2.0",
-  "version": "0.1.1"
+  "id": "jid1-UjG7KyBWEwwD@jetpack",
+  "description": "Log results from a web site to the file system",
+  "author": "Michael Pradel",
+  "license": "GPLv2",
+  "version": "0.2.0",
+  "main": "lib/main.js"
 }
