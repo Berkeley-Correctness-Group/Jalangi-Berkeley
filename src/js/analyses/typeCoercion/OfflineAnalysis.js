@@ -75,25 +75,25 @@
     }
 
     if (!parallelize || workload === 2) {
-        // Which percentage of calls contain at least one coercion?
-        prevalencePlots.callsWithCoercioRatio(onlineAnalysisResults);
-
-        // How does the percentage of coercions among all operations differ for particular libs compared to other code?
-        //prevalencePlots.libsVsOthers(observations);   // memory problem when analyzing all benchmarks
-
-        // What's the ratio of explicit to implicit conversions?
-        prevalencePlots.explicitVsImplicit(onlineAnalysisResults);
+        //// Which percentage of calls contain at least one coercion?
+        //prevalencePlots.callsWithCoercioRatio(onlineAnalysisResults);
+        //
+        //// How does the percentage of coercions among all operations differ for particular libs compared to other code?
+        ////prevalencePlots.libsVsOthers(observations);   // memory problem when analyzing all benchmarks
+        //
+        //// What's the ratio of explicit to implicit conversions?
+        //prevalencePlots.explicitVsImplicit(onlineAnalysisResults);
 
         // ============ (In)Equality checks ===================
 
         // At code locations with in(equality) checks, are values of the "same" or different types compared?
         equalityPlots.sameOrDiffTypes(onlineAnalysisResults);
 
-        // How much dynamic information do we have for locations with (in)equality checks?
-        equalityPlots.dynamicOccurrencesOfLocs(onlineAnalysisResults);
-
-        // How many equality checks are (non-)strict?
-        equalityPlots.strictVsNonStrict(onlineAnalysisResults);
+        //// How much dynamic information do we have for locations with (in)equality checks?
+        //equalityPlots.dynamicOccurrencesOfLocs(onlineAnalysisResults);
+        //
+        //// How many equality checks are (non-)strict?
+        //equalityPlots.strictVsNonStrict(onlineAnalysisResults);
     }
 
     if (!parallelize || workload === 3) {

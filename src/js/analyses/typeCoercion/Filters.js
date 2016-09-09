@@ -11,6 +11,12 @@
         return false;
     }
 
+    function sameTypeWithUndefinedOrNullForDoubleEquality(type1, type2) {
+        if (type1 === "undefined" || type2 === "undefined") return true;
+        if (type1 === "null" || type2 === "null") return true;
+        return false;
+    }
+
     function sameTypeForTripleEquality(type1, type2) {
         if (type1 === type2) return true;
         if (type1 === "undefined" || type2 === "undefined") return true;
@@ -66,6 +72,9 @@
         },
         diffTypes:function(obs) {
             return !sameTypeForDoubleEquality(obs.leftType, obs.rightType);
+        },
+        sameTypesWithUndefinedOrNull:function(obs) {
+            return sameTypeWithUndefinedOrNullForDoubleEquality(obs.leftType, obs.rightType);
         }
     }
 

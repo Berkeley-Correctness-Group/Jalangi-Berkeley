@@ -3,10 +3,10 @@
 mkdir -p papers/type_coercions_ecoop2015/tables
 mkdir -p papers/type_coercions_ecoop2015/generated_results
 
-node --max-old-space-size=2048 src/js/analyses/typeCoercion/OfflineAnalysis.js 0 &> out_offline_0 &
-node --max-old-space-size=2048 src/js/analyses/typeCoercion/OfflineAnalysis.js 1 &> out_offline_1 &
+#node --max-old-space-size=2048 src/js/analyses/typeCoercion/OfflineAnalysis.js 0 &> out_offline_0 &
+#node --max-old-space-size=2048 src/js/analyses/typeCoercion/OfflineAnalysis.js 1 &> out_offline_1 &
 node --max-old-space-size=2048 src/js/analyses/typeCoercion/OfflineAnalysis.js 2 &> out_offline_2 &
-node --max-old-space-size=2048 src/js/analyses/typeCoercion/OfflineAnalysis.js 3 &> out_offline_3 &
+#node --max-old-space-size=2048 src/js/analyses/typeCoercion/OfflineAnalysis.js 3 &> out_offline_3 &
 
 FAIL=0
 for job in `jobs -p`

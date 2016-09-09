@@ -38,6 +38,15 @@
         var allIIDs = util.arrayToSet(observations.map(m.obs.toIID));
         var nbAllIIDs = Object.keys(allIIDs).length;
 
+        // added after finalizing ECOOP'15 paper:
+        if (equalityKind === EqualityKinds.DOUBLE) {
+            var iidsWithSameTypesDueToUndefinedOrNull = iidsWithProperty(observations, f.doubleEqObs.sameTypesWithUndefinedOrNull);
+            var sameDueToUndefinedOrNull = Object.keys(iidsWithSameTypesDueToUndefinedOrNull).length;
+            var sameAll = Object.keys(iidsWithSameTypes).length;
+            console.log("'Same' types for non-strict equality that are due to undefined or null: " + sameDueToUndefinedOrNull
+            + " of " + sameAll + " = " + (sameDueToUndefinedOrNull * 100 / sameAll) + "%");
+        }
+
         var categoryToValue = {};
         categoryToValue["always same"] = Object.keys(iidsWithAlwaysSameTypes).length * 100 / nbAllIIDs;
         categoryToValue["mixed"] = Object.keys(iidsWithBoth).length * 100 / nbAllIIDs;
